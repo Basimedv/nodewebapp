@@ -10,4 +10,4 @@ const connectdb=async ()=>{
       process.exit(1)
     }
 }
-module.exports=connectdb
+module.exports = connectdb
