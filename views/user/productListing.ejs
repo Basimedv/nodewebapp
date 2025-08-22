@@ -1,0 +1,80 @@
+<%-include("../../views/partials/user/header")%>
+
+<body>
+
+  <!-- 🛒 Cart Icon -->
+  <div class="cart-icon">
+    🛒 <span class="cart-count">0</span>
+    <span class="cart-total">₹0</span>
+  </div>
+
+  <!-- 🛍️ Products -->
+  <div class="products">
+    <div class="product">
+         <img src="/images/banner7.png" alt="Shirt">
+      <h3>Shirt</h3>
+      <p data-price="499">₹499</p>
+      <a class="add-to-cart" data-price="499">Add to Cart</a>
+      <a class="remove-btn" data-price="499">Remove</a>
+    </div>
+    <div class="product">
+      <h3>Pants</h3>
+      <p data-price="799">₹799</p>
+      <button class="add-to-cart" data-price="799">Add to Cart</button>
+      <button class="remove-btn" data-price="799">Remove</button>
+    </div>
+    <div class="product">
+      <h3>Shoes</h3>
+      <p data-price="1299">₹1299</p>
+      <button class="add-to-cart" data-price="1299">Add to Cart</button>
+      <button class="remove-btn" data-price="1299">Remove</button>
+    </div>
+  </div>
+
+  <script>
+    let cartCount = 0;
+    let cartTotal = 0;
+
+    // ✅ Add to Cart
+    document.querySelectorAll(".add-to-cart").forEach(button => {
+      button.addEventListener("click", function () {
+        const price = parseInt(this.getAttribute("data-price"));
+        cartCount++;
+        cartTotal += price;
+        updateCartDisplay();
+      });
+    });
+
+    // ✅ Remove from Cart
+    document.querySelectorAll(".remove-btn").forEach(button => {
+      button.addEventListener("click", function () {
+        const price = parseInt(this.getAttribute("data-price"));
+        if (cartCount > 0 && cartTotal >= price) {
+          cartCount--;
+          cartTotal -= price;
+          updateCartDisplay();
+        }
+      });
+    });
+
+    // ✅ Update Cart Display
+    function updateCartDisplay() {
+      const cartCountElement = document.querySelector(".cart-count");
+      const cartTotalElement = document.querySelector(".cart-total");
+
+      cartCountElement.textContent = cartCount;
+      cartCountElement.style.display = cartCount > 0 ? "inline-flex" : "none";
+
+      // Bounce animation
+      cartCountElement.classList.add("active-bounce");
+      setTimeout(() => cartCountElement.classList.remove("active-bounce"), 400);
+
+      cartTotalElement.textContent = `₹${cartTotal}`;
+    }
+  </script>
+
+</body>
+</html>
+
+
+<%-include("../../views/partials/user/footer")%>
