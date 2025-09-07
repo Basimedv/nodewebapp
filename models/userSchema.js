@@ -11,21 +11,27 @@ const userSchema = new Schema({
         type: String,
         required: true,
         unique: true,
-      
+
     },
     phone: {
         type: String,
-        required: true,
+        required: false,
         unique: true,
-       
+        sparse: true,
+        default: null,
+
     },
-    
+    googleId: {
+        type: String,
+        unique: true,
+    },
+
     password: {
         type: String,
         required: false
 
     },
-    
+
     isBlocked: {
         type: Boolean,
         default: false
@@ -57,7 +63,7 @@ const userSchema = new Schema({
     },
     referalCode: {
         type: String,
-        
+
     },
     redeemed: {
         type: Boolean
