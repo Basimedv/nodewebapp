@@ -53,6 +53,7 @@
      z-index: 1000;
  }
 
+
  .modal-content {
      background-color: #ffffff;
      padding: 15px;
@@ -63,6 +64,7 @@
      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
      text-align: center;
  }
+ 
 
  .modal-content li {
      list-style-type: none;
@@ -73,6 +75,54 @@
  .modal-content a {
      text-decoration: none;
  }
+ /* 🔹 Modal container */
+#profileViewModal {
+  display: none; /* hidden by default */
+  position: absolute;
+  top: 60px;   /* adjust depending on header height */
+  right: 20px; /* align near profile icon */
+  z-index: 1000;
+}
+
+/* 🔹 Modal content */
+#profileViewModal .modal-content {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+  padding: 15px 20px;
+  min-width: 180px;
+  transition: all 0.3s ease;
+}
+
+/* 🔹 Menu items */
+#profileViewModal ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#profileViewModal ul li {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+#profileViewModal ul li:last-child {
+  border-bottom: none;
+}
+
+#profileViewModal ul li a {
+  text-decoration: none;
+  color: #333;
+  font-size: 14px;
+  display: block;
+  transition: 0.2s;
+}
+
+#profileViewModal ul li a:hover {
+  color: #007bff;     /* blue highlight */
+  padding-left: 5px;  /* little slide effect */
+}
+
 
  .close {
      color: black;

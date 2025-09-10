@@ -1,8 +1,78 @@
- <%-include("../../views/partials/user/header")%> 
-  
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Landing Page</title>
 
-<main>
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/header.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 3D Model Viewer -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+</head>
+
+<body>
+
+    <!-- 🔹 Normal Header (not partial) -->
+    <header>
+        <div class="mainhead">
+            <img src="/images/theend.png" class="imageLogo" alt="Logo">
+            <div class="buttons">
+                <input type="text" class="searchBar" placeholder="Search product...">
+                <i class="fas fa-user" id="profileIcon"></i>
+                <form action="/logout" method="GET" style="display:inline;">
+                    <button type="submit">Logout</button>
+                </form>
+                <% if (user) { %>
+                    <p>Welcome, <%= user.fullName %>!</p>
+                    <% } else { %>
+                        <p>Welcome, Guest!</p>
+                        <% } %>
+            </div>
+        </div>
+        <div id="profileViewModal" class="modal1">
+            <div class="modal-content" onmouseleave="closeViewModal()">
+
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/productListing">Shop</a></li>
+                    <li><a href="/customListing">Custom</a></li>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+         <div class="subhead">
+            <nav>
+                <ul>
+                    <li>Home</li>
+                    <a href="/productListing">
+                        <li>Shop</li>
+                    </a>
+                    <a href="/customListing">
+                        <li>Custom</li>
+                    </a>
+                    <a href="/about">
+                        <li>About</li>
+                    </a>
+                    <a href="/contact">
+                        <li>Contact</li>
+                    </a>
+                </ul>
+            </nav>
+        </div>
+
+    </header>
+
+    <!-- 🔹 Main Content -->
+    <main>
         <div id="banner">
             <div id="banner1">
                 <p>"Unleash your creativity—turn your unique designs into amazing products!"</p>
@@ -10,7 +80,7 @@
             </div>
             <div id="banner2">
                 <img src="/images/theend.png" alt="gbt" id="imgLogo">
-                <p>"Your Offer, Your Time!” ?Lock exclusive deals and claim them even after they're gone!<br>
+                <p>"Your Offer, Your Time!” Lock exclusive deals and claim them even after they're gone!<br>
                     - Coming Soon... !
                 </p>
             </div>
@@ -29,15 +99,17 @@
                 <ul>
                     <li><img src="/images/banner2.png" alt="">UNISEX</li>
                     <li><img src="/images/banner3.png" alt="">WOMEN'S</li>
-                    <li><img src="/images/banner4.png" alt="">MEN"S</li>
+                    <li><img src="/images/banner4.png" alt="">MEN'S</li>
                     <li><img src="/images/banner5.png" alt="">FORMAL'S</li>
                     <li><img src="/images/banner6.png" alt="">CASUAL'S</li>
                 </ul>
             </div>
+
             <div class="trendingText">
                 <div class="point"></div>
                 <p>TRENDING</p>
             </div>
+
             <div id="shopProductSection">
                 <!-- Product 1 -->
                 <div class="product">
@@ -97,15 +169,16 @@
             </div>
 
             <div class="shopButton">
-                <a href="/login" style="text-decoration: none;"><button type="submit">Explore Fashion
-                        ></button></a>
+                <a href="/productListing" style="text-decoration: none;">
+                    <button type="submit">Explore Fashion ></button>
+                </a>
             </div>
         </div>
 
         <div id="custom">
             <div id="shopText">
                 <div class="textline"></div>
-                <p>Your Way, Your Style .<br>
+                <p>Your Way, Your Style.<br>
                     Upload your image and customize the product effortlessly. Personalization made simple, right on your
                     website - U-Craft.
                 </p>
@@ -153,7 +226,6 @@
                     </div>
                 </div>
 
-
                 <!-- Product 3 -->
                 <div class="customProduct">
                     <div class="pointText">
@@ -164,21 +236,60 @@
                         <img src="/images/banner8.png" alt="Custom Sleeveless">
                     </div>
                     <div class="product-details">
-                        <img src="//images/banner9.png" alt="">
                         <p class="price">
-
                             <span class="original-price">Rs. 1,599.00</span>
                             <span class="discount-price">Rs. 1,199.00</span>
                         </p>
                     </div>
                 </div>
             </div>
+
             <div class="customShopButton">
                 <button type="submit">Get Into Custom World ></button>
             </div>
         </div>
-
-
-
     </main>
-    <%-include("../../views/partials/user/footer")%>
+
+    <!-- 🔹 Normal Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>&copy; <%= new Date().getFullYear() %> U-Craft. All rights reserved.</p>
+            <ul class="footer-links">
+                <li><a href="/privacy">Privacy Policy</a></li>
+                <li><a href="/terms">Terms of Service</a></li>
+                <li><a href="/contact">Contact</a></li>
+            </ul>
+        </div>
+    </footer>
+
+</body>
+
+</html>
+<script>
+    const profileIcon = document.getElementById("profileIcon");
+    const modal = document.getElementById("profileViewModal");
+
+    // Show modal when mouse enters icon
+    profileIcon.addEventListener("mouseenter", () => {
+        modal.style.display = "block";
+    });
+
+    // Keep it open while mouse is inside modal
+    modal.addEventListener("mouseenter", () => {
+        modal.style.display = "block";
+    });
+
+    // Hide when leaving icon or modal
+    profileIcon.addEventListener("mouseleave", () => {
+        setTimeout(() => {
+            if (!modal.matches(":hover")) {
+                modal.style.display = "none";
+            }
+        }, 200);
+    });
+
+    modal.addEventListener("mouseleave", () => {
+        modal.style.display = "none";
+    });
+
+</script>

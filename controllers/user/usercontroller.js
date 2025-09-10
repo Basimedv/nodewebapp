@@ -14,15 +14,41 @@ const pageNotFound = async (req, res) => {
 
 
 const loadHomepage = async (req, res) => {
-
+  try {
+    res.render('home')
+  } catch (error) {
+    console.log('homepage error',error)
+    res.status(500).send('Server error')
+  }
+   
+};
+const loadLandingPage = async (req, res) => {
     try {
-        return res.render('home')
-    } catch (error) {
-        console.log('page not found', error)
-        res.status(500).send('server error')
-       
+    // console.log("Session user:", req.session.user); // debug log
+
+    let userData = null;
+
+    // If session has _id → query by id
+    if (req.session.user && req.session.user._id) {
+      console.log("Looking up user by ID:", req.session.user._id);
+      userData = await User.findById(req.session.user._id).lean();
     }
-}
+    // Else if session has email → query by email
+    else if (req.session.user && req.session.user.email) {
+      console.log("Looking up user by email:", req.session.user.email);
+      userData = await User.findOne({ email: req.session.user.email }).lean();
+    }
+
+    // ✅ Always render with user (null if not found)
+    return res.render("landingpage", { user: userData });
+  } catch (err) {
+    console.error("❌ Homepage error:", err);
+    return res.status(500).send("Server error");
+  }
+};
+
+
+
 const loadSignup = async (req, res) => {
     try {
         return res.render('signup', {
@@ -49,34 +75,8 @@ const loadShopping = async (req, res) => {
 
 
 
-// const signup = async (req, res) => {
-//     const { fullName, password, phone, email, confirmPassword } = req.body;
-//     try {
-//         const existing = await User.findOne({ email })
-//         if (existing) {
-//             return res.redirect('/signup?msg=User already exists&type=error');
-//         } else {
-//             const newuser = new User({
-//                 fullName, email, phone, password, confirmPassword
-//             })
 
 
-//             console.log(newuser)
-//             await newuser.save()
-
-//         }
-
-
-//         if (password !== confirmPassword) {
-//             return res.redirect('/signup?msg=Password not match&type=error');
-//         }
-
-//         return res.redirect('/signup?msg=User created successfully&type=success');
-
-//     } catch (error) {
-//         return res.status(500).send(`server error${error}`)
-//     }
-// }
 
 
 // Generate 6-digit OTP
@@ -242,9 +242,16 @@ const verifyOtp = async (req, res) => {
     });
 
     await saveUserData.save();
-    req.session.user = saveUserData._id;
+   await saveUserData.save();
 
-    return res.json({ success: true, redirectUrl: "/" });
+req.session.user = {
+  _id: saveUserData._id,
+  fullName: saveUserData.fullName,
+  email: saveUserData.email
+};
+
+
+    return res.json({ success: true, redirectUrl: "/landingPage" });
 
   } catch (error) {
     console.error("Error verifying OTP:", error);
@@ -282,7 +289,7 @@ const loadLogin = async (req, res) => {
      return res.render("login", { message: null });
 
     } else {
-      res.redirect("/"); // home page
+      res.redirect("/landingPage"); // home page
     }
   } catch (error) {
     res.redirect("/pageNotFound");
@@ -309,14 +316,32 @@ const login = async (req, res) => {
     }
 
     // ✅ Save user in session
-    req.session.user = findUser._id;
+     req.session.user = {
+      _id: findUser._id,
+      email: findUser.email,
+      name: findUser.fullName,
+    };
 
-    res.redirect("/"); // redirect to home
+    res.redirect("/landingPage"); // redirect to home
   } catch (error) {
     console.error("login error", error);
     res.render("login", { message: "Login failed, please try again later" });
   }
 };
+const logout=async (req,res)=>{
+  try {
+    req.session.destroy((err)=>{
+      if(err){
+        console.log('session destruction error',err.message);
+        return res.redirect('/pageNotFound')
+      }
+      return res.redirect('/login')
+    })
+  } catch (error) {
+    console.log('Logout error',error)
+    return res.redirect('/pageNotFound')
+  }
+}
 
 
 const showPro = (req, res) => {
@@ -333,5 +358,7 @@ module.exports = {
     resendOtp,
     loadLogin,
     login,
+    loadLandingPage,
+    logout,
     
 }

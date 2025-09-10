@@ -48,31 +48,31 @@
                         <button type="submit">Login</button>
                     </form>
 
-<div>
-<% if (message) { %>
-                        <p class="error-message" id="error message">
-                            <%= message %>
-                        </p>
-                        <% } %>
-</div>
-                    
+                    <div>
+                        <% if (message) { %>
+                            <p class="error-message" id="error message">
+                                <%= message %>
+                            </p>
+                            <% } %>
+                    </div>
 
 
-                            <!-- Google button -->
-                            <div class="or">
 
-                                <span>--------------- OR ---------------</span>
-                            </div>
+                    <!-- Google button -->
+                    <div class="or">
 
-                            <div class="googleLoginButton">
+                        <span>--------------- OR ---------------</span>
+                    </div>
 
-                                <a href="/auth/google">
-                                    <button type="button">
-                                        <img src="/images/google.png" alt="Google Icon">
-                                        Continue with Google
-                                    </button>
-                                </a>
-                            </div>
+                    <div class="googleLoginButton">
+
+                        <a href="/auth/google">
+                            <button type="button">
+                                <img src="/images/google.png" alt="Google Icon">
+                                Continue with Google
+                            </button>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -81,10 +81,10 @@
 
 </html>
 <script>
-   const removemessage= document.getElementById('error message')
-   if(removemessage){
-   setTimeout(() => {
-     removemessage.style.display='none'
-   }, 3000);
-   }
+    const removemessage = document.getElementById('error message')
+    if (removemessage) {
+        setTimeout(() => {
+            removemessage.style.display = 'none'
+        }, 3000);
+    }
 </script>
