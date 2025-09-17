@@ -15,7 +15,7 @@ const pageNotFound = async (req, res) => {
 
 const loadHomepage = async (req, res) => {
   try {
-    res.render('home')
+    res.render('user/home')
   } catch (error) {
     console.log('homepage error',error)
     res.status(500).send('Server error')
@@ -40,7 +40,7 @@ const loadLandingPage = async (req, res) => {
     }
 
     // ✅ Always render with user (null if not found)
-    return res.render("landingpage", { user: userData });
+    return res.render("user/landingpage", { user: userData });
   } catch (err) {
     console.error("❌ Homepage error:", err);
     return res.status(500).send("Server error");
@@ -51,7 +51,7 @@ const loadLandingPage = async (req, res) => {
 
 const loadSignup = async (req, res) => {
     try {
-        return res.render('signup', {
+        return res.render('user/signup', {
             msg: req.query.msg,
             type: req.query.type
         });
@@ -63,7 +63,7 @@ const loadSignup = async (req, res) => {
 
 const loadShopping = async (req, res) => {
     try {
-        return res.render('productListing')
+        return res.render('user/productListing')
     } catch (error) {
         console.log('shopping page not loading', error)
         res.status(500).send('Server Error')
@@ -178,7 +178,7 @@ const signup = async (req, res) => {
     req.session.userData = { fullName, phone, email, password };
 
     // Show OTP verify page
-    res.render('verifyOTP', { email: email });
+    res.render('user/verifyOTP', { email: email });
 
     console.log('OTP sent:', otp);
 
@@ -286,15 +286,16 @@ const resendOtp = async (req, res) => {
 const loadLogin = async (req, res) => {
   try {
     if (!req.session.user) {
-     return res.render("login", { message: null });
-
+      return res.render("user/login", { message: null });
     } else {
-      res.redirect("/landingPage"); // home page
+      return res.redirect("landingPage"); // user home page
     }
   } catch (error) {
-    res.redirect("/pageNotFound");
+    console.error("Error loading user login:", error);
+    res.redirect("user/pageNotFound");
   }
 };
+
 
 const login = async (req, res) => {
   try {
@@ -303,16 +304,16 @@ const login = async (req, res) => {
     const findUser = await User.findOne({ isAdmin: 0, email: email });
 
     if (!findUser) {
-      return res.render("login", { message: "User not found" });
+      return res.render("user/login", { message: "User not found" });
     }
 
     if (findUser.isBlocked) {
-      return res.render("login", { message: "User is blocked by admin" });
+      return res.render("user/login", { message: "User is blocked by admin" });
     }
 
     const passwordMatch = await bcrypt.compare(password, findUser.password);
     if (!passwordMatch) {
-      return res.render("login", { message: "Incorrect Password" });
+      return res.render("user/login", { message: "Incorrect Password" });
     }
 
     // ✅ Save user in session
@@ -322,10 +323,10 @@ const login = async (req, res) => {
       name: findUser.fullName,
     };
 
-    res.redirect("/landingPage"); // redirect to home
+    res.redirect("landingPage"); // redirect to home
   } catch (error) {
     console.error("login error", error);
-    res.render("login", { message: "Login failed, please try again later" });
+    res.render("user/login", { message: "Login failed, please try again later" });
   }
 };
 const logout=async (req,res)=>{
@@ -333,13 +334,13 @@ const logout=async (req,res)=>{
     req.session.destroy((err)=>{
       if(err){
         console.log('session destruction error',err.message);
-        return res.redirect('/pageNotFound')
+        return res.redirect('user/pageNotFound')
       }
-      return res.redirect('/login')
+      return res.redirect('login')
     })
   } catch (error) {
     console.log('Logout error',error)
-    return res.redirect('/pageNotFound')
+    return res.redirect('user/pageNotFound')
   }
 }
 

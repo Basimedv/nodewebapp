@@ -7,6 +7,7 @@ dotenv.config();
 const db = require('./config/db');
 const mongoose = require('mongoose');
 const userRouter = require('./routes/userRouter');
+const adminRouter=require('./routes/adminRouter')
 db()
 
 
@@ -31,10 +32,12 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
-app.set("view engine", "ejs")
-app.set('views', [path.join(__dirname, 'views/user'), path.join(__dirname, 'views/admin')]);
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+// app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', userRouter)
+app.use('/admin',adminRouter);
 
 
 
