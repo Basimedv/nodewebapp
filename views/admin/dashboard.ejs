@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroMania Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bellefair&family=Outfit:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/admindashboard.css">
+
+
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="d-flex align-items-center">
+            <button class="btn btn-link d-lg-none sidebar-toggle" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+                <i class="bi bi-list"></i>
+            </button>
+            <a href="/admin/dashboard" class="brand-name">THE-END</a>
+        </div>
+        <div class="nav-right">
+            <select class="filter-select" id="periodFilter" onchange="updateDashboard()">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly" selected>Monthly</option>
+                <option value="yearly">Yearly</option>
+            </select>
+            <button class="export-btn" onclick="exportData()">Export</button>
+            <a href="/admin/logout" id="logoutBtn" class="btn">Logout</a>
+
+        </div>
+    </nav>
+
+    <!-- Update the sidebar to be offcanvas on mobile -->
+    <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="sidebarOffcanvas"
+        aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="sidebar">
+                <a href="/admin/dashboard"><i class="bi bi-grid"></i> Dashboard</a>
+                <a href="/admin/categories" class="active"><i class="bi bi-tag"></i> Categories</a>
+                <a href="/admin/offers"><i class="bi bi-gift"></i> Offers</a>
+                <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
+                <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
+                <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
+                <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
+                <a href="/admin/sales-report"><i class="bi bi-bar-chart"></i> Sales Report</a>
+                <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i>Wallet</a>
+                <a href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keep the original sidebar for desktop -->
+    <div class="sidebar d-none d-lg-block">
+        <a href="/admin/dashboard" class="active"><i class="bi bi-grid"></i> Dashboard</a>
+        <a href="/admin/categories"><i class="bi bi-tag"></i> Categories</a>
+        <a href="/admin/offers"><i class="bi bi-gift"></i> Offers</a>
+        <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
+        <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
+        <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
+        <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
+        <a href="/admin/sales-report"><i class="bi bi-bar-chart"></i> Sales Report</a>
+        <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i> Wallet</a>
+        <a href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <h2 class="dashboard-title">Dashboard Overview</h2>
+
+        <!-- Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-xl-3">
+                <div class="dashboard-card">
+                    <div class="icon-container bg-danger text-white"><i class="bi bi-people"></i></div>
+                    <p class="text-muted mb-1">Total Customers</p>
+                    <h5 id="totalCustomers">Loading...</h5>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3">
+                <div class="dashboard-card">
+                    <div class="icon-container bg-primary text-white"><i class="bi bi-wallet"></i></div>
+                    <p class="text-muted mb-1">Total Sales</p>
+                    <h5 id="totalSales">Loading...</h5>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3">
+                <div class="dashboard-card">
+                    <div class="icon-container bg-warning text-white"><i class="bi bi-cart"></i></div>
+                    <p class="text-muted mb-1">Total Orders</p>
+                    <h5 id="totalOrders">Loading...</h5>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3">
+                <div class="dashboard-card">
+                    <div class="icon-container bg-success text-white"><i class="bi bi-pie-chart"></i></div>
+                    <p class="text-muted mb-1">Products Sold</p>
+                    <h5 id="productsSold">Loading...</h5>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5>Sales Overview</h5>
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5>Orders Overview</h5>
+                    <canvas id="ordersChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Best Selling Products -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="chart-container">
+                    <h5>Top 10 Best Selling Products</h5>
+                    <canvas id="productsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="chart-container">
+                    <h5>Top 10 Best Selling Categories</h5>
+                    <canvas id="categoriesChart"></canvas>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="chart-container">
+                    <h5>Top 10 Best Selling Brands</h5>
+                    <canvas id="brandsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+    <script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // Global variables for charts
+        let salesChart, ordersChart, productsChart, categoriesChart, brandsChart;
+        let currentPeriod = 'monthly';
+
+        // Store initial server data
+        const initialData = {
+            users: " <%= typeof users !== 'undefined' ? users : 0 %>",
+            totalSales: "<%= typeof totalSales !== 'undefined' ? totalSales : 0 %>",
+            totalOrders: "<%= typeof totalOrders !== 'undefined' ? totalOrders : 0 %>",
+            totalProducts: "<%= typeof totalProducts !== 'undefined' ? totalProducts : 0 %>"
+        };
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function () {
+            // Set initial data
+            setInitialData();
+            // Initialize charts
+            initializeCharts();
+            // Load dynamic data
+            loadDashboardData();
+            loadBestSellingData();
+        });
+
+        // Set initial server data
+        function setInitialData() {
+            document.getElementById('totalCustomers').textContent = initialData.users.toLocaleString();
+            document.getElementById('totalSales').textContent = '₹' + initialData.totalSales.toLocaleString();
+            document.getElementById('totalOrders').textContent = initialData.totalOrders.toLocaleString();
+            document.getElementById('productsSold').textContent = initialData.totalProducts.toLocaleString();
+        }
+
+        // Initialize empty charts
+        function initializeCharts() {
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            const ordersCtx = document.getElementById('ordersChart').getContext('2d');
+            const productsCtx = document.getElementById('productsChart').getContext('2d');
+            const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
+            const brandsCtx = document.getElementById('brandsChart').getContext('2d');
+
+            salesChart = new Chart(salesCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Sales (₹)',
+                        data: [],
+                        borderColor: '#3b6da1',
+                        backgroundColor: 'rgba(59, 109, 161, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return '₹' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            ordersChart = new Chart(ordersCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Orders',
+                        data: [],
+                        backgroundColor: '#28a745',
+                        borderColor: '#1e7e34',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Products Chart
+            productsChart = new Chart(productsCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Units Sold',
+                        data: [],
+                        backgroundColor: '#3b6da1',
+                        borderColor: '#28517D',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Categories Chart
+            categoriesChart = new Chart(categoriesCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Units Sold',
+                        data: [],
+                        backgroundColor: '#ffc107',
+                        borderColor: '#d39e00',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Brands Chart
+            brandsChart = new Chart(brandsCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Units Sold',
+                        data: [],
+                        backgroundColor: '#17a2b8',
+                        borderColor: '#138496',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load dashboard statistics
+        async function loadDashboardData() {
+            try {
+                // Load chart data
+                const chartResponse = await fetch(`/admin/dashboard/data?type=chart&period=${currentPeriod}`);
+
+                if (!chartResponse.ok) {
+                    throw new Error(`HTTP error! status: ${chartResponse.status}`);
+                }
+
+                const chartResult = await chartResponse.json();
+
+                if (chartResult.success) {
+                    updateCharts(chartResult.data);
+                } else {
+                    console.error('Chart data error:', chartResult.error);
+                    // Set empty data if API fails
+                    updateCharts({ labels: [], sales: [], orders: [] });
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                // Set empty data if fetch fails
+                updateCharts({ labels: [], sales: [], orders: [] });
+            }
+        }
+
+        // Update charts with new data
+        function updateCharts(data) {
+            if (!data) {
+                console.error('No chart data provided');
+                return;
+            }
+
+            // Update sales chart
+            if (salesChart && data.labels && data.sales) {
+                salesChart.data.labels = data.labels;
+                salesChart.data.datasets[0].data = data.sales;
+                salesChart.update();
+            }
+
+            // Update orders chart
+            if (ordersChart && data.labels && data.orders) {
+                ordersChart.data.labels = data.labels;
+                ordersChart.data.datasets[0].data = data.orders;
+                ordersChart.update();
+            }
+        }
+
+        // Load best selling data
+        async function loadBestSellingData() {
+            try {
+                // Load best selling products
+                const productsResponse = await fetch('/admin/dashboard/data?type=products');
+                if (productsResponse.ok) {
+                    const productsResult = await productsResponse.json();
+                    if (productsResult.success) {
+                        updateProductsChart(productsResult.data);
+                    }
+                }
+
+                // Load best selling categories
+                const categoriesResponse = await fetch('/admin/dashboard/data?type=categories');
+                if (categoriesResponse.ok) {
+                    const categoriesResult = await categoriesResponse.json();
+                    if (categoriesResult.success) {
+                        updateCategoriesChart(categoriesResult.data);
+                    }
+                }
+
+                // Load best selling brands
+                const brandsResponse = await fetch('/admin/dashboard/data?type=brands');
+                if (brandsResponse.ok) {
+                    const brandsResult = await brandsResponse.json();
+                    if (brandsResult.success) {
+                        updateBrandsChart(brandsResult.data);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading best selling data:', error);
+            }
+        }
+
+        // Update products chart
+        function updateProductsChart(products) {
+            if (!products || products.length === 0) return;
+
+            const labels = products.map(product => product.name ? product.name.substring(0, 20) + '...' : 'Unknown');
+            const data = products.map(product => product.totalQuantity || 0);
+
+            productsChart.data.labels = labels;
+            productsChart.data.datasets[0].data = data;
+            productsChart.update();
+        }
+
+        // Update categories chart
+        function updateCategoriesChart(categories) {
+            if (!categories || categories.length === 0) return;
+
+            const labels = categories.map(category => category.name || 'Unknown');
+            const data = categories.map(category => category.totalQuantity || 0);
+
+            categoriesChart.data.labels = labels;
+            categoriesChart.data.datasets[0].data = data;
+            categoriesChart.update();
+        }
+
+        // Update brands chart
+        function updateBrandsChart(brands) {
+            if (!brands || brands.length === 0) return;
+
+            const labels = brands.map(brand => brand.name || 'Unknown');
+            const data = brands.map(brand => brand.totalQuantity || 0);
+
+            brandsChart.data.labels = labels;
+            brandsChart.data.datasets[0].data = data;
+            brandsChart.update();
+        }
+
+        // Update dashboard when period changes
+        async function updateDashboard() {
+            const periodSelect = document.getElementById('periodFilter');
+            currentPeriod = periodSelect.value;
+
+            // Show loading state for stats
+            document.getElementById('totalCustomers').textContent = 'Loading...';
+            document.getElementById('totalSales').textContent = 'Loading...';
+            document.getElementById('totalOrders').textContent = 'Loading...';
+            document.getElementById('productsSold').textContent = 'Loading...';
+
+            try {
+                // Load updated stats for the selected period
+                const statsResponse = await fetch(`/admin/dashboard/data?type=stats&period=${currentPeriod}`);
+                if (statsResponse.ok) {
+                    const statsResult = await statsResponse.json();
+                    if (statsResult.success) {
+                        const data = statsResult.data;
+                        document.getElementById('totalCustomers').textContent = data.totalCustomers.toLocaleString();
+                        document.getElementById('totalSales').textContent = '₹' + data.totalSales.toLocaleString();
+                        document.getElementById('totalOrders').textContent = data.totalOrders.toLocaleString();
+                        document.getElementById('productsSold').textContent = data.productsSold.toLocaleString();
+                    }
+                } else {
+                    // Fallback to initial data if stats API fails
+                    setInitialData();
+                }
+
+                // Reload chart data
+                await loadDashboardData();
+            } catch (error) {
+                console.error('Error updating dashboard:', error);
+                // Fallback to initial data
+                setInitialData();
+            }
+        }
+
+        // Export data function
+        function exportData() {
+            const data = {
+                period: currentPeriod,
+                stats: {
+                    totalCustomers: document.getElementById('totalCustomers').textContent,
+                    totalSales: document.getElementById('totalSales').textContent,
+                    totalOrders: document.getElementById('totalOrders').textContent,
+                    productsSold: document.getElementById('productsSold').textContent
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dashboard-export-${currentPeriod}-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('Dashboard data exported successfully!');
+        }
+    </script>
+</body>
+
+</html>

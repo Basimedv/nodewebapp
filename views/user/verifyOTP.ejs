@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/otp.css">
+
+</head>
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+<body>
+    <header>
+        <img src="/images/theend.png" class="imageLogo" alt="Logo">
+
+        <div class="buttons">
+            <form action="/login" method="GET" style="display:inline;">
+                <button type="submit">Login</button>
+            </form>
+            <form action="/signup" method="GET" style="display:inline;">
+                <button type="submit">Signup</button>
+            </form>
+        </div>
+    </header>
+
+    <main>
+        <div id="loginContainer">
+            <div id="loginLeft">
+                <img id="loginImage" src="/images/linevector.png" alt="Login Image">
+            </div>
+            <div id="loginRight">
+                <div id="rightHeader">
+                    <img src="/images/theend.png" alt="Logo" id="loginHeadLogo">
+
+                    <h2>Enter the OTP</h2>
+                    <p>The OTP has been sent to your registered email</p>
+
+                </div>
+                <div id="rightBody">
+                    <form id="otpForm">
+                        <input type="hidden" id="email" name="email" value="<%= email %>" />
+
+                        <div class="input-group">
+                            <input type="text" id="otp" name="otp" placeholder="Enter the OTP" required>
+                           <button type="button" id="resend-otp" onclick="resendOTP()">Resend OTP</button>
+
+                            <span id="timerValue"></span>
+                        </div>
+                        <!-- 🔑 Make verify button type="button" so it won’t auto-submit -->
+                        <button id="verify-button" type="button" onclick="ValidateOTPForm()">Verify</button>
+                    </form>
+
+                    <div id="loginButton">
+                        <a href="/login"><button type="submit">Login</button></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  // ---- ELEMENTS ----
+  const resendButton = document.getElementById("resend-otp");
+  const timerValue = document.getElementById("timerValue");
+  const verifyButton = document.getElementById("verify-button");
+  let timerInterval; // make timer global
+
+  // ---- TIMER FUNCTION ----
+  function startTimer(duration = 60) {
+    let timeLeft = duration;
+
+    clearInterval(timerInterval); // stop old timer
+    resendButton.disabled = true;
+    timerValue.classList.remove("expired");
+
+    timerInterval = setInterval(() => {
+      timerValue.textContent = `(${timeLeft}s)`;
+      timeLeft--;
+
+      if (timeLeft < 0) {
+        clearInterval(timerInterval);
+        resendButton.disabled = false;
+        timerValue.textContent = "Expired";
+        timerValue.classList.add("expired");
+      }
+    }, 1000);
+  }
+
+  // ---- START TIMER ON PAGE LOAD ----
+  window.addEventListener("DOMContentLoaded", () => {
+    startTimer(60);
+  });
+
+  // ---- IMAGE ROTATE EFFECT ----
+  verifyButton.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    const img = document.getElementById("loginImage");
+    img.classList.add("rotate");
+
+    setTimeout(() => {
+      img.classList.remove("rotate");
+    }, 2000);
+
+    ValidateOTPForm(); // ✅ trigger OTP validation
+  });
+
+  // ---- VERIFY OTP ----
+  async function ValidateOTPForm() {
+    const otpInput = document.getElementById("otp").value;
+
+    try {
+      const response = await fetch("/verifyOtp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp: otpInput })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        Swal.fire({
+          icon: "success",
+          title: "OTP Verified Successfully",
+          showConfirmButton: false,
+          timer: 1500
+        }).then(() => {
+          window.location.href = data.redirectUrl;
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Invalid OTP",
+          text: data.message || "Please try again"
+        });
+      }
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: "Something went wrong, please try again later."
+      });
+    }
+  }
+
+  // ---- RESEND OTP ----
+  async function resendOTP() {
+    const email = document.getElementById("email").value;
+
+    try {
+      const response = await fetch("/resendOtp", { // ✅ match backend route
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        Swal.fire({
+          icon: "success",
+          title: "OTP Sent!",
+          text: "A new OTP has been sent to your email.",
+          timer: 2000,
+          showConfirmButton: false
+        });
+        startTimer(60); // ✅ restart timer after success
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to Resend OTP",
+          text: data.message || "Please try again later."
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: "Something went wrong, please try again later."
+      });
+    }
+  }
+</script>
+
+
+
+
+
+</body>
+
+</html>

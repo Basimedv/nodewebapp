@@ -1,0 +1,278 @@
+body {
+    background-image: url("/images/loginbackground.jpeg");
+    background-repeat: no-repeat;
+    /* prevent tiling */
+    background-position: center;
+    /* keep centered */
+    background-size: 110%;
+    /* reduce image to 50% of screen */
+
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.error-message {
+  color: rgb(222, 12, 12);
+
+  font-size: 15px;
+    text-align: left;   /* align text to the left */
+  margin-top: -340px;   /* reduce top margin to move it up */
+  font-weight: bold;
+   margin-left: -300px; 
+}
+
+
+
+
+
+.wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 60px;
+}
+
+.input {
+    width: 300px;
+    /* increase width */
+    height: 15px;
+    /* increase height */
+    font-size: 16px;
+    /* make text inside bigger */
+    padding: 10px;
+    /* add spacing inside */
+    border-radius: 8px;
+    /* optional: rounded corners */
+}
+
+
+.loginContainer {
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 40px;
+    border-radius: 12px;
+    height: 650px;
+    max-width: 600px;
+    /* keeps the box compact */
+    margin: auto;
+    /* centers the whole box */
+}
+
+.loginLeft {
+    display: none;
+    /* hides the left image */
+}
+
+
+
+.loginLeft,
+.loginRight {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#loginImage {
+    width: 250px;
+    /* smaller image */
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.loginHeadLogo {
+    width: 120px;
+    height: auto;
+    display: block;
+    margin-left: 100px;
+    /* moves logo to the right */
+    margin-top: -350px;
+    /* moves logo upward (optional) */
+}
+
+.p1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin-top: 10px;
+    color: white;
+    margin-left: 50px;
+    /* smaller value = more left */
+}
+
+.rightBody {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* center horizontally */
+    justify-content: center;
+    /* center vertically */
+    width: 100%;
+    /* take full right column */
+    gap: 15px;
+    /* space between elements */
+}
+
+
+.form-body {
+    width: 100%;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: flex-start;
+    font-size: 12px;
+    /* ⬅️ pushes inputs & labels to the left */
+
+    margin-left: -500px;
+    /* ⬅️ removes any centering */
+    margin-top: 150px;
+    /* ⬅️ pushes form downward */
+}
+
+.or {
+    width: 100%;
+    /* take full width of login box */
+    text-align: left;
+    /* push text to the left */
+    margin: 0;
+    /* reset default margins */
+    padding-left: 10px;
+    margin-left: -500px;
+    /* optional small spacing */
+}
+
+span {
+    white-space: nowrap;
+    /* keep all text on one line */
+}
+
+
+.rightHeader p {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin-top: 10px;
+    text-align: center;
+    color: white;
+}
+
+.rightBody {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
+.rightBody label {
+    font-size: 14px;
+    color: white;
+    margin-bottom: 5px;
+}
+
+.rightBody input {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.rightBody button {
+    width: 300px;
+    padding: 10px;
+    border-radius: 50px;
+    background-color: #992828;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+.rightBody button:hover {
+    background-color: #751f1f;
+}
+
+.forgotLink {
+    display: inline-block;
+    color: #992828;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.signupLink {
+    display: inline-block;
+    color: #992828;
+    text-decoration: none;
+    font-size: 14px;
+    position: relative;
+    left: 100%;
+    /* push them to right */
+    transform: translateX(-100%);
+    /* keep them inside container */
+}
+
+
+.forgotLink:hover,
+.signupLink:hover {
+    text-decoration: underline;
+}
+
+.rightBody>p {
+    width: 90%;
+    text-align: center;
+    color: rgb(228, 9, 9);
+    margin: 15px 0;
+    font-size: 14px;
+}
+
+.googleLoginButton {
+    width: 90%;
+    margin: 0 auto;
+}
+
+
+.googleLoginButton button {
+    width: 300px;
+    height: 45px;
+    border-radius: 50px;
+    background-color: transparent;
+    border: 2px solid rgba(247, 245, 245, 0.957);
+    color: white;
+    font-size: large;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-left: -250px;
+    margin-top: 30px;
+}
+
+a {
+    text-decoration: none;
+    /* removes underline */
+}
+
+
+
+.googleLoginButton button:hover {
+    background-color: rgba(128, 128, 128, 0.1);
+}
+
+.googleLoginButton img {
+    height: 24px;
+    width: 24px;
+}

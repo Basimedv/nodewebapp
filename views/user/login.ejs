@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE-END Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+
+<body>
+    <main>
+        <div class="loginContainer">
+            <!-- Left side image -->
+            <div class="loginLeft">
+                <img id="loginImage" src="/images/login.png" alt="Line Vector">
+            </div>
+
+            <!-- Right side form -->
+            <div class="loginRight">
+                <div class="rightHeader">
+                    <img src="/images/theend.png" alt="U-Craft Logo" class="loginHeadLogo">
+                    <p class="p1">Welcome to THE-END.</p>
+
+                </div>
+
+
+                <div class="rightBody">
+
+
+
+                    <!-- Login form -->
+                    <form action="/login" method="POST" class="form-body">
+                        <label for="email">Email</label>
+                        <input type="text" id="email" class="input" name="email" placeholder="Enter your Email">
+
+                        <label for="password">Password</label>
+                        <input type="password" id="password" class="input" name="password"
+                            placeholder="Enter your password">
+
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <a href="/forgotPassword" class="forgotLink">Forgot Password?</a>
+                            <a href="/signup" class="signupLink">Sign Up instead</a>
+                        </div>
+
+                        <button type="submit">Login</button>
+                    </form>
+
+                    <div>
+                        <% if (message) { %>
+                            <p class="error-message" id="error message">
+                                <%= message %>
+                            </p>
+                            <% } %>
+                    </div>
+
+
+
+                    <!-- Google button -->
+                    <div class="or">
+
+                        <span>--------------- OR ---------------</span>
+                    </div>
+
+                    <div class="googleLoginButton">
+
+                        <a href="/auth/google">
+                            <button type="button">
+                                <img src="/images/google.png" alt="Google Icon">
+                                Continue with Google
+                            </button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>
+<script>
+    const removemessage = document.getElementById('error message')
+    if (removemessage) {
+        setTimeout(() => {
+            removemessage.style.display = 'none'
+        }, 3000);
+    }
+</script>

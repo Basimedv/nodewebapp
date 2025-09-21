@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signup - U-Craft</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/css/auth.css" />
+
+</head>
+
+<body>
+
+    <div class="auth-container">
+        <div class="auth-form-container">
+            <div class="form-header">
+                <img src="/images/theend.png" class="logo-btn" alt="theend" />
+                <h2>Sign Up</h2>
+                <% if (msg) { %>
+  <% if (type === 'success') { %>
+    <p id="flash-message" style="color:green"><%= msg %></p>
+  <% } else { %>
+    <p id="flash-message" style="color:red"><%= msg %></p>
+  <% } %>
+<% } %>
+
+
+            </div>
+            <div class="form-body">
+                <form id="signform" method="POST" action="/signup">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" placeholder=" enter fullName" />
+                    <div id="error1" class="error-message"></div>
+                    <label for="phone">Phone</label>
+                    <input type="tel" id="phone" name="phone" placeholder=" enter phoneNumber" />
+                    <div id="error3" class="error-message"></div>
+                    <label for="email">Email</label>
+                    <input type="text" id="email" name="email" placeholder=" enter Email" />
+                    <div id="error2" class="error-message"></div>
+
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="enter password" />
+                    <div id="error4" class="error-message"></div>
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="confirmPassword" />
+                    <div id="error5" class="error-message"></div>
+                    <button type="submit" class="signup">Sign Up</button>
+                    <a href="/auth/google" class="google-btn">
+                        <img src="/images/google.png" alt="Google Icon">
+                        <span>Sign up with Google</span>
+                    </a>
+
+                </form>
+
+
+                <a href="/auth/google" class="google-btn">
+
+                    <bu>Already have an account</span>
+                </a>
+
+
+            </div>
+        </div>
+    </div>
+    <script>
+        const flashMessage=document.getElementById('flash-message')
+        if(flashMessage){
+            setTimeout(()=>{
+                flashMessage.style.display="none"
+            },3000);
+        }
+    </script>
+</body>
+
+</html>
+<script>
+    const nameid = document.getElementById('fullName')
+    const emailid = document.getElementById('email')
+    const phoneid = document.getElementById('phone')
+    const passwordid = document.getElementById('password')
+    const confirmpassid = document.getElementById('confirmPassword')
+    const error1 = document.getElementById('error1')
+    const error2 = document.getElementById('error2')
+    const error3 = document.getElementById('error3')
+    const error4 = document.getElementById('error4')
+    const error5 = document.getElementById('error5')
+    const signform = document.getElementById('signform')
+
+
+    function nameValidateChecking(e) {
+        const nameval = nameid.value;
+        const namepattern = /^[A-Za-z\s]+$/;
+        if (nameval.trim() === "") {
+            error1.style.display = 'block'
+            error1.innerHTML = "please enter a valid name"
+        } else if (!namepattern.test(nameval)) {
+            error1.style.display = "block"
+            error1.innerHTML = 'Name can only contain alphabets and spaces'
+
+        } else {
+            error1.style.display = "none"
+            error1.innerHTML = ""
+        }
+
+
+    }
+    function emailValidateChecking(e) {
+        const emailval = emailid.value;
+        const emailpattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+        if (!emailpattern.test(emailval)) {
+            error2.style.display = "block"
+            error2.innerHTML = "Invalid Format"
+        } else {
+            error2.style.display = 'none'
+            error2.innerHTML = ""
+        }
+
+    }
+    function phoneValidateChecking(e) {
+        const phoneval = phoneid.value;
+        const phonepattern = /^\d{10}$/
+        if (!phonepattern.test(phoneval)) {
+            error3.style.display = 'block'
+            error3.innerHTML = "Enter Valid phone number"
+        } else if (phoneval.length > 10 || phoneval.length < 10) {
+            error3.style.display = "block"
+            error3.innerHTML = "Enter 10 digit"
+        } else {
+            error3.style.display = "none"
+            error3.innerHTML = ""
+        }
+    }
+    function passValidateChecking(e) {
+        const passval = passwordid.value;
+        const cpassval = confirmpassid.value;
+        const alpha = /[a-zA-Z]/;
+        const digit = /\d/;
+        if (passval.length < 8) {
+            error4.style.display = "block"
+            error4.innerHTML = "should contain atleast 8 characters"
+        } else if (!alpha.test(passval) || !digit.test(passval)) {
+            error4.style.display = "block"
+            error4.innerHTML = "Should contain numbers and alphabets"
+        } else {
+            error4.style.display = "none"
+            error4.innerHTML = ""
+        }
+        if (passval !== cpassval) {
+            error5.style.display = "block"
+            error5.innerHTML = "passwords do not match"
+        } else {
+            error5.style.display = "none"
+            error5.innerHTML = ""
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        signform.addEventListener("submit", function (e) {
+            nameValidateChecking()
+            emailValidateChecking()
+            phoneValidateChecking()
+            passValidateChecking()
+
+            if (
+                !nameid ||
+                !phoneid ||
+                !emailid ||
+                !passwordid ||
+                !error1 ||
+                !error2 ||
+                !error3 ||
+                !error4 ||
+                !error5 ||
+                !signform
+            ) {
+                console.error('one or more elements not found')
+            }
+            if (
+                error1.innerHTML ||
+                error2.innerHTML ||
+                error3.innerHTML ||
+                error4.innerHTML ||
+                error5.innerHTML
+            ) {
+                e.preventDefault()
+            }
+
+        })
+
+    })
+
+
+
+</script>

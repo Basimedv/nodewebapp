@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> "Login" </title>
+  <link rel="stylesheet" href="/css/auth.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-form-container">
+      
+      <!-- Header -->
+      <div class="form-header">
+        <img src="/images/logo.png" alt="Logo">
+        <h2> heading || "Login" </h2>
+      </div>
+
+      <!-- Form -->
+      <div class="form-body">
+        <form action="/login" method="POST">
+          <label for="email">Email</label>
+          <input type="email" name="email" id="email" placeholder="Enter your email" required>
+
+          <label for="password">Password</label>
+          <input type="password" name="password" id="password" placeholder="Enter your password" required>
+
+          <button type="submit">Login</button>
+        </form>
+      </div>
+
+      <!-- Switch link -->
+      <div class="switch-link">
+        <p>Don’t have an account? <a href="/register">Register here</a></p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/header.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&display=swap"
+        rel="stylesheet">
+    <!-- <-- 3d model  -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+    <!-- Local version -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
+</head>
+
+<body>
+    <header>
+        <div class="mainhead">
+            <img src="/images/theend.png" class="imageLogo" alt="">
+            <div class="buttons">
+                <input type="text" class="searchBar" placeholder="Search product...">
+
+                <!-- <img src="/images/project_icons/profile.png" alt="profile" onmouseover="profileViewModal()"  class="profileImg"> -->
+                <i class="fas fa-user" id="profileIcon" onmouseover="profileViewModal()"></i>
+
+                <form action="/login" method="GET" style="display:inline;">
+                    <button type="submit">Login</button>
+                </form>
+                <form action="/signup" method="GET" style="display:inline;">
+                    <button type="submit">signup</button>
+                </form>
+            </div>
+            <div id="profileViewModal" class="modal">
+                <div class="modal-content" onmouseleave="closeViewModal()">
+                    
+
+                                <ul>
+                                    <a href="/profile">
+                                        <li>Profile</li>
+                                    </a>
+                                    <a href="/wishlist">
+                                        <li>Wish List</li>
+                                    </a>
+                                    <a href="/cart">
+                                        <li>Cart</li>
+                                    </a>
+                                    <a href="/wallet">
+                                        <li>Wallet</li>
+                                    </a>
+                                </ul>
+                </div>
+
+            </div>
+
+        </div>
+        <div class="subhead">
+            <nav>
+                <ul>
+                    <li>Home</li>
+                    <a href="/login">
+                        <li>Shop</li>
+                    </a>
+                    <a href="/customListing">
+                        <li>Custom</li>
+                    </a>
+                    <a href="/about">
+                        <li>About</li>
+                    </a>
+                    <a href="/contact">
+                        <li>Contact</li>
+                    </a>
+                </ul>
+            </nav>
+        </div>
+    </header>
