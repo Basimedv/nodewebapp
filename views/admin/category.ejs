@@ -250,8 +250,10 @@
 
         .category-table table {
             width: 100%;
-            border-collapse: collapse; /* ensure clean single separating lines */
-            table-layout: auto; /* allow our width hints to take effect */
+            border-collapse: collapse;
+            /* ensure clean single separating lines */
+            table-layout: auto;
+            /* allow our width hints to take effect */
         }
 
         .category-table th {
@@ -260,7 +262,8 @@
             padding: 12px;
             font-size: 14px;
             white-space: nowrap;
-            border-bottom: 0; /* remove default header border to avoid double line */
+            border-bottom: 0;
+            /* remove default header border to avoid double line */
         }
 
         .category-table td {
@@ -268,7 +271,8 @@
             font-size: 14px;
             color: #192430;
             vertical-align: middle;
-            border: 0; /* reset Bootstrap cell borders */
+            border: 0;
+            /* reset Bootstrap cell borders */
         }
 
         /* Draw a single subtle separator under each body row */
@@ -287,15 +291,21 @@
         /* Removed custom left padding on first column to align with Description column */
 
         .category-table .category-description {
-            max-width: 1024px; /* let description align with its header span */
+            max-width: 1024px;
+            /* let description align with its header span */
             overflow: hidden;
             display: -webkit-box;
-            -webkit-line-clamp: 2; /* show up to 2 lines */
+            -webkit-line-clamp: 2;
+            /* show up to 2 lines */
             -webkit-box-orient: vertical;
-            line-clamp: 2; /* standard property for linters/broader tooling */
-            white-space: normal; /* allow wrapping */
-            word-break: break-word; /* break long words */
-            overflow-wrap: anywhere; /* wrap anywhere to prevent overflow */
+            line-clamp: 2;
+            /* standard property for linters/broader tooling */
+            white-space: normal;
+            /* allow wrapping */
+            word-break: break-word;
+            /* break long words */
+            overflow-wrap: anywhere;
+            /* wrap anywhere to prevent overflow */
         }
 
         /* Column width and alignment helpers to ensure perfect header/body alignment */
@@ -341,7 +351,8 @@
 
         /* Give rows a consistent height so vertical centering is visually perfect */
         .category-table table tbody tr {
-            height: 56px; /* adjust if you prefer tighter/looser rows */
+            height: 56px;
+            /* adjust if you prefer tighter/looser rows */
         }
 
         /* Status Icon alignment */
@@ -349,7 +360,8 @@
             display: inline-block;
             width: 24px;
             height: 24px;
-            line-height: 24px; /* centers icon within the box */
+            line-height: 24px;
+            /* centers icon within the box */
             text-align: center;
             font-size: 18px;
             vertical-align: middle;
@@ -490,9 +502,17 @@
                 padding: 10px;
             }
 
-            .col-desc { width: 40%; }
-            .col-date { width: 150px; }
-            .col-actions { width: 100px; }
+            .col-desc {
+                width: 40%;
+            }
+
+            .col-date {
+                width: 150px;
+            }
+
+            .col-actions {
+                width: 100px;
+            }
         }
 
         @media (max-width: 768px) {
@@ -694,8 +714,13 @@
                 padding: 8px;
             }
 
-            .col-name { min-width: 150px; }
-            .col-date { width: 140px; }
+            .col-name {
+                min-width: 150px;
+            }
+
+            .col-date {
+                width: 140px;
+            }
         }
 
         @media (max-width: 575.98px) {
@@ -742,13 +767,14 @@
             </div>
         </div>
     </div>
+    
 
     <!-- Keep the original sidebar for desktop -->
     <div class="sidebar d-none d-lg-block">
         <a href="/admin/dashboard"><i class="bi bi-grid"></i> Dashboard</a>
         <a href="/admin/categories" class="active"><i class="bi bi-tag"></i> Categories</a>
         <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
-          <a href="/admin/offers"><i class="bi bi-gift"></i> Offers</a>
+        <a href="/admin/offers"><i class="bi bi-gift"></i> Offers</a>
         <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
         <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
         <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
@@ -766,19 +792,20 @@
             <div class="filter-select">
                 <select class="form-select" id="categoryFilter">
                     <option value="">All Categories</option>
-                    <option value="active" <%= filterValue === 'active' ? 'selected' : '' %>>Active</option>
-                    <option value="inactive" <%= filterValue === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                    <option value="active" <%=filterValue==='active' ? 'selected' : '' %>>Active</option>
+                    <option value="inactive" <%=filterValue==='inactive' ? 'selected' : '' %>>Inactive</option>
                 </select>
             </div>
             <div class="d-flex align-items-center gap-3">
                 <form id="searchForm" class="search-container">
-                    <input type="text" id="searchInput" placeholder="Search categories..." value="<%= searchQuery || '' %>">
+                    <input type="text" id="searchInput" placeholder="Search categories..."
+                        value="<%= searchQuery || '' %>">
                     <button type="submit"><i class="bi bi-search"></i></button>
                     <% if (searchQuery || filterValue) { %>
                         <button type="button" id="clearFilters" class="btn btn-outline-secondary btn-sm ms-2">
                             <i class="bi bi-x-circle"></i> Clear
                         </button>
-                    <% } %>
+                        <% } %>
                 </form>
                 <button class="new-btn-2" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                     <i class="bi bi-plus-lg"></i> Add Category
@@ -892,12 +919,14 @@
                             <td class="text-start col-name">
                                 <%= category.name %>
                             </td>
-                            <td class="category-description text-start col-desc" title="<%= category.description || '' %>">
+                            <td class="category-description text-start col-desc"
+                                title="<%= category.description || '' %>">
                                 <% if (category.description && category.description.length) { %>
-                                    <%= category.description.slice(0, 60) %><%= category.description.length > 60 ? '…' : '' %>
-                                <% } else { %>
-                                    —
-                                <% } %>
+                                    <%= category.description.slice(0, 60) %>
+                                        <%= category.description.length> 60 ? '…' : '' %>
+                                            <% } else { %>
+                                                —
+                                                <% } %>
                             </td>
                             <td class="col-count text-center">
                                 <%= category.itemsCount || 0 %>
@@ -907,7 +936,8 @@
                                     month: "short" , year: "numeric" , timeZone: "Asia/Kolkata" }) %>
                             </td>
                             <td class="status-cell col-status text-center align-middle">
-                                <i class="fa-solid <%= category.isListed ? 'fa-eye' : 'fa-eye-slash' %> status-icon <%= category.isListed ? 'status-active' : 'status-inactive' %>"></i>
+                                <i
+                                    class="fa-solid <%= category.isListed ? 'fa-eye' : 'fa-eye-slash' %> status-icon <%= category.isListed ? 'status-active' : 'status-inactive' %>"></i>
                             </td>
                             <td class="actions col-actions text-center">
                                 <button class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#editCategoryModal"
@@ -928,24 +958,23 @@
         <!-- Pagination -->
         <div class="pagination-custom">
             <div class="page-nav">
-                <% 
-                    let baseUrl = '/admin/categories?';
-                    let params = [];
-                    if (searchQuery) params.push(`search=${encodeURIComponent(searchQuery)}`);
-                    if (filterValue) params.push(`filter=${filterValue}`);
-                    let queryString = params.length > 0 ? params.join('&') + '&' : '';
-                %>
-                <% if (currentPage > 1) { %>
-                    <a href="<%= baseUrl + queryString %>page=<%= currentPage - 1 %>">«</a>
-                <% } %>
-                <% for(let i = 1; i <= totalPages; i++) { %>
-                    <a href="<%= baseUrl + queryString %>page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>">
-                        <%= i %>
-                    </a>
-                <% } %>
-                <% if (currentPage < totalPages) { %>
-                    <a href="<%= baseUrl + queryString %>page=<%= currentPage + 1 %>">»</a>
-                <% } %>
+                <% let baseUrl='/admin/categories?' ; let params=[]; if (searchQuery)
+                    params.push(`search=${encodeURIComponent(searchQuery)}`); if (filterValue)
+                    params.push(`filter=${filterValue}`); let queryString=params.length> 0 ? params.join('&') + '&' :
+                    '';
+                    %>
+                    <% if (currentPage> 1) { %>
+                        <a href="<%= baseUrl + queryString %>page=<%= currentPage - 1 %>">«</a>
+                        <% } %>
+                            <% for(let i=1; i <=totalPages; i++) { %>
+                                <a href="<%= baseUrl + queryString %>page=<%= i %>"
+                                    class="<%= currentPage === i ? 'active' : '' %>">
+                                    <%= i %>
+                                </a>
+                                <% } %>
+                                    <% if (currentPage < totalPages) { %>
+                                        <a href="<%= baseUrl + queryString %>page=<%= currentPage + 1 %>">»</a>
+                                        <% } %>
             </div>
         </div>
     </div>
@@ -1141,12 +1170,12 @@
                 event.preventDefault();
                 const searchQuery = document.getElementById('searchInput').value.trim();
                 const currentFilter = document.getElementById('categoryFilter').value;
-                
+
                 try {
                     let params = [];
                     if (searchQuery) params.push(`search=${encodeURIComponent(searchQuery)}`);
                     if (currentFilter) params.push(`filter=${currentFilter}`);
-                    
+
                     const queryString = params.length > 0 ? '?' + params.join('&') : '';
                     window.location.href = `/admin/categories${queryString}`;
                 } catch (error) {
@@ -1158,11 +1187,11 @@
             document.getElementById('categoryFilter').addEventListener('change', function () {
                 const filterValue = this.value;
                 const currentSearch = document.getElementById('searchInput').value.trim();
-                
+
                 let params = [];
                 if (currentSearch) params.push(`search=${encodeURIComponent(currentSearch)}`);
                 if (filterValue) params.push(`filter=${filterValue}`);
-                
+
                 const queryString = params.length > 0 ? '?' + params.join('&') : '';
                 window.location.href = `/admin/categories${queryString}`;
             });
@@ -1170,7 +1199,7 @@
             // Clear Filters
             const clearFiltersBtn = document.getElementById('clearFilters');
             if (clearFiltersBtn) {
-                clearFiltersBtn.addEventListener('click', function() {
+                clearFiltersBtn.addEventListener('click', function () {
                     window.location.href = '/admin/categories';
                 });
             }
