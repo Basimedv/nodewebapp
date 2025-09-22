@@ -250,6 +250,8 @@
 
         .category-table table {
             width: 100%;
+            border-collapse: collapse; /* ensure clean single separating lines */
+            table-layout: auto; /* allow our width hints to take effect */
         }
 
         .category-table th {
@@ -257,6 +259,8 @@
             color: white;
             padding: 12px;
             font-size: 14px;
+            white-space: nowrap;
+            border-bottom: 0; /* remove default header border to avoid double line */
         }
 
         .category-table td {
@@ -264,13 +268,63 @@
             font-size: 14px;
             color: #192430;
             vertical-align: middle;
+            border: 0; /* reset Bootstrap cell borders */
         }
 
+        /* Draw a single subtle separator under each body row */
+        .category-table tbody tr {
+            border-bottom: 1px solid #e6e9ef;
+        }
+
+        .category-table tbody tr:last-child {
+            border-bottom: 0;
+        }
+
+        .category-table th {
+            vertical-align: middle;
+        }
+
+        /* Removed custom left padding on first column to align with Description column */
+
         .category-table .category-description {
-            max-width: 200px;
-            white-space: nowrap;
+            max-width: 1024px; /* let description align with its header span */
             overflow: hidden;
-            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* show up to 2 lines */
+            -webkit-box-orient: vertical;
+            line-clamp: 2; /* standard property for linters/broader tooling */
+            white-space: normal; /* allow wrapping */
+            word-break: break-word; /* break long words */
+            overflow-wrap: anywhere; /* wrap anywhere to prevent overflow */
+        }
+
+        /* Column width and alignment helpers to ensure perfect header/body alignment */
+        .col-name {
+            min-width: 180px;
+        }
+
+        .col-desc {
+            width: 45%;
+        }
+
+        .col-count {
+            width: 110px;
+            text-align: center;
+        }
+
+        .col-date {
+            width: 170px;
+            text-align: center;
+        }
+
+        .col-status {
+            width: 90px;
+            text-align: center;
+        }
+
+        .col-actions {
+            width: 110px;
+            text-align: center;
         }
 
         .category-table .actions button {
@@ -283,6 +337,36 @@
 
         .category-table .actions button:hover {
             color: #28517D;
+        }
+
+        /* Give rows a consistent height so vertical centering is visually perfect */
+        .category-table table tbody tr {
+            height: 56px; /* adjust if you prefer tighter/looser rows */
+        }
+
+        /* Status Icon alignment */
+        .status-icon {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px; /* centers icon within the box */
+            text-align: center;
+            font-size: 18px;
+            vertical-align: middle;
+        }
+
+        .status-active {
+            color: #3e29a8;
+        }
+
+        .status-inactive {
+            color: #9c9999;
+        }
+
+        /* Ensure status column has consistent width */
+        .status-cell {
+            width: 90px;
+            white-space: nowrap;
         }
 
         /* Pagination */
@@ -405,6 +489,10 @@
                 font-size: 13px;
                 padding: 10px;
             }
+
+            .col-desc { width: 40%; }
+            .col-date { width: 150px; }
+            .col-actions { width: 100px; }
         }
 
         @media (max-width: 768px) {
@@ -605,6 +693,9 @@
                 font-size: 12px;
                 padding: 8px;
             }
+
+            .col-name { min-width: 150px; }
+            .col-date { width: 140px; }
         }
 
         @media (max-width: 575.98px) {
@@ -657,6 +748,7 @@
         <a href="/admin/dashboard"><i class="bi bi-grid"></i> Dashboard</a>
         <a href="/admin/categories" class="active"><i class="bi bi-tag"></i> Categories</a>
         <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
+          <a href="/admin/offers"><i class="bi bi-gift"></i> Offers</a>
         <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
         <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
         <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
@@ -672,17 +764,22 @@
         <!-- Filters and Search -->
         <div class="filter-search-container">
             <div class="filter-select">
-                <select class="form-select">
+                <select class="form-select" id="categoryFilter">
                     <option value="">All Categories</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="active" <%= filterValue === 'active' ? 'selected' : '' %>>Active</option>
+                    <option value="inactive" <%= filterValue === 'inactive' ? 'selected' : '' %>>Inactive</option>
                 </select>
             </div>
             <div class="d-flex align-items-center gap-3">
-                <div class="search-container">
-                    <input type="text" placeholder="Search categories...">
-                    <button><i class="bi bi-search"></i></button>
-                </div>
+                <form id="searchForm" class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search categories..." value="<%= searchQuery || '' %>">
+                    <button type="submit"><i class="bi bi-search"></i></button>
+                    <% if (searchQuery || filterValue) { %>
+                        <button type="button" id="clearFilters" class="btn btn-outline-secondary btn-sm ms-2">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </button>
+                    <% } %>
+                </form>
                 <button class="new-btn-2" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                     <i class="bi bi-plus-lg"></i> Add Category
                 </button>
@@ -781,48 +878,43 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th class="text-start ps-5">Category Info</th>
-                        <th>Description</th>
-                        <th>Item Count</th>
-                        <th>Created Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th class="text-start col-name">Category Info</th>
+                        <th class="text-start col-desc">Description</th>
+                        <th class="col-count text-center">Item Count</th>
+                        <th class="col-date text-center">Created Date</th>
+                        <th class="text-center status-cell col-status">Status</th>
+                        <th class="col-actions text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% cat.reverse().forEach((category, index)=> { %>
                         <tr>
-                            <td>
+                            <td class="text-start col-name">
                                 <%= category.name %>
                             </td>
-                            <td class="category-description">
-                                <%= category.description %>
+                            <td class="category-description text-start col-desc" title="<%= category.description || '' %>">
+                                <% if (category.description && category.description.length) { %>
+                                    <%= category.description.slice(0, 60) %><%= category.description.length > 60 ? '…' : '' %>
+                                <% } else { %>
+                                    —
+                                <% } %>
                             </td>
-                            <td>
-                                <%= category.itemsCount %>
+                            <td class="col-count text-center">
+                                <%= category.itemsCount || 0 %>
                             </td>
-                            <td>
+                            <td class="col-date text-center">
                                 <%= new Date(category.createdAt).toLocaleString("en-IN", { day: "2-digit" ,
                                     month: "short" , year: "numeric" , timeZone: "Asia/Kolkata" }) %>
                             </td>
-                            <td>
-                                <div class="d-flex justify-content-center align-items-center">
-                                    <p style="color: #3e29a8; margin: 0;"
-                                        class="<%= category.visibility ? '' : 'd-none' %>">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </p>
-                                    <p style="color: #9c9999; margin: 0;"
-                                        class="<%= category.visibility ? 'd-none' : '' %>">
-                                        <i class="fa-solid fa-eye-slash"></i>
-                                    </p>
-                                </div>
+                            <td class="status-cell col-status text-center align-middle">
+                                <i class="fa-solid <%= category.isListed ? 'fa-eye' : 'fa-eye-slash' %> status-icon <%= category.isListed ? 'status-active' : 'status-inactive' %>"></i>
                             </td>
-                            <td class="actions">
+                            <td class="actions col-actions text-center">
                                 <button class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#editCategoryModal"
                                     onclick="openEditModal(
                                     '<%= category.name %>', 
                                     '<%= category.description %>', 
-                                    '<%= category.visibility %>',
+                                    '<%= category.isListed %>'
                                 )">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
@@ -836,17 +928,24 @@
         <!-- Pagination -->
         <div class="pagination-custom">
             <div class="page-nav">
-                <% if (currentPage> 1) { %>
-                    <a href="?page=<%= currentPage - 1 %>">«</a>
-                    <% } %>
-                        <% for(let i=1; i <=totalPages; i++) { %>
-                            <a href="?page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>">
-                                <%= i %>
-                            </a>
-                            <% } %>
-                                <% if (currentPage < totalPages) { %>
-                                    <a href="?page=<%= currentPage + 1 %>">»</a>
-                                    <% } %>
+                <% 
+                    let baseUrl = '/admin/categories?';
+                    let params = [];
+                    if (searchQuery) params.push(`search=${encodeURIComponent(searchQuery)}`);
+                    if (filterValue) params.push(`filter=${filterValue}`);
+                    let queryString = params.length > 0 ? params.join('&') + '&' : '';
+                %>
+                <% if (currentPage > 1) { %>
+                    <a href="<%= baseUrl + queryString %>page=<%= currentPage - 1 %>">«</a>
+                <% } %>
+                <% for(let i = 1; i <= totalPages; i++) { %>
+                    <a href="<%= baseUrl + queryString %>page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>">
+                        <%= i %>
+                    </a>
+                <% } %>
+                <% if (currentPage < totalPages) { %>
+                    <a href="<%= baseUrl + queryString %>page=<%= currentPage + 1 %>">»</a>
+                <% } %>
             </div>
         </div>
     </div>
@@ -1041,36 +1140,42 @@
             document.getElementById('searchForm').addEventListener('submit', async function (event) {
                 event.preventDefault();
                 const searchQuery = document.getElementById('searchInput').value.trim();
+                const currentFilter = document.getElementById('categoryFilter').value;
+                
                 try {
-                    if (searchQuery) {
-                        window.location.href = `/admin/addCategory?q=${encodeURIComponent(searchQuery)}`;
-                    } else if (searchQuery == "") {
-                        window.location.href = '/admin/addCategory';
-                    }
+                    let params = [];
+                    if (searchQuery) params.push(`search=${encodeURIComponent(searchQuery)}`);
+                    if (currentFilter) params.push(`filter=${currentFilter}`);
+                    
+                    const queryString = params.length > 0 ? '?' + params.join('&') : '';
+                    window.location.href = `/admin/categories${queryString}`;
                 } catch (error) {
                     console.error('Error fetching search results:', error);
                 }
             });
 
             // Filter Select Change
-            document.querySelector('.filter-select').addEventListener('change', function () {
+            document.getElementById('categoryFilter').addEventListener('change', function () {
                 const filterValue = this.value;
-                let query = '';
-                if (filterValue === 'true') {
-                    query = '?visibility=true';
-                } else if (filterValue === 'false') {
-                    query = '?visibility=false';
-                }
-                window.location.href = `/admin/Category/filter${query}`;
+                const currentSearch = document.getElementById('searchInput').value.trim();
+                
+                let params = [];
+                if (currentSearch) params.push(`search=${encodeURIComponent(currentSearch)}`);
+                if (filterValue) params.push(`filter=${filterValue}`);
+                
+                const queryString = params.length > 0 ? '?' + params.join('&') : '';
+                window.location.href = `/admin/categories${queryString}`;
             });
 
-            // Truncate Description
-            document.querySelectorAll(".category-description").forEach((desc) => {
-                const maxLength = 30;
-                if (desc.textContent.length > maxLength) {
-                    desc.textContent = desc.textContent.substring(0, maxLength) + "...";
-                }
-            });
+            // Clear Filters
+            const clearFiltersBtn = document.getElementById('clearFilters');
+            if (clearFiltersBtn) {
+                clearFiltersBtn.addEventListener('click', function() {
+                    window.location.href = '/admin/categories';
+                });
+            }
+
+            // (Removed) JS truncation of description to avoid conflicts; truncating on server-side now
         });
     </script>
 </body>

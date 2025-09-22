@@ -6,7 +6,7 @@ const customercontroller=require('../controllers/admin/customercontroller')
 const {userAuth,adminAuth}=require('../middlewares/auth')
 const categorycontroller=require('../controllers/admin/categorycontroller')
 const categoryOfferController = require('../controllers/admin/categoryOfferController');
-router.get('/pageerror,',admincontroller.pageerror)
+router.get('/pageerror', admincontroller.pageerror)
 router.get("/adminLogin", admincontroller.loadLogin);
 router.post("/adminLogin", admincontroller.login);
 router.get("/dashboard", adminAuth,admincontroller.loadDashboard);
@@ -22,7 +22,6 @@ router.put('/categories',adminAuth,categorycontroller.editCategory);
 
 router.get('/offers', categoryOfferController.loadOffersPage);
 router.put('/category/offer/:id', categoryOfferController.updateCategoryOffer);
-router.get('/Category',categorycontroller. getCategories);
 
 
 

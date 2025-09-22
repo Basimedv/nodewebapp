@@ -5,21 +5,48 @@ const categoryinfo = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 4;
         const skip = (page - 1) * limit;
+        const search = req.query.search || '';
+        const filter = req.query.filter || '';
 
-        const categoryData = await Category.find({})
+        // Build query object
+        let query = {};
+        
+        // Add search functionality
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+        
+        // Add filter functionality
+        if (filter === 'active') {
+            query.isListed = true;
+        } else if (filter === 'inactive') {
+            query.isListed = false;
+        }
+
+        const categoryData = await Category.find(query)
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
 
-        const totalCategories = await Category.countDocuments();
+        const totalCategories = await Category.countDocuments(query);
         const totalPages = Math.ceil(totalCategories / limit);
 
-        // ✅ FIX: point to views/admin/category.ejs
+        // Add itemsCount to each category (you can implement this based on your product schema)
+        const categoriesWithCount = categoryData.map(category => ({
+            ...category.toObject(),
+            itemsCount: 0 // TODO: Implement actual count from products
+        }));
+
         res.render("admin/category", {
-            cat: categoryData,
+            cat: categoriesWithCount,
             currentPage: page,
             totalPages: totalPages,
-            totalCategories: totalCategories
+            totalCategories: totalCategories,
+            searchQuery: search,
+            filterValue: filter
         });
 
     } catch (error) {
@@ -37,7 +64,11 @@ const addCategory = async (req, res) => {
             return res.status(400).json({ error: "Category already exists" });
         }
 
-        const newCategory = new Category({ name, description, status });
+        const newCategory = new Category({ 
+            name, 
+            description, 
+            isListed: status?.toLowerCase() === "active" ? true : false
+        });
         await newCategory.save();
 
         return res.status(201).json({ message: "Category added successfully" });
@@ -63,35 +94,14 @@ const editCategory = async (req,res)=>{
 
          category.name = editName;
          category.description = editDescription;
-         category.visibility = editStatus?.toLowerCase() === "active" ? true : false ;
+         category.isListed = editStatus?.toLowerCase() === "active" ? true : false ;
 
          await category.save();
 
-         return res.status(200).json({message : "Category added successfully ."});
+         return res.status(200).json({message : "Category updated successfully ."});
     } catch (error) {
-        console.log("Add Category error : ",error);
+        console.log("Edit Category error : ",error);
         return res.status(500).json({error : "Some error occured in the server ."});
-    }
-};
-
-const getCategories = async (req, res) => {
-    try {
-        const visibilityQuery = req.query.visibility; // "true" or "false"
-        let filter = {};
-
-        if (visibilityQuery === 'true') filter.isListed = true;
-        else if (visibilityQuery === 'false') filter.isListed = false;
-
-        const cat = await Category.find(filter).lean();
-
-        res.render('admin/category', {
-            cat,
-            currentPage: 1,
-            totalPages: 1
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Server Error');
     }
 };
 
@@ -99,7 +109,6 @@ module.exports = {
     categoryinfo,
     addCategory,
     editCategory,
-    getCategories,
 };
 
 
