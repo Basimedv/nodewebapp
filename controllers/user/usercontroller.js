@@ -834,10 +834,29 @@ async function viewWishlist(req, res) {
     if (!user) return res.redirect('/login');
 
     const wishlist = await Wishlist.findOne({ userId: user._id }).populate('products.ProductId').lean();
-    const items = (wishlist?.products || []).map(item => ({
-      ...item,
-      product: item.ProductId,
-    }));
+    const items = (wishlist?.products || []).map(item => {
+      const p = item.ProductId;
+      if (!p) return item;
+
+      // Apply the same data transformation as other functions
+      const regular = typeof p.reqularPrice === 'number' ? p.reqularPrice : (typeof p.price === 'number' ? p.price : 0);
+      const sale = typeof p.salePrice === 'number' ? p.salePrice : 0;
+      const offerPercent = Math.max(p.productOffer || 0, (p.category && p.category.offer) || 0);
+
+      return {
+        ...item,
+        product: {
+          ...p,
+          name: p.productNmae ?? p.name,
+          images: Array.isArray(p.productImage) && p.productImage.length ? p.productImage : (Array.isArray(p.images) ? p.images : []),
+          price: regular,
+          sale,
+          offerPercent,
+          offerPrice: offerPercent > 0 ? Math.round(regular - (regular * offerPercent / 100)) : (sale > 0 && sale < regular ? sale : regular),
+          regularPrice: regular,
+        }
+      };
+    });
 
     return res.render('user/wishlist', { user, items });
   } catch (err) {
