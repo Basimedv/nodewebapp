@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= product ? product.name : "Product" %> | COLINGUEST</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    body {
+      background: url("/images/background.jpg") no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+    }
+
+    main {
+      min-height: calc(100vh - 80px);
+      padding-bottom: 2rem;
+    }
+
+    .footer {
+      background-color: black;
+      color: #ecf0f1;
+      padding: 2rem 0;
+      margin-top: 2rem;
+    }
+    .footer-title {
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .footer-social a {
+      color: #bdc3c7;
+      font-size: 1.2rem;
+      margin-right: 10px;
+      transition: color 0.3s ease;
+    }
+    .footer-social a:hover {
+      color: #fff;
+    }
+
+    /* Enhanced Product Display */
+    .main-image {
+      position: relative;
+      overflow: hidden;
+      border-radius: 15px;
+      background: #f8f9fa;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .main-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+
+    .image-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      border-radius: 15px;
+      cursor: pointer;
+    }
+
+    .main-image:hover .image-overlay {
+      opacity: 1;
+    }
+
+    .zoom-icon {
+      color: white;
+      font-size: 2rem;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 15px;
+      border-radius: 50%;
+      backdrop-filter: blur(10px);
+    }
+
+    .product-header {
+      padding-bottom: 1.5rem;
+      border-bottom: 2px solid #f0f0f0;
+      margin-bottom: 1.5rem;
+    }
+
+    .product-title {
+      font-size: 1.8rem;
+      color: #2c3e50;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+
+    .product-meta {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      padding: 1rem;
+      border-radius: 10px;
+      border-left: 4px solid #667eea;
+    }
+
+    .pd-card {
+      background: #fff;
+      border-radius: 15px;
+      padding: 2rem;
+      border: 1px solid #e9ecef;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .pd-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .rating-stars {
+      color: #ffc107;
+      font-size: 1.1rem;
+    }
+
+    .feature-tile {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 10px;
+      transition: transform 0.2s ease;
+    }
+
+    .feature-tile:hover {
+      transform: translateX(5px);
+    }
+
+    .feature-tile i {
+      color: #667eea;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(102, 126, 234, 0.1);
+      border-radius: 50%;
+    }
+
+    .product-description {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 10px;
+      border-left: 4px solid #28a745;
+      line-height: 1.6;
+    }
+
+    /* Enhanced Buttons */
+    .btn {
+      border-radius: 25px;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      border: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+    .btn-dark {
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      color: white;
+    }
+
+    .btn-outline-secondary:hover {
+      background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+      color: white;
+      transform: scale(1.05);
+    }
+
+    /* Enhanced interactive elements */
+    .thumbs-vertical img {
+      width: 100%;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .thumbs-vertical img:hover {
+      border-color: #667eea;
+      transform: scale(1.05);
+    }
+
+    .thumbs-vertical img.active {
+      border-color: #667eea;
+      box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+    }
+
+    .color-swatch {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .color-swatch:hover {
+      border-color: #667eea;
+      transform: scale(1.1);
+    }
+
+    .color-swatch.active {
+      border-color: #667eea;
+      box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+    }
+
+    .color-swatch img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .size-grid .btn {
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .size-grid .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .size-grid .btn.active {
+      background: var(--primary-gradient);
+      color: white;
+      border-color: #667eea;
+    }
+
+    /* Description Toggle Styles */
+    .description-toggle {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .description-toggle .btn {
+      border-radius: 20px;
+      padding: 0.5rem 1.5rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .description-toggle .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .product-description {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 10px;
+      border-left: 4px solid #28a745;
+      line-height: 1.6;
+      margin-top: 1rem;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .product-description p {
+      margin: 0;
+      color: #495057;
+    }
+
+    .description-toggle .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .product-description {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 10px;
+      border-left: 4px solid #28a745;
+      line-height: 1.6;
+      margin-top: 1rem;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .product-description p {
+      margin: 0;
+      color: #495057;
+    }
+
+    /* Product styles */
+    .main-image img {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    .thumbs-vertical img {
+      width: 100%;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    .thumbs-vertical img.active {
+      border-color: #667eea;
+    }
+    .color-swatch {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+    .color-swatch.active {
+      border-color: #667eea;
+    }
+    .color-swatch img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .size-grid .btn.active {
+      background: #667eea;
+      color: #fff;
+    }
+    .feature-tile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .rating-progress {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .rating-label {
+      width: 60px;
+      font-size: 0.9rem;
+    }
+    .rating-bar {
+      flex-grow: 1;
+      height: 8px;
+      background-color: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .rating-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ffc107 0%, #fd7e14 100%);
+    }
+  </style>
+</head>
+<body>
+
+<main>
+  <div class="container py-4 pd-wrapper">
+    <div id="user-data" style="display: none;" data-user="<%= typeof user !== 'undefined' && user && user._id ? user._id : '' %>" data-images="<%= JSON.stringify(product?.images || []) %>"></div>
+    <div class="row g-4">
+      <!-- Left: Thumbnails + Main Image -->
+      <div class="col-lg-7">
+        <div class="row g-3">
+          <div class="col-2 d-none d-md-block">
+            <div class="thumbs-vertical" id="thumbList">
+              <% (product?.images || []).slice(0,6).forEach((img, idx) => { %>
+                <img data-idx="<%= idx %>" src="<%= img %>" class="<%= idx===0 ? 'active' : '' %>" alt="thumb">
+              <% }) %>
+            </div>
+          </div>
+          <div class="col-12 col-md-10">
+            <div class="main-image position-relative">
+              <img id="mainImage" src="<%= (product && Array.isArray(product.images) && product.images[0]) ? product.images[0] : '' %>" alt="<%= product ? (product.name || '') : '' %>">
+              <div class="image-overlay">
+                <div class="zoom-icon">
+                  <i class="fas fa-search-plus"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Product Info Card -->
+      <div class="col-lg-5">
+        <div class="pd-card shadow-lg">
+          <div class="product-header">
+            <h4 class="mb-1 fw-bold product-title"><%= product ? (product.name || 'Product') : 'Product' %></h4>
+            <div class="product-meta">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="rating-stars">
+                  <i class="fa fa-star"></i><i class="fa fa-star"></i>
+                  <i class="fa fa-star"></i><i class="fa fa-star-half-alt"></i><i class="far fa-star"></i>
+                </div>
+                <small class="text-muted">(50 Reviews)</small>
+                <small class="text-success fw-semibold">In Stock</small>
+              </div>
+            </div>
+          </div>
+
+          <% const displayOffer = Math.max(product?.offerPercent || product?.productOffer || 0, (product?.category && product?.category.offer) || 0); 
+             const baseRegular = Number(product?.regularPrice ?? product?.price ?? 0);
+             const saleCandidate = Number(product?.sale ?? product?.salePrice ?? 0);
+             const offerCalc = Math.round(baseRegular - (baseRegular * (displayOffer || 0) / 100));
+             const hasSale = saleCandidate > 0 && saleCandidate < baseRegular;
+             const finalPrice = displayOffer > 0 ? offerCalc : (hasSale ? saleCandidate : baseRegular);
+          %>
+
+          <div class="mb-3">
+            <% if (finalPrice < baseRegular) { %>
+              <div class="d-flex justify-content-between align-items-end">
+                <div>
+                  <div class="small">Regular price</div>
+                  <div>Rs. <del><%= baseRegular.toLocaleString('en-IN') %></del></div>
+                </div>
+                <div>
+                  <div class="small fw-semibold">Sale price</div>
+                  <div class="fw-bold fs-4">Rs. <%= Number(finalPrice).toLocaleString('en-IN') %>
+                    <% if (displayOffer > 0) { %>
+                      <span class="badge bg-success ms-1"><%= displayOffer %>% OFF</span>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            <% } else { %>
+              <div>
+                <div class="small text-muted">Price</div>
+                <div class="fw-bold fs-4">Rs. <%= baseRegular.toLocaleString('en-IN') %></div>
+              </div>
+            <% } %>
+          </div>
+
+          <!-- Colors -->
+          <% const swatches = (product?.images && product.images.length ? product.images.slice(0,4) : []); %>
+          <% if (swatches.length) { %>
+            <div class="mb-2 fw-semibold">Color :</div>
+            <div class="d-flex gap-2 mb-3" id="colorList">
+              <% swatches.forEach((img, idx) => { %>
+                <div class="color-swatch <%= idx===0 ? 'active' : '' %>" data-idx="<%= idx %>">
+                  <img src="<%= img %>" alt="color">
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+
+          <!-- Sizes -->
+          <% const sizes = Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : ['XS','S','M','L','XL']; %>
+          <div class="mb-2 fw-semibold">Select Size:</div>
+          <div class="size-grid d-flex flex-wrap gap-2 mb-3">
+            <% sizes.forEach((s, idx) => { %>
+              <button type="button" class="btn <%= idx===0 ? 'active' : '' %>" data-size="<%= s %>"><%= s %></button>
+            <% }) %>
+          </div>
+
+          <div class="d-flex gap-2 mb-2">
+            <button class="btn btn-dark" data-product-id="<%= product?._id %>" data-price="<%= finalPrice %>">Buy Now</button>
+            <button class="btn btn-primary" data-product-id="<%= product?._id %>" data-price="<%= finalPrice %>">
+              <i class="fa fa-cart-plus me-1"></i> Add to Cart
+            </button>
+            <button class="btn btn-outline-secondary" data-product-id="<%= product?._id %>">
+              <i class="fa fa-heart"></i>
+            </button>
+          </div>
+
+          <div class="feature-tile"><i class="fa fa-truck fs-4"></i><div><b>Free Delivery</b><br><small>Enter your postal code for availability</small></div></div>
+          <div class="feature-tile"><i class="fa fa-undo fs-4"></i><div><b>Free Returns</b><br><small>30 Days Delivery Returns</small></div></div>
+        </div>
+
+        <!-- Product Description -->
+        <% if (product && product.description) { %>
+        <div class="mt-4">
+          <div class="description-toggle">
+            <button class="btn btn-outline-primary btn-sm" onclick="toggleDescription()">
+              <i class="fas fa-chevron-down me-2" id="desc-icon"></i>
+              Show Product Details
+            </button>
+          </div>
+          <div class="product-description" id="product-description" style="display: none;">
+            <p class="text-muted"><%= product.description %></p>
+          </div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Reviews -->
+    <div class="row mt-5">
+      <div class="col-md-6">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div class="rating-stars fs-4">
+            <i class="fa fa-star"></i><i class="fa fa-star"></i>
+            <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="far fa-star"></i>
+          </div>
+          <div class="ms-2">5.00 out of 5</div>
+        </div>
+        <small class="text-muted">Based on 2 reviews</small>
+      </div>
+      <div class="col-md-6">
+        <% [5,4,3,2,1].forEach(r => { %>
+          <div class="rating-progress">
+            <div class="rating-label"><%= r %> <i class="fa fa-star text-warning"></i></div>
+            <div class="rating-bar"><div class="rating-fill" style="width: <%= (r===5?60:r===4?30:10) %>%"></div></div>
+            <div class="rating-count"><%= r===5?2:r===4?1:0 %></div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Related -->
+    <div class="mt-5 related">
+      <h5 class="mb-3">Related Items</h5>
+      <div id="relatedRow" class="row g-4"></div>
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<%-include("../../views/partials/user/footer")%>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get user data from the template
+    const userDataElement = document.getElementById('user-data');
+    const userId = userDataElement ? userDataElement.getAttribute('data-user') : null;
+    const currentUser = userId ? { _id: userId } : null;
+
+    // Get all product images for switching
+    const imagesData = userDataElement.getAttribute('data-images');
+    const productImages = imagesData ? JSON.parse(imagesData) : [];
+
+    // Image switching functionality
+    const mainImage = document.getElementById('mainImage');
+    const thumbList = document.getElementById('thumbList');
+    const colorList = document.getElementById('colorList');
+
+    // Handle thumbnail clicks
+    if (thumbList) {
+        const thumbnails = thumbList.querySelectorAll('img[data-idx]');
+        thumbnails.forEach(thumb => {
+            thumb.addEventListener('click', function() {
+                const idx = parseInt(this.getAttribute('data-idx'));
+
+                // Remove active class from all thumbnails
+                thumbnails.forEach(t => t.classList.remove('active'));
+
+                // Add active class to clicked thumbnail
+                this.classList.add('active');
+
+                // Change main image
+                if (mainImage && productImages[idx]) {
+                    mainImage.src = productImages[idx];
+                    mainImage.alt = '<%= product ? (product.name || "Product") : "Product" %>';
+                }
+            });
+        });
+    }
+
+    // Handle color swatch clicks
+    if (colorList) {
+        const colorSwatches = colorList.querySelectorAll('.color-swatch');
+        colorSwatches.forEach(swatch => {
+            swatch.addEventListener('click', function() {
+                const idx = parseInt(this.getAttribute('data-idx'));
+
+                // Remove active class from all swatches
+                colorSwatches.forEach(s => s.classList.remove('active'));
+
+                // Add active class to clicked swatch
+                this.classList.add('active');
+
+                // Change main image to corresponding color image
+                if (mainImage && productImages[idx]) {
+                    mainImage.src = productImages[idx];
+                    mainImage.alt = '<%= product ? (product.name || "Product") : "Product" %>';
+                }
+            });
+        });
+    }
+
+    // Handle size selection
+    const sizeButtons = document.querySelectorAll('.size-grid .btn');
+    sizeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all size buttons
+            sizeButtons.forEach(btn => btn.classList.remove('active'));
+
+            // Add active class to clicked button
+            this.classList.add('active');
+        });
+    });
+
+    // Handle Buy Now button
+    const buyNowBtn = document.querySelector('button[data-product-id]:first-of-type');
+    if (buyNowBtn) {
+      buyNowBtn.addEventListener('click', function() {
+        if (!currentUser) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Login Required',
+            text: 'Please login to add items to cart',
+            confirmButtonText: 'Go to Login'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = '/login';
+            }
+          });
+          return;
+        }
+
+        const productId = this.getAttribute('data-product-id');
+        const price = this.getAttribute('data-price');
+
+        // Add to cart first, then redirect to cart
+        fetch('/user/addToCart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: currentUser._id,
+            productId: productId,
+            price: price,
+            quantity: 1
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message === 'Added to cart') {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success!',
+              text: 'Product added to cart! Redirecting to cart...',
+              timer: 1500,
+              showConfirmButton: false,
+              timerProgressBar: true
+            }).then(() => {
+              window.location.href = '/user/cart';
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: data.error || 'Failed to add to cart'
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred. Please try again.'
+          });
+        });
+      });
+    }
+
+    // Handle Add to Cart button
+    const addToCartBtn = document.querySelector('button[data-product-id]:nth-of-type(2)');
+    if (addToCartBtn) {
+      addToCartBtn.addEventListener('click', function() {
+        if (!currentUser) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Login Required',
+            text: 'Please login to add items to cart',
+            confirmButtonText: 'Go to Login'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = '/login';
+            }
+          });
+          return;
+        }
+
+        const productId = this.getAttribute('data-product-id');
+        const price = this.getAttribute('data-price');
+
+        fetch('/user/addToCart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: currentUser._id,
+            productId: productId,
+            price: price,
+            quantity: 1
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message === 'Added to cart') {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success!',
+              text: 'Product added to cart successfully!',
+              timer: 2000,
+              showConfirmButton: false,
+              timerProgressBar: true
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: data.error || 'Failed to add to cart'
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred. Please try again.'
+          });
+        });
+      });
+    }
+
+    // Handle Wishlist button (update selector for third button)
+    const wishlistBtns = document.querySelectorAll('button[data-product-id]');
+    const wishlistBtn = wishlistBtns[wishlistBtns.length - 1]; // Get the last button (wishlist)
+    if (wishlistBtn) {
+      wishlistBtn.addEventListener('click', function() {
+        if (!currentUser) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Login Required',
+            text: 'Please login to add items to wishlist',
+            confirmButtonText: 'Go to Login'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = '/login';
+            }
+          });
+          return;
+        }
+
+        const productId = this.getAttribute('data-product-id');
+
+        fetch('/user/addToWishlist', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: currentUser._id,
+            productId: productId
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message === 'Added to wishlist' || data.message === 'Already in wishlist') {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success!',
+              text: data.message,
+              timer: 2000,
+              showConfirmButton: false,
+              timerProgressBar: true
+            });
+            // Change heart icon to filled
+            const icon = this.querySelector('i');
+            if (icon) {
+              icon.classList.remove('fa-heart');
+              icon.classList.add('fa-heart');
+              icon.style.color = '#ff6b6b';
+            }
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Oops...',
+              text: data.error || 'Failed to add to wishlist'
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred. Please try again.'
+          });
+        });
+      });
+    }
+
+    // Enhanced image zoom functionality
+    if (mainImage) {
+        const imageOverlay = mainImage.closest('.main-image');
+
+        imageOverlay.addEventListener('click', function() {
+            // Create modal for enlarged image view
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                cursor: zoom-out;
+            `;
+
+            const enlargedImg = document.createElement('img');
+            enlargedImg.src = mainImage.src;
+            enlargedImg.alt = mainImage.alt;
+            enlargedImg.style.cssText = `
+                max-width: 90%;
+                max-height: 90%;
+                object-fit: contain;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            `;
+
+            modal.appendChild(enlargedImg);
+            document.body.appendChild(modal);
+
+            modal.addEventListener('click', function() {
+                document.body.removeChild(modal);
+            });
+
+            // Close on escape key
+            document.addEventListener('keydown', function escapeHandler(e) {
+                if (e.key === 'Escape') {
+                    document.body.removeChild(modal);
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            });
+        });
+    }
+  });
+
+  // Load related products function
+  async function loadRelatedProducts() {
+    try {
+      // Get current product category for related products
+      const currentProductId = '<%= product ? product._id : "" %>';
+      const categoryId = '<%= product && product.category ? product.category._id : "" %>';
+
+      if (!categoryId) return;
+
+      // Fetch related products from the same category (excluding current product)
+      const response = await fetch(`/api/products?category=${categoryId}&limit=4&exclude=${currentProductId}`);
+      const data = await response.json();
+
+      if (data.products && data.products.length > 0) {
+        displayRelatedProducts(data.products);
+      }
+    } catch (error) {
+      console.error('Error loading related products:', error);
+    }
+  }
+
+  // Display related products
+  function displayRelatedProducts(products) {
+    const relatedRow = document.getElementById('relatedRow');
+    if (!relatedRow) return;
+
+    relatedRow.innerHTML = products.map(product => `
+      <div class="col-md-3 col-sm-6">
+        <div class="product-card">
+          <div class="product-image">
+            <img src="${product.images && product.images[0] ? product.images[0] : '/images/no-image.png'}"
+                 alt="${product.name || 'Product'}"
+                 onerror="this.src='/images/no-image.png'">
+            <div class="product-overlay">
+              <button class="btn btn-primary btn-sm" onclick="viewProduct('${product._id}')">
+                <i class="fas fa-eye me-1"></i>View
+              </button>
+            </div>
+          </div>
+          <div class="product-info">
+            <h6 class="product-title">${product.name || 'Product'}</h6>
+            <div class="product-price">
+              <% const regPrice = typeof product.price === 'number' ? product.price : 0; %>
+              <% const salePrice = typeof product.sale === 'number' ? product.sale : 0; %>
+              <% const offerDisc = product.offerPercent || 0; %>
+              <% if (salePrice > 0 && salePrice < regPrice) { %>
+                <span class="text-muted"><del>₹${regPrice.toLocaleString('en-IN')}</del></span>
+                <span class="text-success fw-bold">₹${salePrice.toLocaleString('en-IN')}</span>
+              <% } else if (offerDisc > 0) { %>
+                <span class="text-muted"><del>₹${regPrice.toLocaleString('en-IN')}</del></span>
+                <span class="text-success fw-bold">₹${Math.round(regPrice - (regPrice * offerDisc / 100)).toLocaleString('en-IN')}</span>
+                <span class="badge bg-success ms-1">${offerDisc}% OFF</span>
+              <% } else { %>
+                <span class="fw-bold">₹${regPrice.toLocaleString('en-IN')}</span>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    // Add CSS for related products if not already present
+    if (!document.getElementById('related-products-styles')) {
+      const style = document.createElement('style');
+      style.id = 'related-products-styles';
+      style.textContent = `
+        .product-card {
+          background: white;
+          border-radius: 15px;
+          overflow: hidden;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
+
+        .product-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-image {
+          position: relative;
+          overflow: hidden;
+          height: 200px;
+        }
+
+        .product-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        }
+
+        .product-card:hover .product-image img {
+          transform: scale(1.1);
+        }
+
+        .product-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+
+        .product-card:hover .product-overlay {
+          opacity: 1;
+        }
+
+        .product-info {
+          padding: 1rem;
+        }
+
+        .product-title {
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #2c3e50;
+          margin-bottom: 0.5rem;
+          line-height: 1.3;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .product-price {
+          font-size: 0.9rem;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }
+
+  // View product function
+  function viewProduct(productId) {
+    if (productId) {
+      window.location.href = `/productDetails/${productId}`;
+    }
+  }
+
+  // Toggle product description
+  function toggleDescription() {
+    const descElement = document.getElementById('product-description');
+    const descIcon = document.getElementById('desc-icon');
+    const toggleBtn = descIcon.closest('button');
+
+    if (descElement.style.display === 'none') {
+      descElement.style.display = 'block';
+      descIcon.classList.remove('fa-chevron-down');
+      descIcon.classList.add('fa-chevron-up');
+      toggleBtn.innerHTML = '<i class="fas fa-chevron-up me-2"></i>Hide Product Details';
+    } else {
+      descElement.style.display = 'none';
+      descIcon.classList.remove('fa-chevron-up');
+      descIcon.classList.add('fa-chevron-down');
+      toggleBtn.innerHTML = '<i class="fas fa-chevron-down me-2"></i>Show Product Details';
+    }
+  }
+</script>
+</body>
+</html>

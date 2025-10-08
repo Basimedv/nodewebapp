@@ -4,17 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Categories</title>
+    <title>Categories</title>
     <link href="https://fonts.googleapis.com/css2?family=Bellefair&family=Outfit:wght@400;500;700&display=swap"
         rel="stylesheet">
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- Font Awesome (for modals) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
+        /* Your existing CSS from before, including navbar, sidebar, table, badges, pagination */
         * {
             margin: 0;
             padding: 0;
@@ -29,7 +27,22 @@
             overflow-x: hidden;
         }
 
-        /* Navbar */
+        .stock-btn1 {
+            width: 75px;
+            border: 1px solid #0CAF60;
+            background-color: #8af5bf;
+            color: #0CAF60;
+            border-radius: 10px;
+        }
+
+        .stock-btn3 {
+            width: 75px;
+            border: 1px solid #FD6A6A;
+            background-color: #f9d3d3;
+            color: #FD6A6A;
+            border-radius: 10px;
+        }
+
         .navbar {
             background: white;
             padding: 15px 30px;
@@ -47,79 +60,10 @@
         .brand-name {
             font-family: 'Bellefair', serif;
             font-size: 28px;
-            font-weight: normal;
             text-decoration: none;
             color: #192430;
         }
 
-        .new-btn-2 {
-            background-color: #3e29a8;
-            border-radius: 10px;
-            width: fit-content;
-            color: #e0e0e0;
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .nav-right .search-container {
-            position: relative;
-        }
-
-        .nav-right input {
-            padding: 8px 15px 8px 35px;
-            border: 1px solid #e0e0e0;
-            border-radius: 20px;
-            width: 200px;
-            font-size: 14px;
-            background: #f5f5f5;
-        }
-
-        .nav-right .search-icon {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #666;
-            font-size: 16px;
-        }
-
-        .nav-right .new-btn {
-            background: #3b6da1;
-            color: white;
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .nav-right .new-btn:hover {
-            background: #2d5480;
-        }
-
-        .nav-right .filter-btn {
-            color: #666;
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        .nav-right a.profile-icon {
-            color: #666;
-            font-size: 24px;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .nav-right a.profile-icon:hover {
-            color: #28517D;
-        }
-
-        /* Sidebar */
         .sidebar {
             width: 250px;
             background: #f9f9f9;
@@ -139,15 +83,7 @@
             color: #192430;
             text-decoration: none;
             font-size: 16px;
-            transition: background 0.3s ease;
-            position: relative;
             border-radius: 15px;
-            cursor: pointer;
-        }
-
-        .sidebar a i {
-            margin-right: 15px;
-            font-size: 18px;
         }
 
         .sidebar a.active {
@@ -155,11 +91,11 @@
             color: white;
         }
 
-        .sidebar a:hover {
-            background: #d9dbdd;
+        .sidebar a i {
+            margin-right: 15px;
+            font-size: 18px;
         }
 
-        /* Main Content */
         .main-content {
             margin-left: 250px;
             padding: 80px 30px 30px;
@@ -172,1039 +108,373 @@
             margin-bottom: 20px;
         }
 
-        /* Filters and Search */
-        .filter-search-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            gap: 20px;
-        }
-
-        .filter-select {
-            min-width: 200px;
-        }
-
-        /* Search Container with Add Button */
-        .search-container {
-            display: flex;
-            align-items: center;
-            background: #f5f5f5;
-            border-radius: 4px;
-            overflow: hidden;
-            flex: 1;
-            max-width: 400px;
-        }
-
-        .search-container input {
-            padding: 8px 15px;
-            border: 1px solid #e0e0e0;
-            border-right: none;
-            border-radius: 4px 0 0 4px;
-            font-size: 14px;
-            width: 100%;
-            background: #f5f5f5;
-        }
-
-        .search-container button {
-            background: #3b6da1;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .search-container button:hover {
-            background: #2d5480;
-        }
-
-        /* Add Category Button */
-        .new-btn-2 {
-            background-color: #3e29a8;
-            border-radius: 4px;
-            color: white;
-            padding: 8px 15px;
-            border: none;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: background-color 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .new-btn-2:hover {
-            background-color: #2d1f7a;
-            color: white;
-        }
-
-        /* Category Table */
-        .category-table {
+        .customer-table {
             background: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
 
-        .category-table table {
+        .customer-table table {
             width: 100%;
-            border-collapse: collapse;
-            /* ensure clean single separating lines */
-            table-layout: auto;
-            /* allow our width hints to take effect */
         }
 
-        .category-table th {
+        .customer-table th {
             background: #3b6da1;
             color: white;
             padding: 12px;
             font-size: 14px;
-            white-space: nowrap;
-            border-bottom: 0;
-            /* remove default header border to avoid double line */
         }
 
-        .category-table td {
+        .customer-table td {
             padding: 12px;
             font-size: 14px;
             color: #192430;
-            vertical-align: middle;
-            border: 0;
-            /* reset Bootstrap cell borders */
         }
 
-        /* Draw a single subtle separator under each body row */
-        .category-table tbody tr {
-            border-bottom: 1px solid #e6e9ef;
-        }
-
-        .category-table tbody tr:last-child {
-            border-bottom: 0;
-        }
-
-        .category-table th {
-            vertical-align: middle;
-        }
-
-        /* Removed custom left padding on first column to align with Description column */
-
-        .category-table .category-description {
-            max-width: 1024px;
-            /* let description align with its header span */
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            /* show up to 2 lines */
-            -webkit-box-orient: vertical;
-            line-clamp: 2;
-            /* standard property for linters/broader tooling */
-            white-space: normal;
-            /* allow wrapping */
-            word-break: break-word;
-            /* break long words */
-            overflow-wrap: anywhere;
-            /* wrap anywhere to prevent overflow */
-        }
-
-        /* Column width and alignment helpers to ensure perfect header/body alignment */
-        .col-name {
-            min-width: 180px;
-        }
-
-        .col-desc {
-            width: 45%;
-        }
-
-        .col-count {
-            width: 110px;
-            text-align: center;
-        }
-
-        .col-date {
-            width: 170px;
-            text-align: center;
-        }
-
-        .col-status {
-            width: 90px;
-            text-align: center;
-        }
-
-        .col-actions {
-            width: 110px;
-            text-align: center;
-        }
-
-        .category-table .actions button {
-            color: #4a00e0;
+        .customer-table .actions a {
+            color: #666;
+            margin: 0 5px;
             font-size: 16px;
-            background: none;
-            border: none;
-            cursor: pointer;
+            text-decoration: none;
         }
 
-        .category-table .actions button:hover {
+        .customer-table .actions a:hover {
             color: #28517D;
         }
 
-        /* Give rows a consistent height so vertical centering is visually perfect */
-        .category-table table tbody tr {
-            height: 56px;
-            /* adjust if you prefer tighter/looser rows */
-        }
-
-        /* Status Icon alignment */
-        .status-icon {
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            line-height: 24px;
-            /* centers icon within the box */
-            text-align: center;
-            font-size: 18px;
-            vertical-align: middle;
-        }
-
-        .status-active {
-            color: #3e29a8;
-        }
-
-        .status-inactive {
-            color: #9c9999;
-        }
-
-        /* Ensure status column has consistent width */
-        .status-cell {
-            width: 90px;
-            white-space: nowrap;
-        }
-
-        /* Pagination */
-        .pagination-custom {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .pagination {
             margin-top: 20px;
-            color: #666;
-            font-size: 14px;
-        }
-
-        .pagination-custom .page-nav {
-            display: flex;
-            gap: 10px;
-        }
-
-        .pagination-custom .page-nav a {
-            color: #666;
-            text-decoration: none;
-            padding: 5px 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-        }
-
-        .pagination-custom .page-nav a.active {
-            background: #e0e0e0;
-        }
-
-        .pagination-custom .page-nav a:hover {
-            background: #f5f5f5;
-        }
-
-        /* Modal Image Upload (for Edit Modal only) */
-        .image-upload-slot {
-            position: relative;
-            width: 100px;
-            height: 100px;
-        }
-
-        .image-upload-dropzone {
-            width: 100%;
-            height: 100%;
-            border: 2px dashed #e0e0e0;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            cursor: pointer;
-        }
-
-        .image-upload-dropzone i {
-            font-size: 24px;
-            color: #666;
-        }
-
-        .image-upload-dropzone p {
-            font-size: 12px;
-            color: #666;
-            margin: 0;
-        }
-
-        .image-preview {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        .image-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-
-        .image-preview .remove-image-btn {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: #ff0101;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .image-upload-slot.filled .image-upload-dropzone {
-            display: none;
-        }
-
-        .image-upload-slot.filled .image-preview {
-            display: block;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 1024px) {
-            .sidebar {
-                width: 200px;
-            }
-
-            .main-content {
-                margin-left: 200px;
-            }
-
-            .nav-right input {
-                width: 150px;
-            }
-
-            .category-table th,
-            .category-table td {
-                font-size: 13px;
-                padding: 10px;
-            }
-
-            .col-desc {
-                width: 40%;
-            }
-
-            .col-date {
-                width: 150px;
-            }
-
-            .col-actions {
-                width: 100px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                position: static;
-                top: auto;
-                padding: 10px 0;
-            }
-
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
-            }
-
-            .navbar {
-                padding: 10px 20px;
-            }
-
-            .brand-name {
-                font-size: 24px;
-            }
-
-            .nav-right {
-                gap: 15px;
-            }
-
-            .nav-right input {
-                width: 120px;
-                padding: 6px 12px 6px 30px;
-            }
-
-            .nav-right .new-btn {
-                padding: 6px 12px;
-                font-size: 12px;
-            }
-
-            .category-table th,
-            .category-table td {
-                font-size: 12px;
-                padding: 8px;
-            }
-
-            .category-table .actions button {
-                font-size: 14px;
-            }
-
-            .filter-search-container {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
-            .filter-select,
-            .search-container {
-                max-width: 100%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .navbar {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 10px 15px;
-                height: auto;
-            }
-
-            .brand-name {
-                margin-bottom: 10px;
-            }
-
-            .nav-right {
-                width: 100%;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
-            .nav-right input {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-
-            .nav-right .new-btn {
-                width: 100%;
-            }
-
-            .category-table {
-                overflow-x: auto;
-            }
-
-            .category-table th,
-            .category-table td {
-                font-size: 11px;
-                padding: 6px;
-            }
-
-            .category-table .actions button {
-                font-size: 12px;
-            }
-
-
-        }
-
-        /* Sidebar Toggle Button */
-        .sidebar-toggle {
-            color: #192430;
-            font-size: 24px;
-            padding: 0;
-            margin-right: 15px;
-            background: none;
-            border: none;
-        }
-
-        .sidebar-toggle:hover {
-            color: #3b6da1;
-        }
-
-        /* Offcanvas Sidebar */
-        .offcanvas {
-            background: #f9f9f9;
-        }
-
-        .offcanvas-header {
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .offcanvas-title {
-            color: #192430;
-            font-weight: 600;
-        }
-
-        /* Responsive Sidebar */
-        .sidebar {
-            width: 250px;
-            background: #f9f9f9;
-            padding: 20px 0;
-            position: fixed;
-            top: 60px;
-            bottom: 0;
-            left: 0;
-            z-index: 999;
-            overflow-y: auto;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 250px;
-            padding: 80px 30px 30px;
-            flex: 1;
-        }
-
-        /* Responsive Media Queries */
-        @media (max-width: 991.98px) {
-            .main-content {
-                margin-left: 0;
-                padding: 80px 20px 20px;
-            }
-
-            .category-table {
-                overflow-x: auto;
-            }
-
-            .filter-search-container {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .filter-select {
-                max-width: 100%;
-            }
-
-            .search-container {
-                max-width: 100%;
-            }
-        }
-
-        @media (max-width: 767.98px) {
-            .navbar {
-                padding: 10px 15px;
-            }
-
-            .brand-name {
-                font-size: 22px;
-            }
-
-            .nav-right {
-                gap: 10px;
-            }
-
-            .new-btn-2 {
-                padding: 6px 12px;
-                font-size: 12px;
-            }
-
-            .category-table th,
-            .category-table td {
-                font-size: 12px;
-                padding: 8px;
-            }
-
-            .col-name {
-                min-width: 150px;
-            }
-
-            .col-date {
-                width: 140px;
-            }
-        }
-
-        @media (max-width: 575.98px) {
-            .category-table {
-                padding: 10px;
-            }
-
-            .category-table .category-description {
-                max-width: 150px;
-            }
         }
     </style>
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="d-flex align-items-center">
-            <button class="btn btn-link d-lg-none sidebar-toggle" type="button" data-bs-toggle="offcanvas"
-                data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
-                <i class="bi bi-list"></i>
-            </button>
-            <a href="/admin/category" class="brand-name">THE-END</a>
-        </div>
-    </nav>
-    <!-- Add the offcanvas sidebar -->
-    <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="sidebarOffcanvas"
-        aria-labelledby="sidebarOffcanvasLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <div class="sidebar">
-                <a href="/admin/dashboard"><i class="bi bi-grid"></i> Dashboard</a>
-                <a href="/admin/categories" class="active"><i class="bi bi-tag"></i> Categories</a>
-                <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
-                <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
-                <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
-                <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
-                <a href="/admin/sales-report"><i class="bi bi-bar-chart"></i> Sales Report</a>
-                <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i>Wallet</a>
-                <a href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
-            </div>
-        </div>
-    </div>
-    
 
-    <!-- Keep the original sidebar for desktop -->
-    <div class="sidebar d-none d-lg-block">
+    <nav class="navbar">
+        <a href="/admin" class="brand-name">COLINGUEST</a>
+    </nav>
+
+    <div class="sidebar">
         <a href="/admin/dashboard"><i class="bi bi-grid"></i> Dashboard</a>
         <a href="/admin/categories" class="active"><i class="bi bi-tag"></i> Categories</a>
-        <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
+        <a href="/admin/brands"><i class="bi bi-badge-tm"></i> Brands</a>
         <a href="/admin/offers"><i class="bi bi-gift"></i> Offers</a>
+        <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
+                         <a href="/admin/addproducts"><i class="bi bi-box"></i> Add Products</a>
         <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
         <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
         <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
         <a href="/admin/sales-report"><i class="bi bi-bar-chart"></i> Sales Report</a>
-        <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i>Wallet</a>
+        <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i> Wallet</a>
         <a href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
     </div>
 
-    <!-- Main Content -->
+    <!-- Edit Category Modal -->
+    <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Category</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="editCategoryForm">
+              <input type="hidden" id="orgName" />
+              <div class="mb-3">
+                <label class="form-label" for="editName">Name</label>
+                <input type="text" id="editName" class="form-control" required>
+                <div id="editNameError" class="text-danger small mt-1"></div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="editDesc">Description</label>
+                <textarea id="editDesc" class="form-control" rows="3"></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="editStatus">Status</label>
+                <select id="editStatus" class="form-select">
+                  <option value="Active">Active</option>
+                  <option value="Blocked">Blocked</option>
+                </select>
+              </div>
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="main-content">
         <h2 class="dashboard-title">Categories</h2>
 
-        <!-- Filters and Search -->
-        <div class="filter-search-container">
-            <div class="filter-select">
-                <select class="form-select" id="categoryFilter">
-                    <option value="">All Categories</option>
-                    <option value="active" <%=filterValue==='active' ? 'selected' : '' %>>Active</option>
-                    <option value="inactive" <%=filterValue==='inactive' ? 'selected' : '' %>>Inactive</option>
-                </select>
-            </div>
-            <div class="d-flex align-items-center gap-3">
-                <form id="searchForm" class="search-container">
-                    <input type="text" id="searchInput" placeholder="Search categories..."
-                        value="<%= searchQuery || '' %>">
-                    <button type="submit"><i class="bi bi-search"></i></button>
-                    <% if (searchQuery || filterValue) { %>
-                        <button type="button" id="clearFilters" class="btn btn-outline-secondary btn-sm ms-2">
-                            <i class="bi bi-x-circle"></i> Clear
-                        </button>
-                        <% } %>
-                </form>
-                <button class="new-btn-2" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-                    <i class="bi bi-plus-lg"></i> Add Category
-                </button>
-            </div>
-        </div>
-
-        <!-- Add Category Modal -->
-        <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 700px;">
-                <div class="modal-content shadow-lg border-0 rounded-3">
-                    <div class="modal-header text-white" style="background-color: #3e29a8; height: 50px;">
-                        <h5 class="modal-title fw-bold" id="addCategoryModalLabel">Add Category</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-4">
-                        <form id="addCategoryForm">
-                            <div class="mb-4">
-                                <label for="addName" class="form-label fw-semibold">Category Name</label>
-                                <input type="text" class="form-control rounded-3" id="addName" name="name"
-                                    placeholder="Enter Category Name">
-                                <div id="addNameError" style="font-size: 0.8em; color: #ff0101;"></div>
-                            </div>
-                            <div class="mb-4">
-                                <label for="addDescription" class="form-label fw-semibold">Category Description</label>
-                                <textarea class="form-control rounded-3" id="addDescription" name="description" rows="3"
-                                    placeholder="Enter Category Description"></textarea>
-                                <div id="addDescriptionError" style="font-size: 0.8em; color: #ff0101;"></div>
-                            </div>
-                            <div class="mb-4">
-                                <label for="addStatus" class="form-label fw-semibold">Visibility Status</label>
-                                <select class="form-select rounded-3" id="addStatus" name="status">
-                                    <option value="Active">Active</option>
-                                    <option value="Inactive">Inactive</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Add Category</button>
-                        </form>
-
-                    </div>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div class="d-flex gap-2">
+                <div class="flex-grow-1" style="max-width:180px;">
+                    <select class="form-select filter-select">
+                        <option value="all" <%=selectedFilter==="all" ?"selected":"" %>>All</option>
+                        <option value="false" <%=selectedFilter==="false" ?"selected":"" %>>Active</option>
+                        <option value="true" <%=selectedFilter==="true" ?"selected":"" %>>Blocked</option>
+                    </select>
                 </div>
             </div>
-        </div>
-
-        <!-- Edit Category Modal -->
-        <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 700px;">
-                <div class="modal-content shadow-lg border-0 rounded-3">
-                    <div class="modal-header text-white" style="background-color: #3e29a8; height: 50px;">
-
-                        <h5 class="modal-title fw-bold" id="editCategoryModalLabel">Update Category</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-4">
-                        <form id="editCategoryForm" class="needs-validation" novalidate>
-                            <div class="mb-4">
-                                <label for="editName" class="form-label fw-semibold">Category Name</label>
-                                <input type="text" class="form-control rounded-3" id="editName" name="editName"
-                                    placeholder="Enter Category Name">
-                                <div id="editNameError" style="font-size: 0.8em; color: #ff0101;"></div>
-                            </div>
-                            <div class="d-flex w-100 gap-5">
-                                <div class="mb-4 w-100">
-                                    <label for="editDescription" class="form-label fw-semibold">Category
-                                        Description</label>
-                                    <input type="hidden" id="originalCategoryName" name="originalCategoryName">
-                                    <textarea class="form-control rounded-3" id="editDescription" name="editDescription"
-                                        rows="3" placeholder="Enter Category Description"></textarea>
-                                    <div id="editDescriptionError" style="font-size: 0.8em; color: #ff0101;"></div>
-                                </div>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-end">
-                                <div class="w-50 me-2">
-                                    <label for="editStatus" class="form-label fw-semibold">Visibility Status</label>
-                                    <select class="form-select rounded-3" id="editStatus" name="editStatus">
-                                        <option value="Active">Active</option>
-                                        <option value="Inactive">Inactive</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn px-4 py-2 text-white shadow-sm align-self-end"
-                                    style="background-color: #3e29a8;">
-                                    <i class="fa fa-check-circle me-2"></i> Update Category
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+            <form class="d-flex search-container flex-grow-1" id="searchForm" style="max-width:300px;">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="searchval" value="<%= searchQuery %>">
+                <button class="btn" type="submit" style="background-color:#3e29a8;">
+                    <i class="bi bi-search text-white"></i>
+                </button>&nbsp;
+                <a href="/admin/categories">
+                    <button class="btn" type="button" style="background-color:#3e29a8; color:white;">Reset</button>
+                </a>
+            </form>
+            <div class="d-flex gap-2">
+              <button id="btnOpenAddCategory" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Category</button>
             </div>
         </div>
 
-        <!-- Category Table -->
-        <div class="category-table">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th class="text-start col-name">Category Info</th>
-                        <th class="text-start col-desc">Description</th>
-                        <th class="col-count text-center">Item Count</th>
-                        <th class="col-date text-center">Created Date</th>
-                        <th class="text-center status-cell col-status">Status</th>
-                        <th class="col-actions text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% cat.reverse().forEach((category, index)=> { %>
+        <div class="customer-table">
+                    <table class="table">
+                        <thead>
                         <tr>
-                            <td class="text-start col-name">
-                                <%= category.name %>
-                            </td>
-                            <td class="category-description text-start col-desc"
-                                title="<%= category.description || '' %>">
-                                <% if (category.description && category.description.length) { %>
-                                    <%= category.description.slice(0, 60) %>
-                                        <%= category.description.length> 60 ? '…' : '' %>
-                                            <% } else { %>
-                                                —
-                                                <% } %>
-                            </td>
-                            <td class="col-count text-center">
-                                <%= category.itemsCount || 0 %>
-                            </td>
-                            <td class="col-date text-center">
-                                <%= new Date(category.createdAt).toLocaleString("en-IN", { day: "2-digit" ,
-                                    month: "short" , year: "numeric" , timeZone: "Asia/Kolkata" }) %>
-                            </td>
-                            <td class="status-cell col-status text-center align-middle">
-                                <i
-                                    class="fa-solid <%= category.isListed ? 'fa-eye' : 'fa-eye-slash' %> status-icon <%= category.isListed ? 'status-active' : 'status-inactive' %>"></i>
-                            </td>
-                            <td class="actions col-actions text-center">
-                                <button class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#editCategoryModal"
-                                    onclick="openEditModal(
-                                    '<%= category.name %>', 
-                                    '<%= category.description %>', 
-                                    '<%= category.isListed %>'
-                                )">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </button>
-                            </td>
+                            <th>Category ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Items</th>
+                            <th>Status</th>
+                            <th>Actions</th>
                         </tr>
+                    </thead>
+                    <tbody>
+                        <% (cat || []).forEach(category=>{ %>
+                            <tr>
+                                <td>
+                                    <%= category._id %>
+                                </td>
+                                <td>
+                                    <%= category.name %>
+                                </td>
+                                <td>
+                                    <%= category.description || '-' %>
+                                </td>
+                                <td>
+                                    <%= typeof category.itemsCount === 'number' ? category.itemsCount : 0 %>
+                                </td>
+                                <td>
+                                    <% if(category.isListed === false){ %>
+                                        <span class="badge stock-btn3">Blocked</span>
+                                    <% } else { %>
+                                        <span class="badge stock-btn1">Active</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-primary btn-edit-category"
+                                                data-name="<%= category.name %>"
+                                                data-description="<%= (category.description || '').replace(/"/g,'&quot;') %>"
+                                                data-status="<%= category.isListed === false ? 'Blocked' : 'Active' %>">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm <%= category.isListed === false ? 'btn-success' : 'btn-warning' %> btn-toggle-list"
+                                                data-name="<%= category.name %>"
+                                                data-description="<%= (category.description || '').replace(/"/g,'&quot;') %>"
+                                                data-status="<%= category.isListed === false ? 'Blocked' : 'Active' %>"
+                                                title="<%= category.isListed === false ? 'Unblock' : 'Block' %>">
+                                            <i class="bi <%= category.isListed === false ? 'bi-unlock' : 'bi-lock' %>"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                         <% }) %>
-                </tbody>
-            </table>
-        </div>
+                    </tbody>
+                </table>
 
-        <!-- Pagination -->
-        <div class="pagination-custom">
-            <div class="page-nav">
-                <% let baseUrl='/admin/categories?' ; let params=[]; if (searchQuery)
-                    params.push(`search=${encodeURIComponent(searchQuery)}`); if (filterValue)
-                    params.push(`filter=${filterValue}`); let queryString=params.length> 0 ? params.join('&') + '&' :
-                    '';
-                    %>
-                    <% if (currentPage> 1) { %>
-                        <a href="<%= baseUrl + queryString %>page=<%= currentPage - 1 %>">«</a>
-                        <% } %>
-                            <% for(let i=1; i <=totalPages; i++) { %>
-                                <a href="<%= baseUrl + queryString %>page=<%= i %>"
-                                    class="<%= currentPage === i ? 'active' : '' %>">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <% for(let i=1;i<=totalPages;i++){ %>
+                            <li class="page-item <%= i===currentPage?'active':'' %>">
+                                <a class="page-link" href="?page=<%= i %><%= selectedFilter!=='all' ? ('&visibility=' + selectedFilter) : '' %><%= searchQuery ? ('&query=' + encodeURIComponent(searchQuery)) : '' %>">
                                     <%= i %>
                                 </a>
-                                <% } %>
-                                    <% if (currentPage < totalPages) { %>
-                                        <a href="<%= baseUrl + queryString %>page=<%= currentPage + 1 %>">»</a>
-                                        <% } %>
-            </div>
+                            </li>
+                        <% } %>
+                    </ul>
+                </nav>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
-    <!-- SweetAlert (for notifications) -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Add Category Modal -->
+    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Category</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="addCategoryForm">
+              <div class="mb-3">
+                <label class="form-label" for="catName">Name</label>
+                <input type="text" id="catName" class="form-control" placeholder="e.g., Shirts" required>
+                <div id="catNameError" class="text-danger small mt-1"></div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="catDesc">Description</label>
+                <textarea id="catDesc" class="form-control" rows="3" placeholder="Short description"></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="catStatus">Status</label>
+                <select id="catStatus" class="form-select">
+                  <option value="Active" selected>Active</option>
+                  <option value="Blocked">Blocked</option>
+                </select>
+              </div>
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function openEditModal(name, description, visibility) {
-            document.getElementById("originalCategoryName").value = name;
-            document.getElementById("editName").value = name;
-            document.getElementById("editDescription").value = description;
-            document.getElementById("editStatus").value = visibility.toString() === "true" ? "Active" : "Inactive";
-
-
-            document.getElementById("editDescription").dispatchEvent(new Event("input"));
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            // Sidebar active state
+        document.addEventListener('DOMContentLoaded', function () {
+            // Sidebar active
             const sidebarLinks = document.querySelectorAll('.sidebar a');
-            sidebarLinks.forEach(link => {
-                link.addEventListener('click', function () {
-                    sidebarLinks.forEach(l => l.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-
             const currentPath = window.location.pathname;
             sidebarLinks.forEach(link => {
-                if (link.getAttribute('href') === currentPath) {
-                    link.classList.add('active');
-                }
+                if (link.getAttribute('href') === currentPath) link.classList.add('active');
+                link.addEventListener('click', function () { sidebarLinks.forEach(l => l.classList.remove('active')); this.classList.add('active'); });
             });
 
-            // Edit Category Form Submission
-            document.getElementById("editCategoryForm").addEventListener("submit", async function (e) {
-                e.preventDefault();
-                const orgName = document.getElementById("originalCategoryName").value.trim();
-                const editName = document.getElementById("editName").value.trim();
-                const editDescription = document.getElementById("editDescription").value.trim();
-                const editStatus = document.getElementById("editStatus").value;
-                const letterRegex = /^[A-Za-z]+$/;
+            // (bulk block/unblock handlers removed)
 
-                let errors = {
-                    editName: document.getElementById("editNameError"),
-                    editDescription: document.getElementById('editDescriptionError')
-                };
-
-                Object.values(errors).forEach((el) => (el.innerText = ""));
-                let hasError = false;
-
-                if (!editName) {
-                    errors.editName.innerText = "Name is required.";
-                    hasError = true;
-                }
-
-                if (!letterRegex.test(editName)) {
-                    errors.editName.innerText = "Name can only contain letters."
-                    hasError = true
-                }
-
-                if (!editDescription) {
-                    errors.editDescription.innerText = "Description is required.";
-                    hasError = true;
-                }
-
-                if (!letterRegex.test(editDescription)) {
-                    errors.editName.innerText = "Description can only contain letters."
-                    hasError = true
-                }
-
-                if (hasError) return;
-
-                const formData = { orgName, editDescription, editName, editStatus }
-                // formData.append('orgName', orgName);
-
-                try {
-                    const response = await fetch("/admin/categories", {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(formData)
-                    });
-
-                    if (response.ok) {
-                        Swal.fire({
-                            icon: "success",
-                            text: "Category updated successfully!",
-                            showConfirmButton: false,
-                            timer: 2000
-                        }).then(() => {
-                            location.reload();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: "error",
-                            text: "Category updation failed!",
-                            showConfirmButton: false,
-                            timer: 2000
-                        });
-                    }
-                } catch (error) {
-                    console.error("Error:", error);
-                    Swal.fire({
-                        icon: "error",
-                        text: "An unexpected error occurred.",
-                        showConfirmButton: false,
-                        timer: 2000
-                    });
-                }
+            // Filter change -> /admin/categories?visibility=...
+            document.querySelector('.filter-select')?.addEventListener('change', function () {
+                const val = this.value;
+                const params = new URLSearchParams(window.location.search);
+                if (val === 'all') params.delete('visibility'); else params.set('visibility', val);
+                params.set('page', '1');
+                window.location.href = `/admin/categories?${params.toString()}`;
             });
 
-            // Add Category Form Submission
-            document.getElementById("addCategoryForm")?.addEventListener("submit", async (event) => {
+            // Search submit -> keep visibility, set query, reset page
+            document.getElementById('searchForm')?.addEventListener('submit', function (event) {
                 event.preventDefault();
-
-                const name = document.getElementById("addName").value.trim();
-                const description = document.getElementById("addDescription").value.trim();
-                const status = document.getElementById("addStatus").value;
-
-                const letterRegex = /^[A-Za-z\s]+$/;
-
-                let errors = {
-                    name: document.getElementById("addNameError"),
-                    description: document.getElementById("addDescriptionError")
-                };
-
-                // Clear previous errors
-                Object.values(errors).forEach(el => el.innerText = "");
-
-                let hasError = false;
-
-                if (!name) {
-                    errors.name.innerText = "Name is required.";
-                    hasError = true;
-                } else if (!letterRegex.test(name)) {
-                    errors.name.innerText = "Name can only contain letters and spaces.";
-                    hasError = true;
-                }
-
-                if (!description) {
-                    errors.description.innerText = "Description is required.";
-                    hasError = true;
-                } else if (!letterRegex.test(description)) {
-                    errors.description.innerText = "Description can only contain letters and spaces.";
-                    hasError = true;
-                }
-
-                if (hasError) return;
-
-                const formData = { name, description, status };
-
-                try {
-                    const response = await fetch("/admin/addCategory", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(formData)
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        Swal.fire({
-                            icon: "success",
-                            text: result.message,
-                            showConfirmButton: false,
-                            timer: 2000
-                        }).then(() => location.reload());
-                    } else {
-                        Swal.fire({
-                            icon: "error",
-                            text: result.error || "Something went wrong!",
-                            showConfirmButton: false,
-                            timer: 2000
-                        });
-                    }
-
-                } catch (error) {
-                    console.error("Error:", error);
-                    Swal.fire({
-                        icon: "error",
-                        title: "Oops!",
-                        text: "Something went wrong. Please try again."
-                    });
-                }
+                const q = document.getElementById('searchval').value.trim();
+                const params = new URLSearchParams(window.location.search);
+                if (q) params.set('query', q); else params.delete('query');
+                params.set('page', '1');
+                window.location.href = `/admin/categories?${params.toString()}`;
             });
 
-            // Search Form Submission
-            document.getElementById('searchForm').addEventListener('submit', async function (event) {
-                event.preventDefault();
-                const searchQuery = document.getElementById('searchInput').value.trim();
-                const currentFilter = document.getElementById('categoryFilter').value;
-
-                try {
-                    let params = [];
-                    if (searchQuery) params.push(`search=${encodeURIComponent(searchQuery)}`);
-                    if (currentFilter) params.push(`filter=${currentFilter}`);
-
-                    const queryString = params.length > 0 ? '?' + params.join('&') : '';
-                    window.location.href = `/admin/categories${queryString}`;
-                } catch (error) {
-                    console.error('Error fetching search results:', error);
-                }
+            // Add Category Modal + Submit
+            const addModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+            document.getElementById('btnOpenAddCategory')?.addEventListener('click', () => {
+              document.getElementById('addCategoryForm').reset();
+              document.getElementById('catNameError').textContent = '';
+              addModal.show();
             });
 
-            // Filter Select Change
-            document.getElementById('categoryFilter').addEventListener('change', function () {
-                const filterValue = this.value;
-                const currentSearch = document.getElementById('searchInput').value.trim();
-
-                let params = [];
-                if (currentSearch) params.push(`search=${encodeURIComponent(currentSearch)}`);
-                if (filterValue) params.push(`filter=${filterValue}`);
-
-                const queryString = params.length > 0 ? '?' + params.join('&') : '';
-                window.location.href = `/admin/categories${queryString}`;
-            });
-
-            // Clear Filters
-            const clearFiltersBtn = document.getElementById('clearFilters');
-            if (clearFiltersBtn) {
-                clearFiltersBtn.addEventListener('click', function () {
-                    window.location.href = '/admin/categories';
+            document.getElementById('addCategoryForm')?.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const name = document.getElementById('catName').value.trim();
+              const description = document.getElementById('catDesc').value.trim();
+              const statusSel = document.getElementById('catStatus').value;
+              if (!name) { document.getElementById('catNameError').textContent = 'Name is required'; return; }
+              document.getElementById('catNameError').textContent = '';
+              try {
+                const res = await fetch('/admin/addCategory', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ name, description, status: statusSel })
                 });
-            }
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                  const msg = data.error || data.nameError || 'Failed to add category';
+                  Swal.fire({ icon: 'error', text: msg });
+                  return;
+                }
+                addModal.hide();
+                Swal.fire({ icon: 'success', text: data.message || 'Category added', timer: 1200, showConfirmButton: false })
+                  .then(() => window.location.reload());
+              } catch (err) {
+                Swal.fire({ icon: 'error', text: 'Network error' });
+              }
+            });
 
-            // (Removed) JS truncation of description to avoid conflicts; truncating on server-side now
+            // Edit Category: open modal with row data
+            const editModal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
+            document.querySelectorAll('.btn-edit-category').forEach(btn => {
+              btn.addEventListener('click', (e) => {
+                const name = btn.getAttribute('data-name') || '';
+                const desc = btn.getAttribute('data-description') || '';
+                const status = btn.getAttribute('data-status') || 'Active';
+                document.getElementById('orgName').value = name;
+                document.getElementById('editName').value = name;
+                document.getElementById('editDesc').value = desc;
+                document.getElementById('editStatus').value = status;
+                document.getElementById('editNameError').textContent = '';
+                editModal.show();
+              });
+            });
+
+            // Submit edit to PUT /admin/categories
+            document.getElementById('editCategoryForm')?.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const orgName = document.getElementById('orgName').value.trim();
+              const editName = document.getElementById('editName').value.trim();
+              const editDescription = document.getElementById('editDesc').value.trim();
+              const editStatus = document.getElementById('editStatus').value;
+              if (!editName) { document.getElementById('editNameError').textContent = 'Name is required'; return; }
+              document.getElementById('editNameError').textContent = '';
+              try{
+                const res = await fetch('/admin/categories', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ orgName, editName, editDescription, editStatus })
+                });
+                const data = await res.json().catch(()=>({}));
+                if (!res.ok) {
+                  const msg = data.error || data.nameError || 'Failed to update category';
+                  Swal.fire({ icon: 'error', text: msg });
+                  return;
+                }
+                editModal.hide();
+                Swal.fire({ icon: 'success', text: data.message || 'Category updated', timer: 1200, showConfirmButton: false })
+                  .then(()=> window.location.reload());
+              } catch(err){
+                Swal.fire({ icon: 'error', text: 'Network error' });
+              }
+            });
+
+            // Quick Block/Unblock using same edit endpoint by flipping status
+            document.querySelectorAll('.btn-toggle-list').forEach(btn => {
+              btn.addEventListener('click', async () => {
+                const name = btn.getAttribute('data-name') || '';
+                const desc = btn.getAttribute('data-description') || '';
+                const status = btn.getAttribute('data-status') || 'Active';
+                const nextStatus = status === 'Blocked' ? 'Active' : 'Blocked';
+                try{
+                  const res = await fetch('/admin/categories', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orgName: name, editName: name, editDescription: desc, editStatus: nextStatus })
+                  });
+                  const data = await res.json().catch(()=>({}));
+                  if (!res.ok) { Swal.fire({ icon: 'error', text: data.error || 'Failed to update' }); return; }
+                  Swal.fire({ icon: 'success', text: nextStatus === 'Active' ? 'Unblocked' : 'Blocked', timer: 900, showConfirmButton: false })
+                    .then(()=> window.location.reload());
+                }catch(err){
+                  Swal.fire({ icon: 'error', text: 'Network error' });
+                }
+              });
+            });
         });
     </script>
 </body>

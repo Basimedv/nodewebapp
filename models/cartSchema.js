@@ -14,7 +14,7 @@ const cartSchema = new Schema({
             required: true
         },
         quantity: {
-            tyep: Number,
+            type: Number,
             default: 1
         },
         price: {
@@ -38,4 +38,3 @@ const cartSchema = new Schema({
 })
 const Cart = mongoose.model('Cart', cartSchema)
 module.exports = Cart;
-

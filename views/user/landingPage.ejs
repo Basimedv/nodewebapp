@@ -23,7 +23,7 @@
     <!-- 🔹 Normal Header (not partial) -->
     <header>
         <div class="mainhead">
-            <img src="/images/theend.png" class="imageLogo" alt="Logo">
+            <img src="/images/colinguest.png" class="imageLogo" alt="Logo">
             <div class="buttons">
                 <input type="text" class="searchBar" placeholder="Search product...">
                 <i class="fas fa-user" id="profileIcon"></i>
@@ -79,7 +79,7 @@
                 <img src="/images/banner1.png" alt="">
             </div>
             <div id="banner2">
-                <img src="/images/theend.png" alt="gbt" id="imgLogo">
+                <img src="/images/colinguest.png" alt="gbt" id="imgLogo">
                 <p>"Your Offer, Your Time!” Lock exclusive deals and claim them even after they're gone!<br>
                     - Coming Soon... !
                 </p>
@@ -111,61 +111,25 @@
             </div>
 
             <div id="shopProductSection">
-                <!-- Product 1 -->
-                <div class="product">
-                    <div class="product-image">
-                        <img src="/images/banner7.png" alt="Regular Fit Short-sleeved jersey shirt">
+                <% (products || []).forEach(function(p){ %>
+                    <div class="product">
+                        <div class="product-image">
+                            <img src="<%= (p.productImage && p.productImage[0]) ? p.productImage[0] : '/images/banner7.png' %>" alt="<%= p.productNmae || 'Product' %>">
+                        </div>
+                        <div class="product-details">
+                            <p><%= p.productNmae || '-' %></p>
+                            <p class="price">
+                                <span class="original-price">Rs. <%= (p.reqularPrice || 0).toFixed ? p.reqularPrice.toFixed(2) : p.reqularPrice %></span>
+                                <% if (p.salePrice && Number(p.salePrice) > 0 && Number(p.salePrice) < Number(p.reqularPrice || 0)) { %>
+                                    <span class="discount-price">Rs. <%= Number(p.salePrice).toFixed(2) %></span>
+                                <% } %>
+                            </p>
+                        </div>
                     </div>
-                    <div class="product-details">
-                        <p>Regular Fit Short-Sleeved Jersey Shirt</p>
-                        <p class="price">
-                            <span class="original-price">Rs. 1,999.00</span>
-                            <span class="discount-price">Rs. 1,499.00</span>
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Product 2 -->
-                <div class="product">
-                    <div class="product-image">
-                        <img src="/images/image 106.png" alt="ZW COLLECTION OPENWORK BLOUSE">
-                    </div>
-                    <div class="product-details">
-                        <p>ZW COLLECTION OPENWORK BLOUSE</p>
-                        <p class="price">
-                            <span class="original-price">Rs. 4,200.00</span>
-                            <span class="discount-price">Rs. 3,500.00</span>
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Product 3 -->
-                <div class="product">
-                    <div class="product-image">
-                        <img src="/images/banner8.png" alt="Regular Fit Linen shirt">
-                    </div>
-                    <div class="product-details">
-                        <p>Regular Fit Linen shirt</p>
-                        <p class="price">
-                            <span class="original-price">Rs. 3,599.00</span>
-                            <span class="discount-price">Rs. 2,999.00</span>
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Product 4 -->
-                <div class="product">
-                    <div class="product-image">
-                        <img src="/images/banner9.png" alt="ZW COLLECTION CULOTTES">
-                    </div>
-                    <div class="product-details">
-                        <p>ZW COLLECTION CULOTTES</p>
-                        <p class="price">
-                            <span class="original-price">Rs. 4,200.00</span>
-                            <span class="discount-price">Rs. 3,500.00</span>
-                        </p>
-                    </div>
-                </div>
+                <% }) %>
+                <% if (!products || products.length === 0) { %>
+                    <p class="text-muted">No products to show yet.</p>
+                <% } %>
             </div>
 
             <div class="shopButton">
@@ -251,16 +215,7 @@
     </main>
 
     <!-- 🔹 Normal Footer -->
-    <footer>
-        <div class="footer-content">
-            <p>&copy; <%= new Date().getFullYear() %> U-Craft. All rights reserved.</p>
-            <ul class="footer-links">
-                <li><a href="/privacy">Privacy Policy</a></li>
-                <li><a href="/terms">Terms of Service</a></li>
-                <li><a href="/contact">Contact</a></li>
-            </ul>
-        </div>
-    </footer>
+    <%-include("../../views/partials/user/footer")%>
 
 </body>
 

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Product</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bellefair&family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet">
+  <style>
+    body { font-family: 'Outfit', sans-serif; background:#f5f7fa; min-height:100vh; }
+    .navbar{ background:white; padding:15px 30px; position:fixed; top:0; left:0; right:0; z-index:1000; box-shadow:0 2px 10px rgba(0,0,0,.08) }
+    .brand-name{ font-family:'Bellefair'; font-size:28px; color:#0d6efd; text-decoration:none; }
+    .sidebar{ width:250px; background:#f9f9f9; padding:20px 0; position:fixed; top:60px; bottom:0; left:0; overflow-y:auto }
+    .sidebar a{ display:flex; align-items:center; padding:15px 30px; color:#192430; text-decoration:none; border-radius:15px }
+    .sidebar a.active{ background:#3b6da1; color:white }
+    .sidebar a i { margin-right: 12px; }
+    .main-content{ margin-left:250px; padding:80px 30px 30px; }
+    .card{ border:none; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+    /* White & Blue Theme */
+    .btn-primary { background:#0d6efd; border-color:#0d6efd; }
+    .btn-primary:hover { background:#0b5ed7; border-color:#0b5ed7; }
+    .btn-outline-secondary{ color:#0d6efd; border-color:#0d6efd; }
+    .btn-outline-secondary:hover{ color:#fff; background:#0d6efd; border-color:#0d6efd; }
+    .form-label { font-weight: 600; color:#0d6efd; }
+    .form-control:focus, .form-select:focus{ border-color:#0d6efd; box-shadow:0 0 0 .2rem rgba(13,110,253,.15); }
+    .card{ background:#fff; }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a class="brand-name" href="/admin/products">COLINGUEST</a>
+  </nav>
+
+  <!-- Sidebar -->
+  <div class="sidebar d-none d-lg-block">
+    <a href="/admin/dashboard"><i class="bi bi-grid"></i> Dashboard</a>
+    <a href="/admin/categories"><i class="bi bi-tag"></i> Categories</a>
+    <a href="/admin/brands"><i class="bi bi-badge-tm"></i> Brands</a>
+    <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
+    <a href="/admin/products" class="active"><i class="bi bi-box"></i> Add Products</a>
+    <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
+    <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
+    <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
+    <a href="/admin/sales-report"><i class="bi bi-bar-chart"></i> Sales Report</a>
+    <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i>Wallet</a>
+    <a href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+  </div>
+
+  <!-- Main -->
+  <div class="main-content">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h2 class="mb-0" style="color:#0d6efd;">Add New Product</h2>
+      <a href="/admin/products" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <form action="/admin/products" method="POST" enctype="multipart/form-data" id="productForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="name">Product Name</label>
+              <input type="text" class="form-control" id="name" name="name" placeholder="Type here" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="brand">Brand</label>
+              <select id="brand" name="brand" class="form-select" required>
+                <option value="">Select brand</option>
+                <% (brand || []).forEach(b => { %>
+                  <option value="<%= b.brandName %>"><%= b.brandName %></option>
+                <% }) %>
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="description">Full description</label>
+              <textarea id="description" name="description" rows="4" class="form-control" placeholder="Type here"></textarea>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label" for="price">Regular price (₹)</label>
+              <input type="number" min="0" step="0.01" class="form-control" id="price" name="price" placeholder="0.00" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="salePrice">Sale price (₹)</label>
+              <input type="number" min="0" step="0.01" class="form-control" id="salePrice" name="salePrice" placeholder="0.00">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="quantity">Quantity</label>
+              <input type="number" min="0" step="1" class="form-control" id="quantity" name="quantity" placeholder="0" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="category">Category</label>
+              <select id="category" name="category" class="form-select" required>
+                <option value="">Select category</option>
+                <% (cat || []).forEach(c => { %>
+                  <option value="<%= c._id %>"><%= c.name %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="color">Color</label>
+              <input type="text" class="form-control" id="color" name="color" placeholder="e.g., Blue" list="colorSuggestions">
+              <datalist id="colorSuggestions">
+                <option value="Blue"></option>
+                <option value="Black"></option>
+                <option value="White"></option>
+                <option value="Red"></option>
+                <option value="Green"></option>
+                <option value="Yellow"></option>
+                <option value="Grey"></option>
+                <option value="Brown"></option>
+                <option value="Pink"></option>
+                <option value="Purple"></option>
+              </datalist>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="size">Size</label>
+              <input type="text" class="form-control" id="size" name="size" placeholder="e.g., M" list="sizeSuggestions">
+              <datalist id="sizeSuggestions">
+                <option value="XS"></option>
+                <option value="S"></option>
+                <option value="M"></option>
+                <option value="L"></option>
+                <option value="XL"></option>
+                <option value="XXL"></option>
+                <option value="28"></option>
+                <option value="30"></option>
+                <option value="32"></option>
+                <option value="34"></option>
+                <option value="36"></option>
+              </datalist>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="status">Status</label>
+              <select id="status" name="status" class="form-select">
+                <option value="Available" selected>Available</option>
+                <option value="out of stock">Out of stock</option>
+                <option value="Discountinued">Discontinued</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="images">Images</label>
+              <input type="file" class="form-control" id="images" name="images" accept="image/*" multiple>
+              <small class="text-muted d-block">Select up to 8 images (JPG, PNG, WebP). You can crop them before upload.</small>
+              <div id="thumbs" class="d-flex flex-wrap gap-2 mt-2"></div>
+              <div id="imagesError" class="text-danger small mt-1"></div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="colorImages">Color variant images (optional)</label>
+              <input type="file" class="form-control" id="colorImages" accept="image/*" multiple>
+              <small class="text-muted d-block">Add separate images for other colors. You can crop them before upload.</small>
+              <div id="colorThumbs" class="d-flex flex-wrap gap-2 mt-2"></div>
+              <div id="colorImagesError" class="text-danger small mt-1"></div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end mt-3">
+              <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Product</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+  <script>
+    // --- Helpers ---
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+    // --- Basic Field Validation ---
+    const form = $('#productForm');
+    const fieldErrors = {
+      name: null, brand: null, description: null, price: null, salePrice: null, quantity: null, category: null, color: null
+    };
+
+    function showError(inputId, msg){
+      let el = document.getElementById(inputId + 'Error');
+      if (!el){
+        const input = document.getElementById(inputId);
+        el = document.createElement('div');
+        el.id = inputId + 'Error';
+        el.className = 'text-danger small mt-1';
+        input && input.insertAdjacentElement('afterend', el);
+      }
+      el.textContent = msg || '';
+    }
+
+    function validateFields(){
+      let ok = true;
+      // Clear all
+      Object.keys(fieldErrors).forEach(k=>showError(k, ''));
+      showError('images', '');
+
+      const name = $('#name').value.trim();
+      const brand = $('#brand').value.trim();
+      const description = $('#description').value.trim();
+      const price = parseFloat($('#price').value || '0');
+      const sale = parseFloat($('#salePrice').value || '0');
+      const quantity = parseInt($('#quantity').value || '0', 10);
+      const category = $('#category').value.trim();
+
+      if (!name){ showError('name', 'Name is required'); ok = false; }
+      if (!brand){ showError('brand', 'Brand is required'); ok = false; }
+      if (!description){ showError('description', 'Description is required'); ok = false; }
+      if (!(price >= 0)){ showError('price', 'Price must be 0 or more'); ok = false; }
+      if (sale && sale > price){ showError('salePrice', 'Sale price cannot exceed price'); ok = false; }
+      if (!(quantity >= 0)){ showError('quantity', 'Quantity must be 0 or more'); ok = false; }
+      if (!category){ showError('category', 'Category is required'); ok = false; }
+      return ok;
+    }
+
+    // --- Cropper Setup ---
+    const fileInput = document.getElementById('images');
+    const thumbs = document.getElementById('thumbs');
+    const imagesError = document.getElementById('imagesError');
+    let filesQueue = [];
+    let croppedBlobs = [];
+    let cropper = null;
+    let scaleX = 1, scaleY = 1;
+
+    // Color images controls
+    const colorFileInput = document.getElementById('colorImages');
+    const colorThumbs = document.getElementById('colorThumbs');
+    const colorImagesError = document.getElementById('colorImagesError');
+    let colorFilesQueue = [];
+    let colorCroppedBlobs = [];
+    let colorCropper = null;
+    let cScaleX = 1, cScaleY = 1;
+
+    // Inject a cropper modal
+    const cropperModalHtml = `
+      <style>
+        /* dashed crop box look */
+        #cropperModal .cropper-view-box,
+        #cropperModal .cropper-face { border-radius: 4px; border: 2px dashed rgba(255,255,255,.8); box-shadow:none; }
+      </style>
+      <div class="modal fade" id="cropperModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:680px;">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Crop image (<span id="cropIndex">1</span>/<span id="cropTotal">1</span>)</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body d-flex justify-content-center">
+              <img id="cropImage" src="" style="max-width:100%; max-height:70vh;"/>
+            </div>
+            <div class="modal-footer w-100 d-flex justify-content-between">
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary" id="rotateLeft">Rotate Left</button>
+                <button type="button" class="btn btn-outline-secondary" id="rotateRight">Rotate Right</button>
+                <button type="button" class="btn btn-outline-secondary" id="flipH">Flip H</button>
+                <button type="button" class="btn btn-outline-secondary" id="flipV">Flip V</button>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-secondary" id="skipCrop">Skip</button>
+                <button type="button" class="btn btn-primary" id="saveCrop">Save Crop</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', cropperModalHtml);
+    const cropperModal = new bootstrap.Modal(document.getElementById('cropperModal'));
+    const cropImgEl = document.getElementById('cropImage');
+    const idxSpan = document.getElementById('cropIndex');
+    const totalSpan = document.getElementById('cropTotal');
+    
+    function openCropperFor(index){
+      const file = filesQueue[index];
+      if (!file) return;
+      idxSpan.textContent = index + 1;
+      totalSpan.textContent = filesQueue.length;
+      const url = URL.createObjectURL(file);
+      cropImgEl.src = url;
+      cropperModal.show();
+      setTimeout(()=>{
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(cropImgEl, {
+          // Free-form aspect ratio for flexible sizing
+          aspectRatio: NaN,
+          viewMode: 1,
+          autoCropArea: 1,
+          movable: true,
+          scalable: false,
+          zoomable: true,
+          background: false,
+        });
+      }, 50);
+    }
+
+    function renderThumb(blobOrFile){
+      const url = URL.createObjectURL(blobOrFile);
+      const img = document.createElement('img');
+      img.src = url;
+      img.width = 70; img.height = 70; img.style.objectFit = 'cover';
+      img.className = 'rounded border';
+      thumbs.appendChild(img);
+    }
+
+    // Rotate / Flip controls
+    document.getElementById('rotateLeft').addEventListener('click', ()=> cropper && cropper.rotate(-90));
+    document.getElementById('rotateRight').addEventListener('click', ()=> cropper && cropper.rotate(90));
+    document.getElementById('flipH').addEventListener('click', ()=> { if (!cropper) return; scaleX = -scaleX; cropper.scaleX(scaleX); });
+    document.getElementById('flipV').addEventListener('click', ()=> { if (!cropper) return; scaleY = -scaleY; cropper.scaleY(scaleY); });
+
+    // Skip keeps original image
+    document.getElementById('skipCrop').addEventListener('click', ()=>{
+      const idx = croppedBlobs.length;
+      croppedBlobs.push(filesQueue[idx]); // push original file
+      renderThumb(filesQueue[idx]);
+      cropperModal.hide();
+      if (croppedBlobs.length < filesQueue.length) openCropperFor(croppedBlobs.length);
+    });
+
+    document.getElementById('saveCrop').addEventListener('click', async ()=>{
+      if (!cropper) return;
+      // Build canvas based on selected crop size (max 2000px on the longer side)
+      const data = cropper.getData(true); // { width, height }
+      const maxSide = 2000;
+      const larger = Math.max(data.width || 0, data.height || 0) || 1000;
+      const scale = larger > maxSide ? (maxSide / larger) : 1;
+      const targetW = Math.max(1, Math.round((data.width || 1000) * scale));
+      const targetH = Math.max(1, Math.round((data.height || 1000) * scale));
+      const canvas = cropper.getCroppedCanvas({ width: targetW, height: targetH });
+      const idx = croppedBlobs.length;
+      const fileName = `cropped-${Date.now()}-${idx}.webp`;
+      canvas.toBlob((blob)=>{
+        if (blob){
+          const file = new File([blob], fileName, { type: 'image/webp' });
+          croppedBlobs.push(file);
+          renderThumb(file);
+        }
+        cropperModal.hide();
+        if (croppedBlobs.length < filesQueue.length) openCropperFor(croppedBlobs.length);
+      }, 'image/webp', 0.95);
+    });
+
+    // Handle file selection
+    fileInput.addEventListener('change', (e)=>{
+      imagesError.textContent = '';
+      thumbs.innerHTML = '';
+      filesQueue = Array.from(e.target.files || []);
+      croppedBlobs = [];
+      if (filesQueue.length === 0) return;
+      if (filesQueue.length > 8){ imagesError.textContent = 'Please select up to 8 images'; fileInput.value=''; return; }
+      const allowed = ['image/jpeg','image/png','image/webp'];
+      for (const f of filesQueue){ if (!allowed.includes(f.type)){ imagesError.textContent = 'Only JPG/PNG/WebP allowed'; fileInput.value=''; filesQueue=[]; return; } }
+      // Start cropping first image
+      openCropperFor(0);
+    });
+
+    // --- Separate modal for Color Images ---
+    const colorCropperModalHtml = `
+      <div class="modal fade" id="colorCropperModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:680px;">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Crop color image (<span id="cCropIndex">1</span>/<span id="cCropTotal">1</span>)</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body d-flex justify-content-center">
+              <img id="cCropImage" src="" style="max-width:100%; max-height:70vh;"/>
+            </div>
+            <div class="modal-footer w-100 d-flex justify-content-between">
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary" id="cRotateLeft">Rotate Left</button>
+                <button type="button" class="btn btn-outline-secondary" id="cRotateRight">Rotate Right</button>
+                <button type="button" class="btn btn-outline-secondary" id="cFlipH">Flip H</button>
+                <button type="button" class="btn btn-outline-secondary" id="cFlipV">Flip V</button>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-secondary" id="cSkipCrop">Skip</button>
+                <button type="button" class="btn btn-primary" id="cSaveCrop">Save Crop</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', colorCropperModalHtml);
+    const colorCropperModal = new bootstrap.Modal(document.getElementById('colorCropperModal'));
+    const cCropImgEl = document.getElementById('cCropImage');
+    const cIdxSpan = document.getElementById('cCropIndex');
+    const cTotalSpan = document.getElementById('cCropTotal');
+
+    function openColorCropperFor(index){
+      const file = colorFilesQueue[index];
+      if (!file) return;
+      cIdxSpan.textContent = index + 1;
+      cTotalSpan.textContent = colorFilesQueue.length;
+      const url = URL.createObjectURL(file);
+      cCropImgEl.src = url;
+      colorCropperModal.show();
+      setTimeout(()=>{
+        if (colorCropper) colorCropper.destroy();
+        colorCropper = new Cropper(cCropImgEl, {
+          aspectRatio: NaN,
+          viewMode: 1,
+          autoCropArea: 1,
+          movable: true,
+          scalable: false,
+          zoomable: true,
+          background: false,
+        });
+      }, 50);
+    }
+
+    function renderColorThumb(blobOrFile){
+      const url = URL.createObjectURL(blobOrFile);
+      const img = document.createElement('img');
+      img.src = url;
+      img.width = 70; img.height = 70; img.style.objectFit = 'cover';
+      img.className = 'rounded border';
+      colorThumbs.appendChild(img);
+    }
+
+    document.getElementById('cRotateLeft').addEventListener('click', ()=> colorCropper && colorCropper.rotate(-90));
+    document.getElementById('cRotateRight').addEventListener('click', ()=> colorCropper && colorCropper.rotate(90));
+    document.getElementById('cFlipH').addEventListener('click', ()=> { if (!colorCropper) return; cScaleX = -cScaleX; colorCropper.scaleX(cScaleX); });
+    document.getElementById('cFlipV').addEventListener('click', ()=> { if (!colorCropper) return; cScaleY = -cScaleY; colorCropper.scaleY(cScaleY); });
+
+    document.getElementById('cSkipCrop').addEventListener('click', ()=>{
+      const idx = colorCroppedBlobs.length;
+      colorCroppedBlobs.push(colorFilesQueue[idx]);
+      renderColorThumb(colorFilesQueue[idx]);
+      colorCropperModal.hide();
+      if (colorCroppedBlobs.length < colorFilesQueue.length) openColorCropperFor(colorCroppedBlobs.length);
+    });
+
+    document.getElementById('cSaveCrop').addEventListener('click', ()=>{
+      if (!colorCropper) return;
+      const data = colorCropper.getData(true);
+      const maxSide = 2000;
+      const larger = Math.max(data.width || 0, data.height || 0) || 1000;
+      const scale = larger > maxSide ? (maxSide / larger) : 1;
+      const targetW = Math.max(1, Math.round((data.width || 1000) * scale));
+      const targetH = Math.max(1, Math.round((data.height || 1000) * scale));
+      const canvas = colorCropper.getCroppedCanvas({ width: targetW, height: targetH });
+      const idx = colorCroppedBlobs.length;
+      const fileName = `color-cropped-${Date.now()}-${idx}.webp`;
+      canvas.toBlob((blob)=>{
+        if (blob){
+          const file = new File([blob], fileName, { type: 'image/webp' });
+          colorCroppedBlobs.push(file);
+          renderColorThumb(file);
+        }
+        colorCropperModal.hide();
+        if (colorCroppedBlobs.length < colorFilesQueue.length) openColorCropperFor(colorCroppedBlobs.length);
+      }, 'image/webp', 0.95);
+    });
+
+    colorFileInput.addEventListener('change', (e)=>{
+      colorImagesError.textContent = '';
+      colorThumbs.innerHTML = '';
+      colorFilesQueue = Array.from(e.target.files || []);
+      colorCroppedBlobs = [];
+      if (colorFilesQueue.length === 0) return;
+      if (colorFilesQueue.length > 8){ colorImagesError.textContent = 'Please select up to 8 images'; colorFileInput.value=''; return; }
+      const allowed = ['image/jpeg','image/png','image/webp'];
+      for (const f of colorFilesQueue){ if (!allowed.includes(f.type)){ colorImagesError.textContent = 'Only JPG/PNG/WebP allowed'; colorFileInput.value=''; colorFilesQueue=[]; return; } }
+      openColorCropperFor(0);
+    });
+
+    // Intercept submit to send cropped files via FormData
+    form.addEventListener('submit', async (e)=>{
+      // Field validations
+      if (!validateFields()) { e.preventDefault(); return; }
+      // Image validations
+      if (filesQueue.length === 0){ e.preventDefault(); imagesError.textContent = 'Please select at least one image'; return; }
+      if (croppedBlobs.length !== filesQueue.length){ e.preventDefault(); imagesError.textContent = 'Please finish cropping all selected images'; return; }
+
+      // Build FormData with cropped files
+      e.preventDefault();
+      const fd = new FormData();
+      fd.set('name', $('#name').value.trim());
+      fd.set('brand', $('#brand').value.trim());
+      fd.set('description', $('#description').value.trim());
+      fd.set('price', $('#price').value);
+      fd.set('salePrice', $('#salePrice').value);
+      fd.set('quantity', $('#quantity').value);
+      fd.set('category', $('#category').value);
+      fd.set('color', $('#color').value);
+      fd.set('status', $('#status').value);
+      croppedBlobs.forEach((f, i)=> fd.append('images', f, f.name || `image-${i}.webp`));
+      // Append color images under the same 'images' field for backend compatibility
+      colorCroppedBlobs.forEach((f, i)=> fd.append('images', f, f.name || `color-image-${i}.webp`));
+
+      try{
+        const res = await fetch('/admin/products', {
+          method: 'POST',
+          body: fd,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (res.ok){
+          window.location.href = '/admin/products';
+          return;
+        } else {
+          const msg = await res.text().catch(()=> '');
+          alert(msg || 'Failed to create product');
+        }
+      } catch(err){
+        console.error(err);
+        alert('Network error while uploading product');
+      }
+    });
+  </script>
+</body>
+</html>

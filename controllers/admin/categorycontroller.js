@@ -1,52 +1,59 @@
 const Category = require('../../models/categorySchema');
+const Product = require('../../models/productSchema');
 
 const categoryinfo = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = 4;
+        const page = Math.max(parseInt(req.query.page) || 1, 1);
+        const limit = 10;
         const skip = (page - 1) * limit;
-        const search = req.query.search || '';
-        const filter = req.query.filter || '';
 
-        // Build query object
-        let query = {};
-        
-        // Add search functionality
-        if (search) {
-            query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } }
-            ];
+        // Filters
+        const visibility = (req.query.visibility || 'all').trim(); // 'all' | 'true' | 'false'
+        const query = (req.query.query || '').trim();
+
+        const filter = {};
+        if (visibility === 'true') {
+            filter.$or = [ { isListed: false }, { visibility: false } ];
+        } else if (visibility === 'false') {
+            filter.$or = [ { isListed: true }, { visibility: true } ];
         }
-        
-        // Add filter functionality
-        if (filter === 'active') {
-            query.isListed = true;
-        } else if (filter === 'inactive') {
-            query.isListed = false;
+        if (query) {
+            const regex = new RegExp(query, 'i');
+            filter.$and = (filter.$and || []);
+            filter.$and.push({ $or: [ { name: regex }, { description: regex } ] });
         }
 
-        const categoryData = await Category.find(query)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
+        const [categoryData, totalCategories] = await Promise.all([
+            Category.find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            Category.countDocuments(filter),
+        ]);
 
-        const totalCategories = await Category.countDocuments(query);
-        const totalPages = Math.ceil(totalCategories / limit);
-
-        // Add itemsCount to each category (you can implement this based on your product schema)
-        const categoriesWithCount = categoryData.map(category => ({
-            ...category.toObject(),
-            itemsCount: 0 // TODO: Implement actual count from products
+        // Normalize and compute item counts for the current page
+        const ids = (categoryData || []).map(d => d._id);
+        const countsAgg = await Product.aggregate([
+            { $match: { category: { $in: ids } } },
+            { $group: { _id: '$category', count: { $sum: 1 } } }
+        ]);
+        const countsMap = Object.fromEntries(countsAgg.map(c => [String(c._id), c.count]));
+        const normalized = (categoryData || []).map(doc => ({
+            ...doc,
+            isListed: typeof doc.isListed === 'boolean' ? doc.isListed : (typeof doc.visibility === 'boolean' ? doc.visibility : true),
+            itemsCount: countsMap[String(doc._id)] || 0,
         }));
 
+        const totalPages = Math.max(Math.ceil(totalCategories / limit), 1);
+
         res.render("admin/category", {
-            cat: categoriesWithCount,
+            cat: normalized,
             currentPage: page,
-            totalPages: totalPages,
-            totalCategories: totalCategories,
-            searchQuery: search,
-            filterValue: filter
+            totalPages,
+            totalCategories,
+            selectedFilter: visibility === 'true' ? 'true' : (visibility === 'false' ? 'false' : 'all'),
+            searchQuery: query,
         });
 
     } catch (error) {
@@ -54,6 +61,7 @@ const categoryinfo = async (req, res) => {
         res.redirect('/pageerror');
     }
 };
+
 
 const addCategory = async (req, res) => {
     const { name, description, status } = req.body;
@@ -64,11 +72,9 @@ const addCategory = async (req, res) => {
             return res.status(400).json({ error: "Category already exists" });
         }
 
-        const newCategory = new Category({ 
-            name, 
-            description, 
-            isListed: status?.toLowerCase() === "active" ? true : false
-        });
+        // Map status string from UI to boolean isListed field in schema
+        const isListed = String(status).toLowerCase() === 'active';
+        const newCategory = new Category({ name, description, isListed });
         await newCategory.save();
 
         return res.status(201).json({ message: "Category added successfully" });
@@ -98,10 +104,49 @@ const editCategory = async (req,res)=>{
 
          await category.save();
 
-         return res.status(200).json({message : "Category updated successfully ."});
+         return res.status(200).json({message : "Category added successfully ."});
     } catch (error) {
-        console.log("Edit Category error : ",error);
+        console.log("Add Category error : ",error);
         return res.status(500).json({error : "Some error occured in the server ."});
+    }
+};
+
+const getCategories = async (req, res) => {
+    try {
+        const visibilityQuery = req.query.visibility; // "true" or "false"
+        let filter = {};
+
+        if (visibilityQuery === 'true') {
+            filter = { $or: [ { isListed: true }, { visibility: true } ] };
+        } else if (visibilityQuery === 'false') {
+            filter = { $or: [ { isListed: false }, { visibility: false } ] };
+        }
+
+        const found = await Category.find(filter).sort({ createdAt: -1 }).lean();
+        // Compute item counts for filtered set
+        const ids = (found || []).map(d => d._id);
+        const countsAgg = await Product.aggregate([
+            { $match: { category: { $in: ids } } },
+            { $group: { _id: '$category', count: { $sum: 1 } } }
+        ]);
+        const countsMap = Object.fromEntries(countsAgg.map(c => [String(c._id), c.count]));
+        const normalized = (found || []).map(doc => ({
+            ...doc,
+            isListed: typeof doc.isListed === 'boolean' ? doc.isListed : (typeof doc.visibility === 'boolean' ? doc.visibility : true),
+            itemsCount: countsMap[String(doc._id)] || 0,
+        }));
+
+        res.render('admin/category', {
+            cat: normalized,
+            currentPage: 1,
+            totalPages: 1,
+            // maintain the selected filter in UI (map visibility -> selectedFilter)
+            selectedFilter: visibilityQuery === 'true' ? 'true' : (visibilityQuery === 'false' ? 'false' : 'all'),
+            searchQuery: ''
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server Error');
     }
 };
 
@@ -109,6 +154,7 @@ module.exports = {
     categoryinfo,
     addCategory,
     editCategory,
+    getCategories,
 };
 
 
