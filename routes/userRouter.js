@@ -49,11 +49,6 @@ router.post('/resend-otp', profileController.resendOtp);
 
 // router.get('/resetPassword', preventBackAfterLogout, usercontroller.getResetPassword);
 // router.post('/resetPassword', usercontroller.handleResetPassword);
-// Cart routes (paths aligned with EJS fetch and links)
-router.get('/user/cart', ensureAuth, usercontroller.viewCart);
-router.post('/user/addToCart', ensureAuth, usercontroller.addToCart);
-router.post('/user/updateCartQuantity', ensureAuth, usercontroller.updateCartQuantity);
-router.post('/user/removeFromCart', ensureAuth, usercontroller.removeFromCart);
 
 // Wishlist add route (EJS uses POST /user/addToWishlist)
 router.post('/user/addToWishlist', ensureAuth, usercontroller.addToWishlist);

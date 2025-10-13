@@ -2,6 +2,7 @@ const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const Brand = require("../../models/brandSchema");
+const Cart = require("../../models/cartSchema");
 const Wishlist = require("../../models/wishlistSchema");
 const nodemailer = require('nodemailer')
 const env = require('dotenv').config();
@@ -255,9 +256,215 @@ async function getProductDetails(req, res) {
   }
 }
 
+// Add to cart
+async function addToCart(req, res) {
+  try {
+    const { userId, productId, quantity, price } = req.body;
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+    if (!productId) return res.status(400).json({ error: 'Missing product' });
 
+    const qty = Math.max(parseInt(quantity) || 1, 1);
 
+    // Validate product and compute safe price
+    const p = await Product.findById(productId).populate('category', 'offer').lean();
+    if (!p) return res.status(404).json({ error: 'Product not found' });
+    const regular = typeof p.reqularPrice === 'number' ? p.reqularPrice : (typeof p.price === 'number' ? p.price : 0);
+    const sale = typeof p.salePrice === 'number' ? p.salePrice : 0;
+    const offerPercent = Math.max(p.productOffer || 0, (p.category && p.category.offer) || 0);
+    const computedOfferPrice = offerPercent > 0 ? Math.round(regular - (regular * offerPercent / 100)) : (sale > 0 && sale < regular ? sale : regular);
+    const unitPrice = Number(price) > 0 ? Number(price) : computedOfferPrice || regular;
 
+    let cart = await Cart.findOne({ userId });
+    if (!cart) {
+      cart = new Cart({ userId, items: [] });
+    }
+
+    const existingIdx = cart.items.findIndex(i => String(i.productId) === String(productId));
+    if (existingIdx >= 0) {
+      cart.items[existingIdx].quantity = (cart.items[existingIdx].quantity || 1) + qty;
+      cart.items[existingIdx].price = unitPrice;
+      cart.items[existingIdx].totalPrice = cart.items[existingIdx].quantity * unitPrice;
+    } else {
+      cart.items.push({
+        productId,
+        quantity: qty,
+        price: unitPrice,
+        totalPrice: qty * unitPrice,
+      });
+    }
+
+    await cart.save();
+    return res.status(200).json({ message: 'Added to cart' });
+  } catch (err) {
+    console.error('addToCart error:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+}
+
+// Update cart quantity
+async function updateCartQuantity(req, res) {
+  try {
+    const { userId, itemId, quantity } = req.body;
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+    if (!itemId) return res.status(400).json({ error: 'Missing item ID' });
+
+    const qty = Math.max(parseInt(quantity) || 1, 1);
+    if (qty > 10) return res.status(400).json({ error: 'Maximum 10 items allowed' });
+
+    const cart = await Cart.findOne({ userId });
+    if (!cart) return res.status(404).json({ error: 'Cart not found' });
+
+    const itemIndex = cart.items.findIndex(i => String(i._id) === String(itemId));
+    if (itemIndex === -1) {
+      return res.status(404).json({ error: 'Item not found in cart' });
+    }
+
+    // Update quantity and total price
+    cart.items[itemIndex].quantity = qty;
+    cart.items[itemIndex].totalPrice = cart.items[itemIndex].price * qty;
+
+    await cart.save();
+    return res.status(200).json({ message: 'Quantity updated' });
+  } catch (err) {
+    console.error('updateCartQuantity error:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+}
+
+// View cart
+async function viewCart(req, res) {
+  try {
+    const user = req.session?.user || null;
+    if (!user) return res.redirect('/login');
+
+    const cart = await Cart.findOne({ userId: user._id }).populate('items.productId').lean();
+
+    // Transform cart items to include product details
+    const cartItems = (cart?.items || []).map(item => ({
+      _id: item._id,
+      productId: item.productId,
+      quantity: item.quantity,
+      price: item.price,
+      totalPrice: item.totalPrice,
+      // Flatten product details for easier access in template
+      name: item.productId?.name || item.productId?.productNmae || 'Product Name',
+      images: item.productId?.images || item.productId?.productImage || [],
+      sale: item.productId?.sale || item.productId?.salePrice || 0,
+      offerPercent: item.productId?.offerPercent || 0,
+      offerPrice: item.productId?.offerPrice || 0,
+      regularPrice: item.productId?.price || item.productId?.reqularPrice || 0,
+    }));
+
+    // Debug: Log cart items for troubleshooting
+    console.log('Cart Items:', cartItems);
+    console.log('Cart Items Length:', cartItems.length);
+    console.log('User ID:', user._id);
+
+    // Calculate totals
+    const subtotal = cartItems.reduce((total, item) => {
+      const price = (item.sale && item.sale < item.regularPrice) ? item.sale :
+                   (item.offerPercent && item.offerPercent > 0) ? item.offerPrice :
+                   item.regularPrice || item.price;
+      return total + (price * item.quantity);
+    }, 0);
+
+    return res.render('user/cart', {
+      user,
+      cartItems,
+      cartCount: cartItems.length
+    });
+  } catch (err) {
+    console.error('viewCart error:', err);
+    return res.status(500).render('user/page-404');
+  }
+}
+
+// Remove from cart
+async function removeFromCart(req, res) {
+  try {
+    const user = req.session?.user || null;
+    console.log('=== REMOVE FROM CART DEBUG ===');
+    console.log('Full session object:', JSON.stringify(req.session, null, 2));
+    console.log('Session user:', user);
+    console.log('Request body:', req.body);
+    console.log('Request headers:', req.headers);
+
+    if (!user) {
+      console.log('Authentication failed - no user in session');
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    // Check if user exists and is not blocked
+    console.log('Checking user in database:', user._id);
+    const dbUser = await User.findById(user._id).lean();
+    console.log('Database user found:', dbUser ? 'YES' : 'NO');
+    if (dbUser) {
+      console.log('User blocked status:', dbUser.isBlocked);
+      console.log('User isAdmin status:', dbUser.isAdmin);
+    }
+
+    if (!dbUser || dbUser.isBlocked) {
+      console.log('User validation failed - user not found or blocked');
+      return res.status(401).json({ error: 'User not found or blocked' });
+    }
+
+    const { productId } = req.body;
+    if (!productId) {
+      console.log('Missing productId in request body');
+      return res.status(400).json({ error: 'Missing product' });
+    }
+
+    console.log('Remove request - User ID:', user._id, 'Product ID:', productId);
+
+    const cart = await Cart.findOne({ userId: user._id }).populate('items.productId');
+    if (!cart) {
+      console.log('Cart not found for user:', user._id);
+      return res.status(404).json({ error: 'Cart not found' });
+    }
+
+    console.log('Cart found with', cart.items.length, 'items');
+    console.log('Cart items details:');
+    cart.items.forEach((item, index) => {
+      console.log(`  Item ${index + 1}:`, {
+        _id: item._id,
+        productId: item.productId,
+        productIdType: typeof item.productId,
+        productId_id: item.productId?._id,
+        quantity: item.quantity,
+        price: item.price
+      });
+    });
+
+    const before = cart.items.length;
+    console.log('Looking for productId:', productId);
+    console.log('ProductId type:', typeof productId);
+    console.log('ProductId length:', productId ? productId.length : 'N/A');
+
+    // Check if the product exists in cart with exact match
+    const itemExists = cart.items.some(it => it.productId && String(it.productId._id) === String(productId));
+    console.log('Item exists in cart:', itemExists);
+
+    cart.items = cart.items.filter(it => !(it.productId && String(it.productId._id) === String(productId)));
+    const after = cart.items.length;
+
+    console.log('Items before removal:', before, 'After:', after);
+
+    if (cart.items.length === before) {
+      console.log('Item not found in cart');
+      return res.status(404).json({ error: 'Item not found in cart' });
+    }
+
+    await cart.save();
+    console.log('Cart saved successfully after removal');
+    console.log('=== END REMOVE DEBUG ===');
+    return res.status(200).json({ message: 'Removed from cart' });
+  } catch (err) {
+    console.error('removeFromCart error:', err);
+    console.log('=== ERROR DEBUG ===');
+    console.log('Error stack:', err.stack);
+    return res.status(500).json({ error: 'Server error' });
+  }
+}
 // Generate 6-digit OTP
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -700,6 +907,10 @@ module.exports = {
   loadLandingPage,
   logout,
   getProductDetails,
+  addToCart,
+  updateCartQuantity,
+  viewCart,
+  removeFromCart,
   addToWishlist,
   viewWishlist,
   removeFromWishlist,
