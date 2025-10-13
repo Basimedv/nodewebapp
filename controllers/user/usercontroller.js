@@ -12,7 +12,7 @@ const pageNotFound = async (req, res) => {
     res.render('page-404')
   } catch (error) {
     console.log('user error', error)
-    res.redirect('/pageNotFound')
+    res.redirect('user/pageNotFound')
   }
 
 }
