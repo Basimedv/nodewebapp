@@ -2,481 +2,483 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Categories</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bellefair&family=Outfit:wght@400;500;700&display=swap"
-        rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categories</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bellefair&family=Outfit:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <style>
-        /* Your existing CSS from before, including navbar, sidebar, table, badges, pagination */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <style>
+    /* Your existing CSS from before, including navbar, sidebar, table, badges, pagination */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: #f5f7fa;
-            min-height: 100vh;
-            display: flex;
-            overflow-x: hidden;
-        }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
 
-        .stock-btn1 {
-            width: 75px;
-            border: 1px solid #0CAF60;
-            background-color: #8af5bf;
-            color: #0CAF60;
-            border-radius: 10px;
-        }
+    .stock-btn1 {
+      width: 75px;
+      border: 1px solid #0CAF60;
+      background-color: #8af5bf;
+      color: #0CAF60;
+      border-radius: 10px;
+    }
 
-        .stock-btn3 {
-            width: 75px;
-            border: 1px solid #FD6A6A;
-            background-color: #f9d3d3;
-            color: #FD6A6A;
-            border-radius: 10px;
-        }
+    .stock-btn3 {
+      width: 75px;
+      border: 1px solid #FD6A6A;
+      background-color: #f9d3d3;
+      color: #FD6A6A;
+      border-radius: 10px;
+    }
 
-        .navbar {
-            background: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-        }
+    .navbar {
+      background: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
 
-        .brand-name {
-            font-family: 'Bellefair', serif;
-            font-size: 28px;
-            text-decoration: none;
-            color: #192430;
-        }
+    .brand-name {
+      font-family: 'Bellefair', serif;
+      font-size: 28px;
+      text-decoration: none;
+      color: #192430;
+    }
 
-        .sidebar {
-            width: 250px;
-            background: #f9f9f9;
-            padding: 20px 0;
-            position: fixed;
-            top: 60px;
-            bottom: 0;
-            left: 0;
-            z-index: 999;
-            overflow-y: auto;
-        }
+    .sidebar {
+      width: 250px;
+      background: #f9f9f9;
+      padding: 20px 0;
+      position: fixed;
+      top: 60px;
+      bottom: 0;
+      left: 0;
+      z-index: 999;
+      overflow-y: auto;
+    }
 
-        .sidebar a {
-            display: flex;
-            align-items: center;
-            padding: 15px 30px;
-            color: #192430;
-            text-decoration: none;
-            font-size: 16px;
-            border-radius: 15px;
-        }
+    .sidebar a {
+      display: flex;
+      align-items: center;
+      padding: 15px 30px;
+      color: #192430;
+      text-decoration: none;
+      font-size: 16px;
+      border-radius: 15px;
+    }
 
-        .sidebar a.active {
-            background: #3b6da1;
-            color: white;
-        }
+    .sidebar a.active {
+      background: #3b6da1;
+      color: white;
+    }
 
-        .sidebar a i {
-            margin-right: 15px;
-            font-size: 18px;
-        }
+    .sidebar a i {
+      margin-right: 15px;
+      font-size: 18px;
+    }
 
-        .main-content {
-            margin-left: 250px;
-            padding: 80px 30px 30px;
-            flex: 1;
-        }
+    .main-content {
+      margin-left: 250px;
+      padding: 80px 30px 30px;
+      flex: 1;
+    }
 
-        .dashboard-title {
-            font-size: 24px;
-            color: #192430;
-            margin-bottom: 20px;
-        }
+    .dashboard-title {
+      font-size: 24px;
+      color: #192430;
+      margin-bottom: 20px;
+    }
 
-        .customer-table {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
+    .customer-table {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
 
-        .customer-table table {
-            width: 100%;
-        }
+    .customer-table table {
+      width: 100%;
+    }
 
-        .customer-table th {
-            background: #3b6da1;
-            color: white;
-            padding: 12px;
-            font-size: 14px;
-        }
+    .customer-table th {
+      background: #3b6da1;
+      color: white;
+      padding: 12px;
+      font-size: 14px;
+    }
 
-        .customer-table td {
-            padding: 12px;
-            font-size: 14px;
-            color: #192430;
-        }
+    .customer-table td {
+      padding: 12px;
+      font-size: 14px;
+      color: #192430;
+    }
 
-        .customer-table .actions a {
-            color: #666;
-            margin: 0 5px;
-            font-size: 16px;
-            text-decoration: none;
-        }
+    .customer-table .actions a {
+      color: #666;
+      margin: 0 5px;
+      font-size: 16px;
+      text-decoration: none;
+    }
 
-        .customer-table .actions a:hover {
-            color: #28517D;
-        }
+    .customer-table .actions a:hover {
+      color: #28517D;
+    }
 
-        .pagination {
-            margin-top: 20px;
-            justify-content: center;
-        }
-    </style>
+    .pagination {
+      margin-top: 20px;
+      justify-content: center;
+    }
+  </style>
 </head>
 
 <body>
 
-    <nav class="navbar">
-        <a href="/admin" class="brand-name">COLINGUEST</a>
-    </nav>
+  <nav class="navbar">
+    <a href="/admin" class="brand-name">COLINGUEST</a>
+  </nav>
 
-    <div class="sidebar">
-        <a href="/admin/dashboard"><i class="bi bi-grid"></i> Dashboard</a>
-        <a href="/admin/categories" class="active"><i class="bi bi-tag"></i> Categories</a>
-        <a href="/admin/brands"><i class="bi bi-badge-tm"></i> Brands</a>
-        <a href="/admin/offers"><i class="bi bi-gift"></i> Offers</a>
-        <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
-                         <a href="/admin/addproducts"><i class="bi bi-box"></i> Add Products</a>
-        <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
-        <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
-        <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
-        <a href="/admin/sales-report"><i class="bi bi-bar-chart"></i> Sales Report</a>
-        <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i> Wallet</a>
-        <a href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
-    </div>
+  <div class="sidebar">
+    <a href="/admin/dashboard"><i class="bi bi-grid"></i> Dashboard</a>
+    <a href="/admin/categories" class="active"><i class="bi bi-tag"></i> Categories</a>
+    <a href="/admin/brands"><i class="bi bi-badge-tm"></i> Brands</a>
+    <a href="/admin/offers"><i class="bi bi-gift"></i> Offers</a>
+    <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
+    <a href="/admin/addproducts"><i class="bi bi-box"></i> Add Products</a>
+    <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
+    <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
+    <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
+    <a href="/admin/sales-report"><i class="bi bi-bar-chart"></i> Sales Report</a>
+    <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i> Wallet</a>
+    <a href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+  </div>
 
-    <!-- Edit Category Modal -->
-    <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Edit Category</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form id="editCategoryForm">
-              <input type="hidden" id="orgName" />
-              <div class="mb-3">
-                <label class="form-label" for="editName">Name</label>
-                <input type="text" id="editName" class="form-control" required>
-                <div id="editNameError" class="text-danger small mt-1"></div>
-              </div>
-              <div class="mb-3">
-                <label class="form-label" for="editDesc">Description</label>
-                <textarea id="editDesc" class="form-control" rows="3"></textarea>
-              </div>
-              <div class="mb-3">
-                <label class="form-label" for="editStatus">Status</label>
-                <select id="editStatus" class="form-select">
-                  <option value="Active">Active</option>
-                  <option value="Blocked">Blocked</option>
-                </select>
-              </div>
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save</button>
-              </div>
-            </form>
-          </div>
+  <!-- Edit Category Modal -->
+  <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Category</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editCategoryForm">
+            <input type="hidden" id="orgName" />
+            <div class="mb-3">
+              <label class="form-label" for="editName">Name</label>
+              <input type="text" id="editName" class="form-control" required>
+              <div id="editNameError" class="text-danger small mt-1"></div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="editDesc">Description</label>
+              <textarea id="editDesc" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="editStatus">Status</label>
+              <select id="editStatus" class="form-select">
+                <option value="Active">Active</option>
+                <option value="Blocked">Blocked</option>
+              </select>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="main-content">
-        <h2 class="dashboard-title">Categories</h2>
+  <div class="main-content">
+    <h2 class="dashboard-title">Categories</h2>
 
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-            <div class="d-flex gap-2">
-                <div class="flex-grow-1" style="max-width:180px;">
-                    <select class="form-select filter-select">
-                        <option value="all" <%=selectedFilter==="all" ?"selected":"" %>>All</option>
-                        <option value="false" <%=selectedFilter==="false" ?"selected":"" %>>Active</option>
-                        <option value="true" <%=selectedFilter==="true" ?"selected":"" %>>Blocked</option>
-                    </select>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+      <div class="d-flex gap-2">
+        <div class="flex-grow-1" style="max-width:180px;">
+          <select class="form-select filter-select">
+            <option value="all" <%=selectedFilter==="all" ?"selected":"" %>>All</option>
+            <option value="false" <%=selectedFilter==="false" ?"selected":"" %>>Active</option>
+            <option value="true" <%=selectedFilter==="true" ?"selected":"" %>>Blocked</option>
+          </select>
+        </div>
+      </div>
+      <form class="d-flex search-container flex-grow-1" id="searchForm" style="max-width:300px;">
+        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="searchval"
+          value="<%= searchQuery %>">
+        <button class="btn" type="submit" style="background-color:#3e29a8;">
+          <i class="bi bi-search text-white"></i>
+        </button>&nbsp;
+        <a href="/admin/categories">
+          <button class="btn" type="button" style="background-color:#3e29a8; color:white;">Reset</button>
+        </a>
+      </form>
+      <div class="d-flex gap-2">
+        <button id="btnOpenAddCategory" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Category</button>
+      </div>
+    </div>
+
+    <div class="customer-table">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Category ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Items</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% (cat || []).forEach(category=>{ %>
+            <tr>
+              <td>
+                <%= category._id %>
+              </td>
+              <td>
+                <%= category.name %>
+              </td>
+              <td>
+                <%= category.description || '-' %>
+              </td>
+              <td>
+                <%= typeof category.itemsCount==='number' ? category.itemsCount : 0 %>
+              </td>
+              <td>
+                <% if(category.isListed===false){ %>
+                  <span class="badge stock-btn3">Blocked</span>
+                  <% } else { %>
+                    <span class="badge stock-btn1">Active</span>
+                    <% } %>
+              </td>
+              <td>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-primary btn-edit-category" data-name="<%= category.name %>"
+                    data-description="<%= (category.description || '').replace(/" /g,'&quot;') %>"
+                    data-status="<%= category.isListed===false ? 'Blocked' : 'Active' %>">
+                      <i class="bi bi-pencil"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm <%= category.isListed === false ? 'btn-success' : 'btn-warning' %> btn-toggle-list"
+                    data-name="<%= category.name %>" data-description="<%= (category.description || '').replace(/"
+                    /g,'&quot;') %>"
+                    data-status="<%= category.isListed===false ? 'Blocked' : 'Active' %>"
+                      title="<%= category.isListed===false ? 'Unblock' : 'Block' %>">
+                        <i class="bi <%= category.isListed === false ? 'bi-unlock' : 'bi-lock' %>"></i>
+                  </button>
                 </div>
-            </div>
-            <form class="d-flex search-container flex-grow-1" id="searchForm" style="max-width:300px;">
-                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="searchval" value="<%= searchQuery %>">
-                <button class="btn" type="submit" style="background-color:#3e29a8;">
-                    <i class="bi bi-search text-white"></i>
-                </button>&nbsp;
-                <a href="/admin/categories">
-                    <button class="btn" type="button" style="background-color:#3e29a8; color:white;">Reset</button>
-                </a>
-            </form>
-            <div class="d-flex gap-2">
-              <button id="btnOpenAddCategory" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Category</button>
-            </div>
-        </div>
+              </td>
+            </tr>
+            <% }) %>
+        </tbody>
+      </table>
 
-        <div class="customer-table">
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th>Category ID</th>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Items</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% (cat || []).forEach(category=>{ %>
-                            <tr>
-                                <td>
-                                    <%= category._id %>
-                                </td>
-                                <td>
-                                    <%= category.name %>
-                                </td>
-                                <td>
-                                    <%= category.description || '-' %>
-                                </td>
-                                <td>
-                                    <%= typeof category.itemsCount === 'number' ? category.itemsCount : 0 %>
-                                </td>
-                                <td>
-                                    <% if(category.isListed === false){ %>
-                                        <span class="badge stock-btn3">Blocked</span>
-                                    <% } else { %>
-                                        <span class="badge stock-btn1">Active</span>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-sm btn-primary btn-edit-category"
-                                                data-name="<%= category.name %>"
-                                                data-description="<%= (category.description || '').replace(/"/g,'&quot;') %>"
-                                                data-status="<%= category.isListed === false ? 'Blocked' : 'Active' %>">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-sm <%= category.isListed === false ? 'btn-success' : 'btn-warning' %> btn-toggle-list"
-                                                data-name="<%= category.name %>"
-                                                data-description="<%= (category.description || '').replace(/"/g,'&quot;') %>"
-                                                data-status="<%= category.isListed === false ? 'Blocked' : 'Active' %>"
-                                                title="<%= category.isListed === false ? 'Unblock' : 'Block' %>">
-                                            <i class="bi <%= category.isListed === false ? 'bi-unlock' : 'bi-lock' %>"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-
-                <nav aria-label="Page navigation">
-                    <ul class="pagination">
-                        <% for(let i=1;i<=totalPages;i++){ %>
-                            <li class="page-item <%= i===currentPage?'active':'' %>">
-                                <a class="page-link" href="?page=<%= i %><%= selectedFilter!=='all' ? ('&visibility=' + selectedFilter) : '' %><%= searchQuery ? ('&query=' + encodeURIComponent(searchQuery)) : '' %>">
-                                    <%= i %>
-                                </a>
-                            </li>
-                        <% } %>
-                    </ul>
-                </nav>
-        </div>
+      <nav aria-label="Page navigation">
+        <ul class="pagination">
+          <% for(let i=1;i<=totalPages;i++){ %>
+            <li class="page-item <%= i===currentPage?'active':'' %>">
+              <a class="page-link"
+                href="?page=<%= i %><%= selectedFilter!=='all' ? ('&visibility=' + selectedFilter) : '' %><%= searchQuery ? ('&query=' + encodeURIComponent(searchQuery)) : '' %>">
+                <%= i %>
+              </a>
+            </li>
+            <% } %>
+        </ul>
+      </nav>
     </div>
+  </div>
 
-    <!-- Add Category Modal -->
-    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Add Category</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form id="addCategoryForm">
-              <div class="mb-3">
-                <label class="form-label" for="catName">Name</label>
-                <input type="text" id="catName" class="form-control" placeholder="e.g., Shirts" required>
-                <div id="catNameError" class="text-danger small mt-1"></div>
-              </div>
-              <div class="mb-3">
-                <label class="form-label" for="catDesc">Description</label>
-                <textarea id="catDesc" class="form-control" rows="3" placeholder="Short description"></textarea>
-              </div>
-              <div class="mb-3">
-                <label class="form-label" for="catStatus">Status</label>
-                <select id="catStatus" class="form-select">
-                  <option value="Active" selected>Active</option>
-                  <option value="Blocked">Blocked</option>
-                </select>
-              </div>
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save</button>
-              </div>
-            </form>
-          </div>
+  <!-- Add Category Modal -->
+  <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Category</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addCategoryForm">
+            <div class="mb-3">
+              <label class="form-label" for="catName">Name</label>
+              <input type="text" id="catName" class="form-control" placeholder="e.g., Shirts" required>
+              <div id="catNameError" class="text-danger small mt-1"></div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="catDesc">Description</label>
+              <textarea id="catDesc" class="form-control" rows="3" placeholder="Short description"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="catStatus">Status</label>
+              <select id="catStatus" class="form-select">
+                <option value="Active" selected>Active</option>
+                <option value="Blocked">Blocked</option>
+              </select>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Sidebar active
-            const sidebarLinks = document.querySelectorAll('.sidebar a');
-            const currentPath = window.location.pathname;
-            sidebarLinks.forEach(link => {
-                if (link.getAttribute('href') === currentPath) link.classList.add('active');
-                link.addEventListener('click', function () { sidebarLinks.forEach(l => l.classList.remove('active')); this.classList.add('active'); });
-            });
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Sidebar active
+      const sidebarLinks = document.querySelectorAll('.sidebar a');
+      const currentPath = window.location.pathname;
+      sidebarLinks.forEach(link => {
+        if (link.getAttribute('href') === currentPath) link.classList.add('active');
+        link.addEventListener('click', function () { sidebarLinks.forEach(l => l.classList.remove('active')); this.classList.add('active'); });
+      });
 
-            // (bulk block/unblock handlers removed)
+      // (bulk block/unblock handlers removed)
 
-            // Filter change -> /admin/categories?visibility=...
-            document.querySelector('.filter-select')?.addEventListener('change', function () {
-                const val = this.value;
-                const params = new URLSearchParams(window.location.search);
-                if (val === 'all') params.delete('visibility'); else params.set('visibility', val);
-                params.set('page', '1');
-                window.location.href = `/admin/categories?${params.toString()}`;
-            });
+      // Filter change -> /admin/categories?visibility=...
+      document.querySelector('.filter-select')?.addEventListener('change', function () {
+        const val = this.value;
+        const params = new URLSearchParams(window.location.search);
+        if (val === 'all') params.delete('visibility'); else params.set('visibility', val);
+        params.set('page', '1');
+        window.location.href = `/admin/categories?${params.toString()}`;
+      });
 
-            // Search submit -> keep visibility, set query, reset page
-            document.getElementById('searchForm')?.addEventListener('submit', function (event) {
-                event.preventDefault();
-                const q = document.getElementById('searchval').value.trim();
-                const params = new URLSearchParams(window.location.search);
-                if (q) params.set('query', q); else params.delete('query');
-                params.set('page', '1');
-                window.location.href = `/admin/categories?${params.toString()}`;
-            });
+      // Search submit -> keep visibility, set query, reset page
+      document.getElementById('searchForm')?.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const q = document.getElementById('searchval').value.trim();
+        const params = new URLSearchParams(window.location.search);
+        if (q) params.set('query', q); else params.delete('query');
+        params.set('page', '1');
+        window.location.href = `/admin/categories?${params.toString()}`;
+      });
 
-            // Add Category Modal + Submit
-            const addModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
-            document.getElementById('btnOpenAddCategory')?.addEventListener('click', () => {
-              document.getElementById('addCategoryForm').reset();
-              document.getElementById('catNameError').textContent = '';
-              addModal.show();
-            });
+      // Add Category Modal + Submit
+      const addModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+      document.getElementById('btnOpenAddCategory')?.addEventListener('click', () => {
+        document.getElementById('addCategoryForm').reset();
+        document.getElementById('catNameError').textContent = '';
+        addModal.show();
+      });
 
-            document.getElementById('addCategoryForm')?.addEventListener('submit', async (e) => {
-              e.preventDefault();
-              const name = document.getElementById('catName').value.trim();
-              const description = document.getElementById('catDesc').value.trim();
-              const statusSel = document.getElementById('catStatus').value;
-              if (!name) { document.getElementById('catNameError').textContent = 'Name is required'; return; }
-              document.getElementById('catNameError').textContent = '';
-              try {
-                const res = await fetch('/admin/addCategory', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ name, description, status: statusSel })
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                  const msg = data.error || data.nameError || 'Failed to add category';
-                  Swal.fire({ icon: 'error', text: msg });
-                  return;
-                }
-                addModal.hide();
-                Swal.fire({ icon: 'success', text: data.message || 'Category added', timer: 1200, showConfirmButton: false })
-                  .then(() => window.location.reload());
-              } catch (err) {
-                Swal.fire({ icon: 'error', text: 'Network error' });
-              }
-            });
+      document.getElementById('addCategoryForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('catName').value.trim();
+        const description = document.getElementById('catDesc').value.trim();
+        const statusSel = document.getElementById('catStatus').value;
+        if (!name) { document.getElementById('catNameError').textContent = 'Name is required'; return; }
+        document.getElementById('catNameError').textContent = '';
+        try {
+          const res = await fetch('/admin/addCategory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, description, status: statusSel })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            const msg = data.error || data.nameError || 'Failed to add category';
+            Swal.fire({ icon: 'error', text: msg });
+            return;
+          }
+          addModal.hide();
+          Swal.fire({ icon: 'success', text: data.message || 'Category added', timer: 1200, showConfirmButton: false })
+            .then(() => window.location.reload());
+        } catch (err) {
+          Swal.fire({ icon: 'error', text: 'Network error' });
+        }
+      });
 
-            // Edit Category: open modal with row data
-            const editModal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
-            document.querySelectorAll('.btn-edit-category').forEach(btn => {
-              btn.addEventListener('click', (e) => {
-                const name = btn.getAttribute('data-name') || '';
-                const desc = btn.getAttribute('data-description') || '';
-                const status = btn.getAttribute('data-status') || 'Active';
-                document.getElementById('orgName').value = name;
-                document.getElementById('editName').value = name;
-                document.getElementById('editDesc').value = desc;
-                document.getElementById('editStatus').value = status;
-                document.getElementById('editNameError').textContent = '';
-                editModal.show();
-              });
-            });
-
-            // Submit edit to PUT /admin/categories
-            document.getElementById('editCategoryForm')?.addEventListener('submit', async (e) => {
-              e.preventDefault();
-              const orgName = document.getElementById('orgName').value.trim();
-              const editName = document.getElementById('editName').value.trim();
-              const editDescription = document.getElementById('editDesc').value.trim();
-              const editStatus = document.getElementById('editStatus').value;
-              if (!editName) { document.getElementById('editNameError').textContent = 'Name is required'; return; }
-              document.getElementById('editNameError').textContent = '';
-              try{
-                const res = await fetch('/admin/categories', {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ orgName, editName, editDescription, editStatus })
-                });
-                const data = await res.json().catch(()=>({}));
-                if (!res.ok) {
-                  const msg = data.error || data.nameError || 'Failed to update category';
-                  Swal.fire({ icon: 'error', text: msg });
-                  return;
-                }
-                editModal.hide();
-                Swal.fire({ icon: 'success', text: data.message || 'Category updated', timer: 1200, showConfirmButton: false })
-                  .then(()=> window.location.reload());
-              } catch(err){
-                Swal.fire({ icon: 'error', text: 'Network error' });
-              }
-            });
-
-            // Quick Block/Unblock using same edit endpoint by flipping status
-            document.querySelectorAll('.btn-toggle-list').forEach(btn => {
-              btn.addEventListener('click', async () => {
-                const name = btn.getAttribute('data-name') || '';
-                const desc = btn.getAttribute('data-description') || '';
-                const status = btn.getAttribute('data-status') || 'Active';
-                const nextStatus = status === 'Blocked' ? 'Active' : 'Blocked';
-                try{
-                  const res = await fetch('/admin/categories', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orgName: name, editName: name, editDescription: desc, editStatus: nextStatus })
-                  });
-                  const data = await res.json().catch(()=>({}));
-                  if (!res.ok) { Swal.fire({ icon: 'error', text: data.error || 'Failed to update' }); return; }
-                  Swal.fire({ icon: 'success', text: nextStatus === 'Active' ? 'Unblocked' : 'Blocked', timer: 900, showConfirmButton: false })
-                    .then(()=> window.location.reload());
-                }catch(err){
-                  Swal.fire({ icon: 'error', text: 'Network error' });
-                }
-              });
-            });
+      // Edit Category: open modal with row data
+      const editModal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
+      document.querySelectorAll('.btn-edit-category').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const name = btn.getAttribute('data-name') || '';
+          const desc = btn.getAttribute('data-description') || '';
+          const status = btn.getAttribute('data-status') || 'Active';
+          document.getElementById('orgName').value = name;
+          document.getElementById('editName').value = name;
+          document.getElementById('editDesc').value = desc;
+          document.getElementById('editStatus').value = status;
+          document.getElementById('editNameError').textContent = '';
+          editModal.show();
         });
-    </script>
+      });
+
+      // Submit edit to PUT /admin/categories
+      document.getElementById('editCategoryForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const orgName = document.getElementById('orgName').value.trim();
+        const editName = document.getElementById('editName').value.trim();
+        const editDescription = document.getElementById('editDesc').value.trim();
+        const editStatus = document.getElementById('editStatus').value;
+        if (!editName) { document.getElementById('editNameError').textContent = 'Name is required'; return; }
+        document.getElementById('editNameError').textContent = '';
+        try {
+          const res = await fetch('/admin/categories', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orgName, editName, editDescription, editStatus })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            const msg = data.error || data.nameError || 'Failed to update category';
+            Swal.fire({ icon: 'error', text: msg });
+            return;
+          }
+          editModal.hide();
+          Swal.fire({ icon: 'success', text: data.message || 'Category updated', timer: 1200, showConfirmButton: false })
+            .then(() => window.location.reload());
+        } catch (err) {
+          Swal.fire({ icon: 'error', text: 'Network error' });
+        }
+      });
+
+      // Quick Block/Unblock using same edit endpoint by flipping status
+      document.querySelectorAll('.btn-toggle-list').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const name = btn.getAttribute('data-name') || '';
+          const desc = btn.getAttribute('data-description') || '';
+          const status = btn.getAttribute('data-status') || 'Active';
+          const nextStatus = status === 'Blocked' ? 'Active' : 'Blocked';
+          try {
+            const res = await fetch('/admin/categories', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orgName: name, editName: name, editDescription: desc, editStatus: nextStatus })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) { Swal.fire({ icon: 'error', text: data.error || 'Failed to update' }); return; }
+            Swal.fire({ icon: 'success', text: nextStatus === 'Active' ? 'Unblocked' : 'Blocked', timer: 900, showConfirmButton: false })
+              .then(() => window.location.reload());
+          } catch (err) {
+            Swal.fire({ icon: 'error', text: 'Network error' });
+          }
+        });
+      });
+    });
+  </script>
 </body>
 
 </html>
