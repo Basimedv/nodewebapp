@@ -364,35 +364,109 @@
         .status-badge.active { background: #e8fff1; color: #16a34a; border: 1px solid #bbf7d0; }
         .status-badge.blocked { background: #fff1f2; color: #ef4444; border: 1px solid #fecaca; }
 
-        /* iOS-like toggle switch */
-        .toggle-switch {
+        /* Image Upload Styles */
+        .image-upload-container {
+            margin-top: 8px;
+        }
+
+        .image-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
             position: relative;
-            width: 44px;
-            height: 24px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .toggle-switch input { display: none; }
-        .toggle-slider {
-            position: absolute;
+
+        .image-upload-area:hover {
+            border-color: #3b6da1;
+            background-color: #e7f3ff;
+        }
+
+        .image-upload-area.dragover {
+            border-color: #3e29a8;
+            background-color: #f0e6ff;
+        }
+
+        .image-upload-content {
+            width: 100%;
+        }
+
+        .image-preview {
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Enhanced Brand Image Styles */
+        .brand-image-container {
+            display: inline-block;
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
             cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #e5e7eb;
-            transition: 0.2s;
-            border-radius: 999px;
         }
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 18px; width: 18px;
-            left: 3px; top: 3px;
-            background-color: white;
-            transition: 0.2s;
-            border-radius: 50%;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+
+        .brand-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        input:checked + .toggle-slider { background-color: #22c55e; }
-        input:checked + .toggle-slider:before { transform: translateX(20px); }
-        /* compact the switch in action cell */
-        .actions .toggle-switch { transform: scale(0.9); }
+
+        .brand-image:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .brand-image-container.no-image {
+            width: 60px;
+            height: 60px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        /* Image Modal Styles */
+        .image-modal .modal-dialog {
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+
+        .image-modal .modal-content {
+            background: rgba(0, 0, 0, 0.9);
+            border: none;
+            border-radius: 15px;
+        }
+
+        .image-modal .modal-body {
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+        }
+
+        .image-modal .modal-body img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .image-modal .btn-close {
+            filter: invert(1);
+        }
     </style>
 </head>
 
@@ -492,6 +566,30 @@
                                 <textarea class="form-control rounded-3" id="addBrandDescription" name="description" rows="3" placeholder="Enter Description"></textarea>
                             </div>
                             <div class="mb-4">
+                                <label for="addBrandImage" class="form-label fw-semibold">Brand Image</label>
+                                <div class="image-upload-container">
+                                    <div class="image-upload-area" id="addImageUploadArea">
+                                        <div class="image-upload-content">
+                                            <i class="bi bi-cloud-arrow-up" style="font-size: 2rem; color: #6c757d;"></i>
+                                            <p class="mb-2">Drag and drop an image here</p>
+                                            <p class="mb-3 text-muted">or</p>
+                                            <input type="file" id="addBrandImageFile" class="form-control" accept="image/*" style="display: none;">
+                                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('addBrandImageFile').click()">
+                                                Choose File
+                                            </button>
+                                        </div>
+                                        <div class="image-preview" id="addImagePreview" style="display: none;">
+                                            <img id="addPreviewImg" src="" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                                            <button type="button" class="btn btn-sm btn-outline-danger mt-2" onclick="clearAddImage()">
+                                                <i class="bi bi-x-circle"></i> Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="addBrandImage" name="brandImage">
+                                <div class="form-text">Supported formats: JPG, PNG, GIF. Max size: 5MB</div>
+                            </div>
+                            <div class="mb-4">
                                 <label for="addBrandStatus" class="form-label fw-semibold">Visibility Status</label>
                                 <select class="form-select rounded-3" id="addBrandStatus" name="status">
                                     <option value="Active">Active</option>
@@ -525,6 +623,30 @@
                                 <label for="editBrandDescription" class="form-label fw-semibold">Description (optional)</label>
                                 <textarea class="form-control rounded-3" id="editBrandDescription" name="editBrandDescription" rows="3" placeholder="Enter Description"></textarea>
                             </div>
+                            <div class="mb-4">
+                                <label for="editBrandImage" class="form-label fw-semibold">Brand Image</label>
+                                <div class="image-upload-container">
+                                    <div class="image-upload-area" id="editImageUploadArea">
+                                        <div class="image-upload-content">
+                                            <i class="bi bi-cloud-arrow-up" style="font-size: 2rem; color: #6c757d;"></i>
+                                            <p class="mb-2">Drag and drop an image here</p>
+                                            <p class="mb-3 text-muted">or</p>
+                                            <input type="file" id="editBrandImageFile" class="form-control" accept="image/*" style="display: none;">
+                                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('editBrandImageFile').click()">
+                                                Choose File
+                                            </button>
+                                        </div>
+                                        <div class="image-preview" id="editImagePreview" style="display: none;">
+                                            <img id="editPreviewImg" src="" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                                            <button type="button" class="btn btn-sm btn-outline-danger mt-2" onclick="clearEditImage()">
+                                                <i class="bi bi-x-circle"></i> Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="editBrandImage" name="editBrandImage">
+                                <div class="form-text">Supported formats: JPG, PNG, GIF. Max size: 5MB</div>
+                            </div>
                             <div class="d-flex justify-content-between align-items-end">
                                 <div class="w-50 me-2">
                                     <label for="editBrandStatus" class="form-label fw-semibold">Visibility Status</label>
@@ -543,12 +665,28 @@
             </div>
         </div>
 
+        <!-- Image Modal -->
+        <div class="modal fade image-modal" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: rgba(0, 0, 0, 0.9); color: white; border: none;">
+                        <h5 class="modal-title" id="imageModalLabel">Brand Image</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <img id="modalImage" src="" alt="Brand Image" style="width: 100%; border-radius: 8px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Brands Table -->
         <div class="brands-table">
             <table class="table table-hover">
                 <thead>
                     <tr>
                         <th class="text-start ps-5">Brand Name</th>
+                        <th>Image</th>
                         <th>Description</th>
                         <th>Created Date</th>
                         <th>Status</th>
@@ -559,6 +697,17 @@
                     <% (brands || []).slice().reverse().forEach((brand)=> { %>
                         <tr>
                             <td><%= brand.name %></td>
+                            <td>
+                                <% if (brand.image) { %>
+                                    <div class="brand-image-container">
+                                        <img src="<%= brand.image %>" alt="<%= brand.name %>" class="brand-image" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageModal('<%= brand.image %>', '<%= brand.name %>')">
+                                    </div>
+                                <% } else { %>
+                                    <div class="brand-image-container no-image">
+                                        <span class="text-muted">No image</span>
+                                    </div>
+                                <% } %>
+                            </td>
                             <td class="brand-description"><%= brand.description || '-' %></td>
                             <td>
                                 <%= brand.createdAt ? new Date(brand.createdAt).toLocaleString("en-IN", { day: "2-digit" , month: "short" , year: "numeric" , timeZone: "Asia/Kolkata" }) : '-' %>
@@ -570,7 +719,7 @@
                             </td>
                             <td class="actions">
                                 <button class="btn btn-sm edit-brand-btn" data-bs-toggle="modal" data-bs-target="#editBrandModal"
-                                    data-name="<%= brand.name %>" data-desc="<%= brand.description || '' %>" data-visible="<%= brand.visibility %>">
+                                    data-name="<%= brand.name %>" data-desc="<%= brand.description || '' %>" data-visible="<%= brand.visibility %>" data-image="<%= brand.image || '' %>">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
                                 <label class="toggle-switch ms-2" title="<%= brand.visibility ? 'Click to block' : 'Click to unblock' %>">
@@ -609,11 +758,160 @@
     <!-- SweetAlert (for notifications) -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function openEditModal(name, description, visibility) {
+        function openEditModal(name, description, visibility, image) {
             document.getElementById("originalBrandName").value = name;
             document.getElementById("editBrandName").value = name;
             document.getElementById("editBrandDescription").value = description || '';
+            document.getElementById("editBrandImage").value = image || '';
+
+            // Show existing image if present
+            if (image) {
+                document.getElementById("editImagePreview").style.display = "block";
+                document.getElementById("editPreviewImg").src = image;
+                document.getElementById("editImageUploadArea").style.display = "none";
+            } else {
+                document.getElementById("editImagePreview").style.display = "none";
+                document.getElementById("editImageUploadArea").style.display = "flex";
+            }
+
             document.getElementById("editBrandStatus").value = (String(visibility) === "true") ? "Active" : "Inactive";
+        }
+
+        // Image handling functions
+        function validateImageFile(file) {
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+
+            if (!allowedTypes.includes(file.type)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid file type',
+                    text: 'Please select a valid image file (JPG, PNG, GIF)'
+                });
+                return false;
+            }
+
+            if (file.size > maxSize) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File too large',
+                    text: 'Please select an image smaller than 5MB'
+                });
+                return false;
+            }
+
+            return true;
+        }
+
+        function convertToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function setupImageUpload(uploadAreaId, fileInputId, previewId, previewImgId, hiddenInputId) {
+            const uploadArea = document.getElementById(uploadAreaId);
+            const fileInput = document.getElementById(fileInputId);
+            const preview = document.getElementById(previewId);
+            const previewImg = document.getElementById(previewImgId);
+            const hiddenInput = document.getElementById(hiddenInputId);
+
+            // Drag and drop events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight(e) {
+                uploadArea.classList.add('dragover');
+            }
+
+            function unhighlight(e) {
+                uploadArea.classList.remove('dragover');
+            }
+
+            uploadArea.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            }
+
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+
+            async function handleFile(file) {
+                if (!validateImageFile(file)) return;
+
+                try {
+                    const base64 = await convertToBase64(file);
+
+                    // Show preview
+                    preview.style.display = 'block';
+                    previewImg.src = base64;
+                    uploadArea.style.display = 'none';
+
+                    // Store base64 in hidden input
+                    hiddenInput.value = base64;
+
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error processing image',
+                        text: 'Please try again'
+                    });
+                }
+            }
+
+            // Remove image function (for this specific upload area)
+            window['clear' + uploadAreaId.charAt(0).toUpperCase() + uploadAreaId.slice(1).replace('Area', '') + 'Image'] = function() {
+                preview.style.display = 'none';
+                uploadArea.style.display = 'flex';
+                fileInput.value = '';
+                hiddenInput.value = '';
+            };
+        }
+
+        function clearAddImage() {
+            document.getElementById('addImagePreview').style.display = 'none';
+            document.getElementById('addImageUploadArea').style.display = 'flex';
+            document.getElementById('addBrandImageFile').value = '';
+            document.getElementById('addBrandImage').value = '';
+        }
+
+        function clearEditImage() {
+            document.getElementById('editImagePreview').style.display = 'none';
+            document.getElementById('editImageUploadArea').style.display = 'flex';
+            document.getElementById('editBrandImageFile').value = '';
+            document.getElementById('editBrandImage').value = '';
+        }
+
+        // Show image in modal
+        function showImageModal(imageSrc, brandName) {
+            document.getElementById('modalImage').src = imageSrc;
+            document.getElementById('imageModalLabel').textContent = brandName + ' - Brand Image';
         }
 
         document.addEventListener("DOMContentLoaded", function () {
@@ -626,6 +924,10 @@
                 }
             });
 
+            // Initialize image upload functionality
+            setupImageUpload('addImageUploadArea', 'addBrandImageFile', 'addImagePreview', 'addPreviewImg', 'addBrandImage');
+            setupImageUpload('editImageUploadArea', 'editBrandImageFile', 'editImagePreview', 'editPreviewImg', 'editBrandImage');
+
             // Open Edit Brand modal via data-* attributes
             document.addEventListener('click', (e) => {
                 const btn = e.target.closest('.edit-brand-btn');
@@ -634,7 +936,8 @@
                 const desc = btn.getAttribute('data-desc') || '';
                 const visibleAttr = btn.getAttribute('data-visible');
                 const visible = String(visibleAttr) === 'true';
-                openEditModal(name, desc, visible);
+                const image = btn.getAttribute('data-image') || '';
+                openEditModal(name, desc, visible, image);
             });
 
             // Add Brand
@@ -642,6 +945,7 @@
                 e.preventDefault();
                 const name = document.getElementById("addBrandName").value.trim();
                 const description = document.getElementById("addBrandDescription").value.trim();
+                const brandImage = document.getElementById("addBrandImage").value.trim();
                 const status = document.getElementById("addBrandStatus").value;
                 const errors = { name: document.getElementById("addBrandNameError") };
                 errors.name.innerText = "";
@@ -655,7 +959,7 @@
                     const res = await fetch("/admin/brands", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ name, description, status })
+                        body: JSON.stringify({ name, description, brandImage, status })
                     });
                     if (res.ok) {
                         Swal.fire({ icon: 'success', title: 'Brand added', timer: 1200, showConfirmButton: false });
@@ -675,6 +979,7 @@
                 const orgName = document.getElementById("originalBrandName").value.trim();
                 const editBrandName = document.getElementById("editBrandName").value.trim();
                 const editBrandDescription = document.getElementById("editBrandDescription").value.trim();
+                const editBrandImage = document.getElementById("editBrandImage").value.trim();
                 const editBrandStatus = document.getElementById("editBrandStatus").value;
                 const errors = { name: document.getElementById("editBrandNameError") };
                 errors.name.innerText = "";
@@ -688,7 +993,7 @@
                     const res = await fetch("/admin/brands", {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ orgName, editBrandName, editBrandDescription, editBrandStatus })
+                        body: JSON.stringify({ orgName, editBrandName, editBrandDescription, editBrandImage, editBrandStatus })
                     });
                     if (res.ok) {
                         Swal.fire({ icon: 'success', title: 'Brand updated', timer: 1200, showConfirmButton: false });

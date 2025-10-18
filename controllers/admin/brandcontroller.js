@@ -22,6 +22,7 @@ const brandInfo = async (req, res) => {
       description: '-',
       visibility: !b.isBlocked,
       createdAt: b.createAt,
+      image: b.brandImage || null,
     }));
 
     res.render('admin/brands', {
@@ -39,7 +40,7 @@ const brandInfo = async (req, res) => {
 // POST /admin/brands
 const addBrand = async (req, res) => {
   try {
-    const { name, status } = req.body;
+    const { name, status, brandImage } = req.body;
     if (!name || !name.trim()) {
       return res.status(400).json({ message: 'Brand name is required' });
     }
@@ -51,6 +52,7 @@ const addBrand = async (req, res) => {
 
     const brand = new Brand({
       brandName: name.trim(),
+      brandImage: brandImage || null,
       isBlocked: String(status).toLowerCase() === 'active' ? false : true,
     });
     await brand.save();
@@ -65,7 +67,7 @@ const addBrand = async (req, res) => {
 // PUT /admin/brands
 const editBrand = async (req, res) => {
   try {
-    const { orgName, editBrandName, editBrandStatus } = req.body;
+    const { orgName, editBrandName, editBrandStatus, editBrandImage } = req.body;
 
     if (!orgName) {
       return res.status(400).json({ message: 'Original brand name is required' });
@@ -86,6 +88,10 @@ const editBrand = async (req, res) => {
 
     if (typeof editBrandStatus !== 'undefined') {
       brand.isBlocked = String(editBrandStatus).toLowerCase() === 'active' ? false : true;
+    }
+
+    if (typeof editBrandImage !== 'undefined') {
+      brand.brandImage = editBrandImage;
     }
 
     await brand.save();

@@ -246,9 +246,34 @@
             margin-bottom: 0.5rem;
         }
 
-        .form-check-label {
-            color: var(--text-muted);
+        .brand-filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 4px 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .brand-filter-item:hover {
+            opacity: 0.8;
+        }
+
+        .brand-image-small {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            
+        }
+
+        .brand-filter-item input[type="checkbox"] {
+            margin: 0;
+        }
+
+        .brand-filter-item span {
             font-size: 0.9rem;
+            color: var(--text-muted);
         }
 
         .product-card {
@@ -332,6 +357,7 @@
             display: -webkit-box;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             line-clamp: 2;
         }
 
@@ -587,6 +613,7 @@
                 display: -webkit-box;
                 -webkit-line-clamp:2;
                 -webkit-box-orient: vertical;
+                line-clamp: 2;
                 overflow: hidden;
             }
 
@@ -839,12 +866,19 @@
                         <div class="filter-section">
                             <h6>Brands</h6>
                             <ul class="list-unstyled">
-                                <% const uniqueBrands=[...new Set(brand)]; uniqueBrands.forEach(brand=> { %>
+                                <% const uniqueBrands=[...new Set(brand.map(b => b.name))]; uniqueBrands.forEach(brandName=> {
+                                    const brandObj = brand.find(b => b.name === brandName);
+                                %>
                                     <li>
-                                        <input type="checkbox" name="brand" value="<%= brand %>" <%=appliedFilters &&
-                                            appliedFilters.brand && appliedFilters.brand.includes(brand) ? "checked"
-                                            : "" %>>
-                                        <%= brand %>
+                                        <label class="brand-filter-item">
+                                            <input type="checkbox" name="brand" value="<%= brandName %>" <%=appliedFilters &&
+                                                appliedFilters.brand && appliedFilters.brand.includes(brandName) ? "checked"
+                                                : "" %>>
+                                            <% if (brandObj && brandObj.image) { %>
+                                                <img src="<%= brandObj.image %>" alt="<%= brandName %>" class="brand-image-small">
+                                            <% } %>
+                                            <span><%= brandName %></span>
+                                        </label>
                                     </li>
                                     <% }); %>
                             </ul>
@@ -902,12 +936,19 @@
                         <div class="filter-section">
                             <h6>Brands</h6>
                             <ul class="list-unstyled">
-                                <% const mobileUniqueBrands=[...new Set(brand)]; mobileUniqueBrands.forEach(brand=> { %>
+                                <% const mobileUniqueBrands=[...new Set(brand.map(b => b.name))]; mobileUniqueBrands.forEach(brandName=> {
+                                    const brandObj = brand.find(b => b.name === brandName);
+                                %>
                                     <li>
-                                        <input type="checkbox" name="brand" value="<%= brand %>" <%=appliedFilters &&
-                                            appliedFilters.brand && appliedFilters.brand.includes(brand) ? "checked"
-                                            : "" %>>
-                                        <%= brand %>
+                                        <label class="brand-filter-item">
+                                            <input type="checkbox" name="brand" value="<%= brandName %>" <%=appliedFilters &&
+                                                appliedFilters.brand && appliedFilters.brand.includes(brandName) ? "checked"
+                                                : "" %>>
+                                            <% if (brandObj && brandObj.image) { %>
+                                                <img src="<%= brandObj.image %>" alt="<%= brandName %>" class="brand-image-small">
+                                            <% } %>
+                                            <span><%= brandName %></span>
+                                        </label>
                                     </li>
                                     <% }); %>
                             </ul>

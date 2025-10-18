@@ -157,7 +157,7 @@ const loadShopping = async (req, res) => {
     const [itemsRaw, total, brandsDocs] = await Promise.all([
       Product.find(filter).populate('category', 'offer').sort(sortObj).skip(skip).limit(limit).lean(),
       Product.countDocuments(filter),
-      Brand.find({ isBlocked: false }).select('brandName').lean(),
+      Brand.find({ isBlocked: false }).select('brandName brandImage').lean(),
     ]);
 
     // Normalize fields for the view
@@ -179,7 +179,10 @@ const loadShopping = async (req, res) => {
     });
 
     const totalPages = Math.max(Math.ceil(total / limit), 1);
-    const brand = (brandsDocs || []).map(b => b.brandName).filter(Boolean);
+    const brand = (brandsDocs || []).map(b => ({
+      name: b.brandName,
+      image: b.brandImage || null
+    })).filter(b => b.name);
 
     const appliedFilters = {
       result,
