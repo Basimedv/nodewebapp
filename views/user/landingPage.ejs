@@ -16,6 +16,166 @@
 
     <!-- 3D Model Viewer -->
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+    <style>
+        /* Brands Section Styles */
+        #brands {
+            background: transparent;
+            padding: 4rem 0;
+            margin: 2rem 0;
+        }
+
+        .brandsText {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .brandsText .textline {
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            margin: 0 auto 1rem;
+        }
+
+        .brandsText p {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .brandsText .text2line {
+            width: 60px;
+            height: 2px;
+            background: #667eea;
+            margin: 1rem auto 0;
+        }
+
+        .brands-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .brands-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2.5rem;
+            flex-wrap: wrap;
+            overflow-x: auto;
+            padding: 1rem 0;
+        }
+
+        .brand-link {
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+       .brand-item-inline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem;
+
+    background: transparent; /* Completely transparent background */
+    border-radius: 15px;
+    border: none; /* Optional: remove border */
+
+    box-shadow: none; /* No shadow (fully transparent) */
+
+    backdrop-filter: none; /* Optional: remove blur if not needed */
+    transition: all 0.3s ease;
+    min-width: 140px;
+}
+
+
+        .brand-link:hover .brand-item-inline {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .brand-image-container-inline {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-bottom: 1.2rem;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .brand-link:hover .brand-image-container-inline {
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .brand-image-inline {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .brand-link:hover .brand-image-inline {
+            transform: scale(1.1);
+        }
+
+        .brand-placeholder-inline {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .brand-name-inline {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .brands-wrapper {
+                gap: 2rem;
+                justify-content: flex-start;
+                padding: 1rem;
+            }
+
+            .brand-item-inline {
+                min-width: 120px;
+                padding: 1.2rem;
+            }
+
+            .brand-image-container-inline {
+                width: 70px;
+                height: 70px;
+            }
+
+            .brand-name-inline {
+                font-size: 1rem;
+            }
+
+            .brandsText p {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -136,6 +296,40 @@
                 <a href="/productListing" style="text-decoration: none;">
                     <button type="submit">Explore Fashion ></button>
                 </a>
+            </div>
+        </div>
+
+        <!-- Brands Section -->
+        <div id="brands" style="background: transparent; padding: 4rem 0; margin: 2rem 0;">
+            <div class="brandsText">
+                <div class="textline"></div>
+                <p>Discover Our Premium Brands</p>
+                <div class="text2line"></div>
+            </div>
+
+            <div class="brands-container">
+                <% if (brands && brands.length > 0) { %>
+                    <div class="brands-wrapper">
+                        <% brands.forEach(function(brand){ %>
+                            <a href="/productListing?brand=<%= encodeURIComponent(brand.brandName) %>" class="brand-link">
+                                <div class="brand-item-inline">
+                                    <div class="brand-image-container-inline">
+                                        <% if (brand.brandImage) { %>
+                                            <img src="<%= brand.brandImage %>" alt="<%= brand.brandName %>" class="brand-image-inline">
+                                        <% } else { %>
+                                            <div class="brand-placeholder-inline">
+                                                <span><%= brand.brandName.charAt(0).toUpperCase() %></span>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                    <div class="brand-name-inline"><%= brand.brandName %></div>
+                                </div>
+                            </a>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <p class="text-muted">No brands available.</p>
+                <% } %>
             </div>
         </div>
 

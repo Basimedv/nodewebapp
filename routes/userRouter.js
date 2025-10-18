@@ -40,27 +40,19 @@ router.post('/resend-otp', profileController.resendOtp);
 //   res.render("user/verifyPasswordOTP", { email: "test@example.com", error: null });
 // });
 
-
-
-
-
-
-
-
 // router.get('/resetPassword', preventBackAfterLogout, usercontroller.getResetPassword);
 // router.post('/resetPassword', usercontroller.handleResetPassword);
-// Cart routes (paths aligned with EJS fetch and links)
-router.get('/user/cart', ensureAuth, usercontroller.viewCart);
-router.post('/user/addToCart', ensureAuth, usercontroller.addToCart);
-router.post('/user/updateCartQuantity', ensureAuth, usercontroller.updateCartQuantity);
-router.post('/user/removeFromCart', ensureAuth, usercontroller.removeFromCart);
 
-// Wishlist add route (EJS uses POST /user/addToWishlist)
-router.post('/user/addToWishlist', ensureAuth, usercontroller.addToWishlist);
+// Cart routes (commented out since functions were removed from controller)
+// router.get('/user/cart', ensureAuth, usercontroller.viewCart);
+// router.post('/user/addToCart', ensureAuth, usercontroller.addToCart);
+// router.post('/user/updateCartQuantity', ensureAuth, usercontroller.updateCartQuantity);
+// router.post('/user/removeFromCart', ensureAuth, usercontroller.removeFromCart);
 
-// Wishlist routes (paths aligned with EJS fetch and links)
-router.get('/user/wishlist', ensureAuth, usercontroller.viewWishlist);
-router.post('/user/removeFromWishlist', ensureAuth, usercontroller.removeFromWishlist);
+// Wishlist routes (commented out since functions were removed from controller)
+// router.get('/user/wishlist', ensureAuth, usercontroller.viewWishlist);
+// router.post('/user/removeFromWishlist', ensureAuth, usercontroller.removeFromWishlist);
+// router.post('/user/addToWishlist', ensureAuth, usercontroller.addToWishlist);
 
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 router.get(
