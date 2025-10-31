@@ -3,11 +3,11 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 
-// Generate 6-digit OTP
+// Generate 4-digit OTP
 function generateOtp() {
   const digits = '1234567890';
   let otp = "";
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 4; i++) {
     otp += digits[Math.floor(Math.random() * 10)];
   }
   return otp;
@@ -20,6 +20,19 @@ const getForgotPage = (req, res) => {
   } catch (error) {
     console.error(error);
     res.redirect('/user/pageNotFound');
+  }
+};
+
+
+// Middleware: ensure OTP verified before allowing reset password
+const ensureOtpVerified = (req, res, next) => {
+  try {
+    if (req.session && req.session.otpVerified && req.session.email) {
+      return next();
+    }
+    return res.redirect('/forgotPassword');
+  } catch (e) {
+    return res.redirect('/forgotPassword');
   }
 };
 
@@ -57,12 +70,21 @@ const sendVerificationEmail = async (email, otp) => {
 const forgotEmailValid = async (req, res) => {
   try {
     const { email } = req.body;
+
+    // Validate email format
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      return res.render('user/forgotPassword', {
+        error: "Please enter a valid email address."
+      });
+    }
+
     const findUser = await User.findOne({ email });
 
     if (!findUser) {
       // Send error message to EJS
-      return res.render('user/forgotPassword', { 
-        error: "❌ User with this email does not exist." 
+      return res.render('user/forgotPassword', {
+        error: "User with this email does not exist."
       });
     }
 
@@ -73,14 +95,15 @@ const forgotEmailValid = async (req, res) => {
 
     if (!emailSent) {
       return res.render('user/forgotPassword', {
-        error: "❌ Failed to send OTP. Please try again."
+        error: "Failed to send OTP. Please try again."
       });
     }
 
     req.session.userOtp = otp;
     req.session.email = email;
+    req.session.otpExpiresAt = Date.now() + 2 * 60 * 1000; // 2 minutes
 
-    res.render('user/verifyPasswordOTP', { email, error: null });
+    res.render('user/verifyOTP', { email, error: null, type: 'forgot' });
 
   } catch (err) {
     console.error(err);
@@ -93,11 +116,23 @@ const forgotEmailValid = async (req, res) => {
 const verifyForgotPassOtp = async (req, res) => {
   try {
     const enteredOtp = req.body.otp;
+    // Check presence
+    if (!req.session.userOtp) {
+      return res.json({ success: false, message: "No OTP found. Please resend." });
+    }
+    // Check expiry
+    if (req.session.otpExpiresAt && Date.now() > req.session.otpExpiresAt) {
+      return res.json({ success: false, expired: true, message: "OTP expired. Please resend and try again." });
+    }
     if (enteredOtp === req.session.userOtp) {
-      // ✅ FIXED: Correct redirect
+      // Mark session as OTP-verified for reset flow and clear OTP
+      req.session.otpVerified = true;
+      req.session.userOtp = null;
+      req.session.otpExpiresAt = null;
+      // Redirect to reset password page
       res.json({ success: true, redirect: '/resetpassword' });
     } else {
-      res.json({ success: false, message: "OTP not matching" });
+      res.json({ success: false, message: "Invalid OTP, Please try again" });
     }
   } catch (error) {
     res.status(500).json({ success: false, message: "An error occurred. Please try again" });
@@ -134,6 +169,9 @@ const resetPassword = async (req, res) => {
     );
 
     req.session.email = null;
+    req.session.otpVerified = null;
+    req.session.userOtp = null;
+    req.session.otpExpiresAt = null;
 
     // Success: send JSON with redirect URL
     res.json({ success: true, redirect: '/login' });
@@ -166,7 +204,8 @@ const resendOtp = async (req, res) => {
       return res.status(500).json({ success: false, message: "❌ Failed to resend OTP. Try again." });
     }
 
-    // Save new OTP in session
+    // Clear old OTP and save new OTP in session
+    req.session.userOtp = null; // Clear any existing OTP
     req.session.userOtp = otp;
     console.log("Resent OTP:", otp);
 
@@ -189,4 +228,5 @@ module.exports = {
   verifyForgotPassOtp,
   resetPassword,
   resendOtp,
+  ensureOtpVerified,
 };

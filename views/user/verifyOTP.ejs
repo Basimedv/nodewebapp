@@ -14,16 +14,9 @@
 
 <body>
     <header>
-        <img src="/images/theend.png" class="imageLogo" alt="Logo">
+        <img src="/images/colinguest.png" class="imageLogo" alt="Logo">
 
-        <div class="buttons">
-            <form action="/login" method="GET" style="display:inline;">
-                <button type="submit">Login</button>
-            </form>
-            <form action="/signup" method="GET" style="display:inline;">
-                <button type="submit">Signup</button>
-            </form>
-        </div>
+        
     </header>
 
     <main>
@@ -33,28 +26,35 @@
             </div>
             <div id="loginRight">
                 <div id="rightHeader">
-                    <img src="/images/theend.png" alt="Logo" id="loginHeadLogo">
+                   
 
-                    <h2>Enter the OTP</h2>
-                    <p>The OTP has been sent to your registered email</p>
+                    <h2>Confirm with OTP</h2>
+                    <p>Please check your email address for OTP</p>
 
                 </div>
                 <div id="rightBody">
                     <form id="otpForm">
                         <input type="hidden" id="email" name="email" value="<%= email %>" />
+                        <input type="hidden" id="type" value="<%= type %>" />
+                        <input type="hidden" id="otp" name="otp" />
 
-                        <div class="input-group">
-                            <input type="text" id="otp" name="otp" placeholder="Enter the OTP" required>
-                           <button type="button" id="resend-otp" onclick="resendOTP()">Resend OTP</button>
-
-                            <span id="timerValue"></span>
+                        <div class="otp-boxes" aria-label="Enter 4-digit OTP">
+                          <input class="otp-input" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 1">
+                          <input class="otp-input" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 2">
+                          <input class="otp-input" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 3">
+                          <input class="otp-input" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 4">
                         </div>
-                        <!-- 🔑 Make verify button type="button" so it won’t auto-submit -->
-                        <button id="verify-button" type="button" onclick="ValidateOTPForm()">Verify</button>
+
+                        <button id="verify-button" type="button" class="btn-confirm">Confirm</button>
+
+                        <div class="resend-wrap">
+                          <span class="resend-hint">Resend OTP in <span id="timerValue" aria-live="polite"></span></span>
+                          <button type="button" id="resend-otp" class="btn-resend" onclick="resendOTP()">Resend OTP</button>
+                        </div>
                     </form>
 
-                    <div id="loginButton">
-                        <a href="/login"><button type="submit">Login</button></a>
+                    <div class="back-login">
+                      <a href="/login" class="back-link">Go back to Login page</a>
                     </div>
                 </div>
             </div>
@@ -67,6 +67,7 @@
   const timerValue = document.getElementById("timerValue");
   const verifyButton = document.getElementById("verify-button");
   let timerInterval; // make timer global
+  let isResending = false; // prevent double-clicks
 
   // ---- TIMER FUNCTION ----
   function startTimer(duration = 60) {
@@ -77,13 +78,13 @@
     timerValue.classList.remove("expired");
 
     timerInterval = setInterval(() => {
-      timerValue.textContent = `(${timeLeft}s)`;
+      timerValue.textContent = `${timeLeft} seconds`;
       timeLeft--;
 
       if (timeLeft < 0) {
         clearInterval(timerInterval);
         resendButton.disabled = false;
-        timerValue.textContent = "Expired";
+        timerValue.textContent = "Available";
         timerValue.classList.add("expired");
       }
     }, 1000);
@@ -92,7 +93,41 @@
   // ---- START TIMER ON PAGE LOAD ----
   window.addEventListener("DOMContentLoaded", () => {
     startTimer(60);
+
+    const inputs = Array.from(document.querySelectorAll('.otp-input'));
+    inputs.forEach((input, idx) => {
+      input.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0,1);
+        if (e.target.value && idx < inputs.length - 1) {
+          inputs[idx + 1].focus();
+        }
+        syncOtpHidden();
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+          inputs[idx - 1].focus();
+        }
+      });
+    });
+
+    // Paste full code support (up to 4 digits)
+    inputs[0].addEventListener('paste', (e) => {
+      const text = (e.clipboardData || window.clipboardData).getData('text');
+      if (!text) return;
+      const digits = text.replace(/\D/g, '').slice(0, inputs.length).split('');
+      inputs.forEach((inp, i) => inp.value = digits[i] || '');
+      syncOtpHidden();
+      const next = digits.length < inputs.length ? digits.length : inputs.length - 1;
+      inputs[next].focus();
+      e.preventDefault();
+    });
   });
+
+  function syncOtpHidden(){
+    const inputs = Array.from(document.querySelectorAll('.otp-input'));
+    document.getElementById('otp').value = inputs.map(i => i.value).join('');
+  }
 
   // ---- IMAGE ROTATE EFFECT ----
   verifyButton.addEventListener("click", (e) => {
@@ -105,15 +140,24 @@
       img.classList.remove("rotate");
     }, 2000);
 
-    ValidateOTPForm(); // ✅ trigger OTP validation
+    // ensure hidden otp is up to date and valid length
+    syncOtpHidden();
+    const v = document.getElementById('otp').value;
+    if (v.length < 4) {
+      Swal.fire({ icon: 'warning', title: 'Enter full OTP', timer: 1200, showConfirmButton: false });
+      return;
+    }
+    ValidateOTPForm();
   });
 
   // ---- VERIFY OTP ----
   async function ValidateOTPForm() {
     const otpInput = document.getElementById("otp").value;
+    const type = document.getElementById("type").value;
+    const url = type === 'forgot' ? "/verify-passForgot-otp" : "/verifyOtp";
 
     try {
-      const response = await fetch("/verifyOtp", {
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ otp: otpInput })
@@ -128,9 +172,25 @@
           showConfirmButton: false,
           timer: 1500
         }).then(() => {
-          window.location.href = data.redirectUrl;
+          if (data.redirect) {
+            window.location.href = data.redirect;
+          } else {
+            window.location.href = data.redirectUrl;
+          }
         });
       } else {
+        if (data.expired) {
+          // Show expired as Invalid OTP per requirement
+          clearInterval(timerInterval);
+          resendButton.disabled = false;
+          timerValue.textContent = "Available";
+          Swal.fire({
+            icon: "error",
+            title: "Invalid OTP",
+            text: "The OTP has expired. Please resend and try again.",
+          });
+          return;
+        }
         Swal.fire({
           icon: "error",
           title: "Invalid OTP",
@@ -149,10 +209,20 @@
 
   // ---- RESEND OTP ----
   async function resendOTP() {
+    if (isResending || resendButton.disabled) return;
+
     const email = document.getElementById("email").value;
+    const type = document.getElementById("type").value;
+    const url = type === 'forgot' ? "/resend-otp" : "/resendOtp";
+
+    // set loading state
+    isResending = true;
+    const originalText = resendButton.textContent;
+    resendButton.textContent = "Sending...";
+    resendButton.disabled = true;
 
     try {
-      const response = await fetch("/resendOtp", { // ✅ match backend route
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email })
@@ -165,23 +235,35 @@
           icon: "success",
           title: "OTP Sent!",
           text: "A new OTP has been sent to your email.",
-          timer: 2000,
+          timer: 1500,
           showConfirmButton: false
         });
-        startTimer(60); // ✅ restart timer after success
+        // clear any previously typed digits to avoid using old OTP
+        const inputs = Array.from(document.querySelectorAll('.otp-input'));
+        inputs.forEach(inp => inp.value = '');
+        if (inputs.length) inputs[0].focus();
+        syncOtpHidden();
+        startTimer(60); // restart timer and keep disabled until it expires
       } else {
         Swal.fire({
           icon: "error",
           title: "Failed to Resend OTP",
           text: data.message || "Please try again later."
         });
+        // allow retry on failure
+        resendButton.disabled = false;
       }
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Server Error",
-        text: "Something went wrong, please try again later."
+        title: "Network Error",
+        text: "Unable to resend OTP. Please check your connection and try again."
       });
+      // allow retry on error
+      resendButton.disabled = false;
+    } finally {
+      resendButton.textContent = originalText;
+      isResending = false;
     }
   }
 </script>

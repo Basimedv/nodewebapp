@@ -218,22 +218,34 @@
             opacity: 0.9;
         }
 
-        .sidebar {
-            background-color: transparent;
-            padding: 1.5rem;
+        .filter-item-div {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 0.1rem;
+            margin-bottom: 0.1rem;
+            cursor: pointer;
         }
+
+        .filter-item-div:hover {
+            opacity: 0.8;
+        }
+
 
         .filter-title {
-            color: var(--text-light);
-            font-size: 1rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 0.5rem;
-        }
+  color: var(--text-light);
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+}
+
 
         .filter-section {
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.5rem;
+            padding: 0.25rem;
+            background-color: transparent;
         }
 
         .filter-section h6 {
@@ -246,36 +258,53 @@
             margin-bottom: 0.5rem;
         }
 
-        .brand-filter-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            padding: 4px 0;
-            transition: opacity 0.2s ease;
-        }
+ .brand-filter-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 6px; /* reduced padding */
+  width: 170px; /* adjust as needed */
+  height: 50px; /* adjust as needed */
+  transition: all 0.3s ease;
+  background-color: transparent;
+  border-radius: 10px;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+
+.brand-filter-item:hover {
+  transform: translateY(-3px); /* lifts up slightly */
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4); /* deeper shadow on hover */
+  opacity: 0.95;
+}
+
 
         .brand-filter-item:hover {
             opacity: 0.8;
         }
 
-        .brand-image-small {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: 4px;
-            
-        }
+      .brand-image-small {
+  width: 50px; /* adjust as needed */
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+  margin: 0 auto; /* centers horizontally */
+}
 
-        .brand-filter-item input[type="checkbox"] {
-            margin: 0;
-        }
+
+     
 
         .brand-filter-item span {
             font-size: 0.9rem;
             color: var(--text-muted);
         }
-
+   .brand-filter-item input[type="checkbox"] {
+            margin: 0;
+        }
         .product-card {
             background: rgba(255, 255, 255, 0.32);
             border: 1px solid rgba(255, 255, 255, 0.6);
@@ -554,10 +583,27 @@
         .sort-container.show .sort-dropdown {
             display: block;
         }
+.sidebar {
+  background-color: rgba(255, 255, 255, 0.05); /* subtle transparent background */
+  padding: 1.5rem;
+  border-radius: 15px; /* curved corners */
+  border: 1px solid rgba(0, 0, 0, 0.2); /* soft outline */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* 3D shadow for depth */
+  transition: all 0.3s ease;
+}
+
+/* Optional hover effect for lift */
+.sidebar:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4); /* deeper shadow */
+}
+
+
 
         @media (max-width: 991.98px) {
             .sidebar.d-lg-block {
                 display: none !important;
+
             }
 
             .offcanvas {
@@ -759,6 +805,50 @@
                 height: 100%;
             }
         }
+
+
+
+        .outOfStock {
+  background-color: transparent; /* keep transparent */
+  padding: 10px 15px;
+  border-radius: 10px; /* smooth curves */
+  border: 1px solid rgba(0, 0, 0, 0.2); /* light outline */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25); /* 3D depth */
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* space between checkbox and text */
+  cursor: pointer;
+}
+
+/* Hover effect for 3D lift */
+.outOfStock:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.35);
+  background-color: rgba(255, 255, 255, 0.05); /* soft transparent glow */
+}
+
+.Category-list {
+  background-color: transparent; /* keep transparent */
+  padding: 10px 15px;
+  border-radius: 10px; /* smooth curved edges */
+  border: 1px solid rgba(0, 0, 0, 0.2); /* soft outline */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25); /* 3D shadow */
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* spacing between checkbox and text */
+  cursor: pointer;
+}
+
+/* Hover = lift up effect */
+.Category-list:hover {
+  transform: translateY(-3px); /* moves slightly upward */
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.35); /* deeper shadow */
+  background-color: rgba(255, 255, 255, 0.05); /* light glow background */
+}
+
+
     </style>
 </head>
 
@@ -785,25 +875,38 @@
                         value="<%= appliedFilters && appliedFilters.result ? appliedFilters.result : '' %>">
                     <button class="icon-btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </form>
-                <a href="/user/wishlist" class="icon-btn" title="Wishlist"><i class="fas fa-heart"></i></a>
-                <a href="/user/cart" class="icon-btn" title="Cart"><i class="fas fa-shopping-cart"></i></a>
-            </div>
-        </div>
-        <div id="profileViewModal" class="modal1">
-            <div class="modal-content" onmouseleave="closeViewModal()">
-                <ul>
-                    <li><a href="/landingPage">Home</a></li>
-                    <li><a href="/productListing">Shop</a></li>
-                    <li><a href="/customListing">Custom</a></li>
-                    <li><a href="/about">About</a></li>
-                    <li><a href="/contact">Contact</a></li>
-                </ul>
+                <a href="/wishlist" class="header-icon" aria-label="Wishlist" title="Wishlist">
+                    <i class="fas fa-heart"></i>
+                </a>
+                <a href="/cart" class="header-icon" aria-label="Cart" title="Cart">
+                    <i class="fas fa-cart-shopping"></i>
+                </a>
+                <% if (user) { %>
+                <div class="user-menu">
+                    <button id="userMenuToggle" class="user-toggle">
+                       
+                        <span><%= user.fullName %></span>
+                     
+                    </button>
+                    <div id="userDropdown" class="user-dropdown" aria-hidden="true">
+                        <a href="/wishlist"><i class="fas fa-heart"></i> <span>Wishlist</span></a>
+                        <a href="/cart"><i class="fas fa-cart-shopping"></i> <span>Cart</span></a>
+                        <a href="/profile"><i class="fas fa-user"></i> <span>Profile</span></a>
+                        <a href="/orders"><i class="fas fa-bag-shopping"></i> <span>My Orders</span></a>
+                        <a href="/wallet"><i class="fas fa-wallet"></i> <span>My Wallet</span></a>
+                        <hr>
+                        <a href="/logout" class="logout"><i class="fas fa-right-from-bracket"></i> <span>Logout</span></a>
+                    </div>
+                </div>
+                <% } else { %>
+                    <a href="/login" class="icon-btn">Sign In</a>
+                <% } %>
             </div>
         </div>
         <div class="subhead">
             <nav>
                 <ul>
-                    <a href="landingPage">
+                    <a href="/landingPage">
                         <li>Home</li>
                     </a>
 
@@ -823,6 +926,30 @@
             </nav>
         </div>
     </header>
+    <script>
+        // Match landing page: dropdown toggle and outside click
+        document.addEventListener('click', (e) => {
+            const toggle = document.getElementById('userMenuToggle');
+            const dropdown = document.getElementById('userDropdown');
+            if (!toggle || !dropdown) return;
+            if (toggle.contains(e.target)) {
+                dropdown.classList.toggle('open');
+                dropdown.setAttribute('aria-hidden', dropdown.classList.contains('open') ? 'false' : 'true');
+            } else if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('open');
+                dropdown.setAttribute('aria-hidden', 'true');
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const dropdown = document.getElementById('userDropdown');
+                if (dropdown) {
+                    dropdown.classList.remove('open');
+                    dropdown.setAttribute('aria-hidden', 'true');
+                }
+            }
+        });
+    </script>
 
     <div class="container-fluid px-4">
         <div class="row">
@@ -833,7 +960,9 @@
                 </button>
                 <div class="sidebar d-none d-lg-block">
                     <div class="filter-title">Filter Items</div>
-                    <form id="filterForm" action="/shop" method="get">
+                    <div class="filter-wrapper">
+                        <div class="filter-container">
+                            <form id="filterForm" action="/shop" method="get">
                         <input type="hidden" name="result"
                             value="<%= appliedFilters && appliedFilters.result ? appliedFilters.result : '' %>">
                         <input type="hidden" name="sort"
@@ -843,10 +972,12 @@
                             <ul class="list-unstyled">
                                 <% category.forEach(cat=> { %>
                                     <li>
-                                        <input type="checkbox" name="category" value="<%= cat.name %>" <%=appliedFilters
-                                            && appliedFilters.category && appliedFilters.category.includes(cat.name)
-                                            ? "checked" : "" %>>
-                                        <%= cat.name %>
+                                        <div class="Category-list" style="background-color: transparent;" onclick="toggleFilter()">
+                                            <input type="checkbox" name="category" value="<%= cat.name %>" <%=appliedFilters
+                                                && appliedFilters.category && appliedFilters.category.includes(cat.name)
+                                                ? "checked" : "" %>>
+                                            <%= cat.name %>
+                                        </div>
                                     </li>
                                     <% }) %>
                             </ul>
@@ -870,30 +1001,39 @@
                                     const brandObj = brand.find(b => b.name === brandName);
                                 %>
                                     <li>
-                                        <label class="brand-filter-item">
-                                            <input type="checkbox" name="brand" value="<%= brandName %>" <%=appliedFilters &&
-                                                appliedFilters.brand && appliedFilters.brand.includes(brandName) ? "checked"
-                                                : "" %>>
-                                            <% if (brandObj && brandObj.image) { %>
-                                                <img src="<%= brandObj.image %>" alt="<%= brandName %>" class="brand-image-small">
-                                            <% } %>
-                                            <span><%= brandName %></span>
-                                        </label>
+                                        <div class="filter-item-div" style="background-color: transparent;" onclick="toggleFilter()">
+
+                                           
+                                                <% if (brandObj && brandObj.image) { %>
+                                                     <img src="<%= brandObj.image %>" alt="<%= brandName %>" class="brand-image-small">
+                                                <% } %>
+                                                <label class="brand-filter-item">
+                                                <input type="checkbox" name="brand" value="<%= brandName %>" <%=appliedFilters &&
+                                                    appliedFilters.brand && appliedFilters.brand.includes(brandName) ? "checked"
+                                                    : "" %>>
+                                                <span><%= brandName %></span>
+                                                 
+                                            </label>
+                                        </div>
                                     </li>
                                     <% }); %>
                             </ul>
                             <ul class="list-unstyled">
                                 <h6>Availability</h6>
                                 <li>
-                                    <input type="checkbox" name="availability" value="outOfStock" <%=appliedFilters &&
-                                        appliedFilters.availability ? "checked" : "" %>>
-                                    Include out of Stock
+                                    <div class="outOfStock" style="background-color: transparent;" onclick="toggleFilter()">
+                                        <input type="checkbox" name="availability" value="outOfStock" <%=appliedFilters &&
+                                            appliedFilters.availability ? "checked" : "" %>>
+                                        Include out of Stock
+                                    </div>
                                 </li>
                             </ul>
                             <br>
                             <button type="submit" class="btn text-white w-95"
                                 style="background-color: #121212; border-radius: 28px;">Apply Filters</button>
-                    </form>
+                        </form>
+                    </div>
+                    </div>
                 </div>
             </div>
             <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasFilters"
@@ -903,7 +1043,9 @@
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
                 <div class="offcanvas-body">
-                    <form id="filterFormMobile" action="/shop" method="get">
+                    <div class="filter-wrapper">
+                        <div class="filter-container">
+                            <form id="filterFormMobile" action="/shop" method="get">
                         <input type="hidden" name="result"
                             value="<%= appliedFilters && appliedFilters.result ? appliedFilters.result : '' %>">
                         <input type="hidden" name="sort"
@@ -913,10 +1055,12 @@
                             <ul class="list-unstyled">
                                 <% category.forEach(cat=> { %>
                                     <li>
-                                        <input type="checkbox" name="category" value="<%= cat.name %>" <%=appliedFilters
-                                            && appliedFilters.category && appliedFilters.category.includes(cat.name)
-                                            ? "checked" : "" %>>
-                                        <%= cat.name %>
+                                        <div class="filter-item-div" style="background-color: #f0f0f0;" onclick="toggleFilter()">
+                                            <input type="checkbox" name="category" value="<%= cat.name %>" <%=appliedFilters
+                                                && appliedFilters.category && appliedFilters.category.includes(cat.name)
+                                                ? "checked" : "" %>>
+                                            <%= cat.name %>
+                                        </div>
                                     </li>
                                     <% }) %>
                             </ul>
@@ -940,24 +1084,28 @@
                                     const brandObj = brand.find(b => b.name === brandName);
                                 %>
                                     <li>
-                                        <label class="brand-filter-item">
-                                            <input type="checkbox" name="brand" value="<%= brandName %>" <%=appliedFilters &&
-                                                appliedFilters.brand && appliedFilters.brand.includes(brandName) ? "checked"
-                                                : "" %>>
-                                            <% if (brandObj && brandObj.image) { %>
-                                                <img src="<%= brandObj.image %>" alt="<%= brandName %>" class="brand-image-small">
-                                            <% } %>
-                                            <span><%= brandName %></span>
-                                        </label>
+                                        <div class="filter-item-div" style="background-color: #f0f0f0;" onclick="toggleFilter()">
+                                            <label class="brand-filter-item">
+                                                <input type="checkbox" name="brand" value="<%= brandName %>" <%=appliedFilters &&
+                                                    appliedFilters.brand && appliedFilters.brand.includes(brandName) ? "checked"
+                                                    : "" %>>
+                                                <% if (brandObj && brandObj.image) { %>
+                                                    <img src="<%= brandObj.image %>" alt="<%= brandName %>" class="brand-image-small">
+                                                <% } %>
+                                                <span><%= brandName %></span>
+                                            </label>
+                                        </div>
                                     </li>
                                     <% }); %>
                             </ul>
                             <ul class="list-unstyled">
                                 <h6>Availability</h6>
                                 <li>
-                                    <input type="checkbox" name="availability" value="outOfStock" <%=appliedFilters &&
-                                        appliedFilters.availability ? "checked" : "" %>>
-                                    Include out of Stock
+                                    <div class="filter-item-div" style="background-color: transparent;">
+                                        <input type="checkbox" name="availability" value="outOfStock" <%=appliedFilters &&
+                                            appliedFilters.availability ? "checked" : "" %>>
+                                        Include out of Stock
+                                    </div>
                                 </li>
                             </ul>
                             <br>
@@ -965,6 +1113,8 @@
                                 style="background-color: #e1d3e5; border-radius: 28px;">Apply Filters</button>
                         </div>
                     </form>
+                    </div>
+                </div>
                 </div>
             </div>
         </div>
@@ -1120,7 +1270,7 @@
                 const price = button.dataset.price;
                 const basePrice = button.dataset.base;
                 if (!userId) {
-                    Swal.fire({ icon: 'error', text: 'Please login to continue.', showConfirmButton: true, confirmButtonText: 'Login' }).then((result) => { if (result.isConfirmed) { window.location.href = '/user/login'; } });
+                    Swal.fire({ icon: 'error', text: 'Please login to continue.', showConfirmButton: true, confirmButtonText: 'Login' }).then((result) => { if (result.isConfirmed) { window.location.href = '/login'; } });
                     return;
                 }
                 const productDetails = { userId, productId, quantity, price, basePrice };
@@ -1145,7 +1295,7 @@
                     const userId = document.body.dataset.userId;
                     const productId = this.getAttribute('data-product-id');
                     if (!userId) {
-                        Swal.fire({ icon: 'error', text: 'Please login to continue.', showConfirmButton: true, confirmButtonText: 'Login' }).then((result) => { if (result.isConfirmed) { window.location.href = '/user/login'; } });
+                        Swal.fire({ icon: 'error', text: 'Please login to continue.', showConfirmButton: true, confirmButtonText: 'Login' }).then((result) => { if (result.isConfirmed) { window.location.href = '/login'; } });
                         return;
                     }
                     const response = await fetch('/user/addToWishlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, productId }) });

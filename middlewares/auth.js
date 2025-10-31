@@ -87,15 +87,9 @@ function ensureGuest(req,res,next){
 }
 
 // If a user is already logged in, keep them on landing page when they hit public pages like homepage (/)
-function stayOnLandingAfterLogin(req, res, next){
-  setNoCache(res);
-  if (req.session && req.session.user){
-    return res.redirect('/landingPage');
-  }
-  return next();
-}
 
-// If a normal user is logged in, block access to admin login page
+
+// If a user is already logged in, block access to admin login page
 function blockUserOnAdminLogin(req, res, next){
   setNoCache(res);
   if (req.session && req.session.user){
@@ -114,13 +108,7 @@ function blockAdminOnUserLogin(req, res, next){
 }
 
 // If an admin is logged in, block access to user pages
-function blockAdminFromUserPages(req, res, next){
-  setNoCache(res);
-  if (req.session && req.session.admin){
-    return res.redirect('/admin/dashboard');
-  }
-  return next();
-}
+
 
 // Admin auth: require admin session and confirm isAdmin
 const adminAuth = async (req,res,next)=>{
@@ -154,11 +142,11 @@ module.exports={
     userAuth,
     ensureAuth,
     ensureGuest,
-    stayOnLandingAfterLogin,
+    
     preventBack,
     blockUserOnAdminLogin,
     blockAdminOnUserLogin,
-    blockAdminFromUserPages,
+  
     adminAuth,
     ensureAdminGuest,
 }

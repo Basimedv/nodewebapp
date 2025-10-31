@@ -372,6 +372,46 @@
      display: block;
  }
 
+/* Header action icons (wishlist/cart) */
+.header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #111827;
+  text-decoration: none;
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  border: 1px transparent;
+  border-radius: 9999px;
+}
+
+.header-icon:hover {
+  background: transparent;
+}
+
+ .buttons {
+     display: flex;
+     gap: 10px;
+     align-items: center;
+ }
+
+ .buttons input {
+     padding: 8px;
+     border-radius: 4px;
+     border: 1px solid #ccc;
+ }
+
+ .buttons button {
+     padding: 8px 15px;
+     border-radius: 4px;
+     cursor: pointer;
+ }
+
+ .remove-btn:hover {
+     background: rgb(120, 48, 48);
+ }
+
 /* Footer Styles */
 footer {
     margin-top: 55px;
@@ -540,28 +580,76 @@ footer .fas {
  }
 
 
-
- .remove-btn:hover {
-     background: rgb(120, 48, 48);
- }
-
- .buttons {
-     display: flex;
-     gap: 10px;
-     align-items: center;
- }
-
- .buttons input {
-     padding: 8px;
-     border-radius: 4px;
-     border: 1px solid #ccc;
- }
-
  .buttons button {
      padding: 8px 15px;
      border-radius: 4px;
      cursor: pointer;
  }
+
+/* User menu (username dropdown) */
+.user-menu {
+  position: relative;
+}
+
+.user-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px transparent;
+  border-radius: 9999px;
+  color: #111827;
+}
+
+.user-toggle .chevron {
+  font-size: 12px;
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 42px;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  width: 220px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+  padding: 8px 0;
+  display: none;
+  z-index: 1000;
+}
+
+.user-dropdown.open {
+  display: block;
+}
+
+.user-dropdown a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  color: #111827;
+  text-decoration: none;
+}
+
+.user-dropdown a:hover {
+  background: transparent;
+}
+
+.user-dropdown hr {
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+  margin: 6px 0;
+}
+
+.user-dropdown a.logout {
+  color: #e11d48;
+}
+
+.user-dropdown a.logout:hover {
+  background: #fee2e2;
+}
 
 /* Footer Responsive Styles */
 @media (max-width: 768px) {

@@ -17,7 +17,19 @@ const pageNotFound = async (req, res) => {
 }
 const loadHomepage = async (req, res) => {
   try {
-    res.render('user/home')
+    let userData = null;
+    if (req.session.user && req.session.user._id) {
+      userData = await User.findById(req.session.user._id).lean();
+    } else if (req.session.user && req.session.user.email) {
+      userData = await User.findOne({ email: req.session.user.email }).lean();
+    }
+
+    const products = await Product.find({ status: { $ne: 'Discountinued' } })
+      .sort({ createdAt: -1 })
+      .limit(8)
+      .lean();
+
+    return res.render('user/home', { user: userData, products });
   } catch (error) {
     console.log('homepage error', error)
     res.status(500).send('Server error')
@@ -263,7 +275,7 @@ async function getProductDetails(req, res) {
 
 // Generate 6-digit OTP
 function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
 async function sendVerificationEmail(email, otp) {
@@ -351,16 +363,16 @@ const signup = async (req, res) => {
     }
 
     // 🔹 Store OTP with expiry (60 seconds)
-    req.session.userOtp = {
-      code: otp,
-      expires: Date.now() + 60 * 1000 // valid for 1 minute
-    };
+    req.session.userOtp = otp; // ✅ Store as simple string like profileController
+    req.session.otpExpiresAt = Date.now() + 60 * 1000; // 1 minute expiry
 
     // 🔹 Store user data temporarily until OTP is verified
     req.session.userData = { fullName, phone, email, password };
+    // also persist email separately to support resend in case userData is pruned by store
+    req.session.email = email;
 
     // Show OTP verify page
-    res.render('user/verifyOTP', { email: email });
+    res.render('user/verifyOTP', { email: email, type: 'signup' });
 
     console.log('OTP sent:', otp);
 
@@ -394,18 +406,12 @@ const verifyOtp = async (req, res) => {
       });
     }
 
-    const { code, expires } = req.session.userOtp;
-
-    // check expiry (60 seconds)
-    if (Date.now() > expires) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP expired. Please resend."
-      });
+    // check expiry
+    if (req.session.otpExpiresAt && Date.now() > req.session.otpExpiresAt) {
+      return res.status(400).json({ success: false, expired: true, message: "OTP expired. Please resend and try again." });
     }
-
-    // check value
-    if (otp.trim() !== code) {
+    // check value - now expecting simple string
+    if (otp.trim() !== req.session.userOtp) {
       return res.status(400).json({
         success: false,
         message: "Invalid OTP, Please try again"
@@ -414,6 +420,9 @@ const verifyOtp = async (req, res) => {
 
     // ✅ OTP is valid
     const userData = req.session.userData;
+    if (!userData || !userData.email || !userData.password) {
+      return res.status(400).json({ success: false, message: "Session expired. Please redo signup." });
+    }
     const passwordHash = await securePassword(userData.password);
 
     const saveUserData = new User({
@@ -424,7 +433,6 @@ const verifyOtp = async (req, res) => {
     });
 
     await saveUserData.save();
-    await saveUserData.save();
 
     req.session.user = {
       _id: saveUserData._id,
@@ -432,30 +440,35 @@ const verifyOtp = async (req, res) => {
       email: saveUserData.email
     };
 
-
+    // clear OTP after success
+    req.session.userOtp = null;
+    req.session.otpExpiresAt = null;
     return res.json({ success: true, redirectUrl: "/landingPage" });
 
   } catch (error) {
     console.error("Error verifying OTP:", error);
-    return res.status(500).json({
-      success: false,
-      message: "An error occurred"
-    });
+    const msg = (error && error.code === 11000)
+      ? "Account already exists for this email. Please login."
+      : "Server error during verification. Please try again.";
+    return res.status(500).json({ success: false, message: msg });
   }
 };
 
 const resendOtp = async (req, res) => {
   try {
-    const { email } = req.body;
-    const otp = generateOtp();
-    req.session.userOtp = {
-      code: otp,
-      expires: Date.now() + 60 * 1000 // ✅ 60 seconds expiry
-    };
+    const email = (req.session.userData && req.session.userData.email) || req.session.email || req.body.email;
 
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email not found. Please request again." });
+    }
+
+    const otp = generateOtp();
+    req.session.userOtp = null; // Clear any existing OTP
+    req.session.userOtp = otp; // ✅ Store as simple string like profileController
+    req.session.otpExpiresAt = Date.now() + 60 * 1000; // refresh 1 minute expiry for new OTP
 
     // send OTP via email (using nodemailer or your service)
-    // await sendVerificationEmail(email, otp);
+    await sendVerificationEmail(email, otp);
 
     console.log("Resent OTP:", otp);
 
@@ -534,9 +547,11 @@ const logout = async (req, res) => {
             return res.render('user/forgotPassword',{error:'Email not found'})
         }
        // generate OTP
-
        const otp = Math.floor(1000+Math.random()*9000);
-       otpStore.set(email,{ otp, expiresAt: Date.now()+30000})
+
+       // Store OTP in session instead of undefined otpStore
+       req.session.userOtp = otp;
+       req.session.email = email;
 
        //configure nodemailer
        const transporter = nodemailer.createTransport({
@@ -580,7 +595,7 @@ const showPro = (req, res) => {
   res.render('practise')
 }
 
-// JSON API: /api/products?q=&page=&limit=
+// JSON API: /api/products?q=&page=&limit=&category=&exclude=&brand=
 async function apiProducts(req, res){
   try{
     const q = (req.query.q || '').trim();
@@ -588,12 +603,34 @@ async function apiProducts(req, res){
     const limit = Math.min(Math.max(parseInt(req.query.limit) || 12, 1), 48);
     const skip = (page - 1) * limit;
 
+    // Get category filter from query params
+    const categoryIds = (req.query.category || '').split(',').filter(Boolean);
+    const brandNames = (req.query.brand || '').split(',').filter(Boolean);
+    const excludeIds = (req.query.exclude || '').split(',').filter(Boolean);
+
     const filter = { status: { $ne: 'Discountinued' }, isBlocked: { $ne: true } };
+
+    // Text search by name/brand
     if (q) {
       filter.$or = [
         { productNmae: { $regex: q, $options: 'i' } },
         { brand: { $regex: q, $options: 'i' } },
       ];
+    }
+
+    // Category filter
+    if (categoryIds.length) {
+      filter.category = { $in: categoryIds };
+    }
+
+    // Brand filter
+    if (brandNames.length) {
+      filter.brand = { $in: brandNames };
+    }
+
+    // Exclude specific products
+    if (excludeIds.length) {
+      filter._id = { $nin: excludeIds };
     }
 
     const [itemsRaw, total] = await Promise.all([
@@ -623,71 +660,71 @@ async function apiProducts(req, res){
     return res.status(500).json({ message: 'Server error' });
   }
 }
-// View wishlist
-async function viewWishlist(req, res) {
-  try {
-    const user = req.session?.user || null;
-    if (!user) return res.redirect('/login');
+// // View wishlist
+// async function viewWishlist(req, res) {
+//   try {
+//     const user = req.session?.user || null;
+//     if (!user) return res.redirect('/login');
 
-    const wishlist = await Wishlist.findOne({ userId: user._id }).populate('products.ProductId').lean();
-    const items = (wishlist?.products || []).map(item => ({
-      ...item,
-      product: item.ProductId,
-    }));
+//     const wishlist = await Wishlist.findOne({ userId: user._id }).populate('products.ProductId').lean();
+//     const items = (wishlist?.products || []).map(item => ({
+//       ...item,
+//       product: item.ProductId,
+//     }));
 
-    return res.render('user/wishlist', { user, items });
-  } catch (err) {
-    console.error('viewWishlist error:', err);
-    return res.status(500).render('user/page-404');
-  }
-}
+//     return res.render('user/wishlist', { user, items });
+//   } catch (err) {
+//     console.error('viewWishlist error:', err);
+//     return res.status(500).render('user/page-404');
+//   }
+// }
 
-// Add to wishlist
-async function addToWishlist(req, res) {
-  try {
-    const { userId, productId } = req.body;
-    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
-    if (!productId) return res.status(400).json({ error: 'Missing product' });
+// // Add to wishlist
+// async function addToWishlist(req, res) {
+//   try {
+//     const { userId, productId } = req.body;
+//     if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+//     if (!productId) return res.status(400).json({ error: 'Missing product' });
 
-    let wl = await Wishlist.findOne({ userId });
-    if (!wl) wl = new Wishlist({ userId, products: [] });
+//     let wl = await Wishlist.findOne({ userId });
+//     if (!wl) wl = new Wishlist({ userId, products: [] });
 
-    const exists = wl.products.some(p => String(p.ProductId) === String(productId));
-    if (exists) {
-      return res.status(200).json({ message: 'Already in wishlist' });
-    }
-    wl.products.push({ ProductId: productId });
-    await wl.save();
-    return res.status(200).json({ message: 'Added to wishlist' });
-  } catch (err) {
-    console.error('addToWishlist error:', err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-}
+//     const exists = wl.products.some(p => String(p.ProductId) === String(productId));
+//     if (exists) {
+//       return res.status(200).json({ message: 'Already in wishlist' });
+//     }
+//     wl.products.push({ ProductId: productId });
+//     await wl.save();
+//     return res.status(200).json({ message: 'Added to wishlist' });
+//   } catch (err) {
+//     console.error('addToWishlist error:', err);
+//     return res.status(500).json({ error: 'Server error' });
+//   }
+// }
 
-// Remove from wishlist
-async function removeFromWishlist(req, res) {
-  try {
-    const user = req.session?.user || null;
-    if (!user) return res.status(401).json({ error: 'Not authenticated' });
-    const { productId } = req.body;
-    if (!productId) return res.status(400).json({ error: 'Missing product' });
+// // Remove from wishlist
+// async function removeFromWishlist(req, res) {
+//   try {
+//     const user = req.session?.user || null;
+//     if (!user) return res.status(401).json({ error: 'Not authenticated' });
+//     const { productId } = req.body;
+//     if (!productId) return res.status(400).json({ error: 'Missing product' });
 
-    const wishlist = await Wishlist.findOne({ userId: user._id });
-    if (!wishlist) return res.status(404).json({ error: 'Wishlist not found' });
+//     const wishlist = await Wishlist.findOne({ userId: user._id });
+//     if (!wishlist) return res.status(404).json({ error: 'Wishlist not found' });
 
-    const before = wishlist.products.length;
-    wishlist.products = wishlist.products.filter(p => String(p.ProductId) !== String(productId));
-    if (wishlist.products.length === before) {
-      return res.status(404).json({ error: 'Item not found in wishlist' });
-    }
-    await wishlist.save();
-    return res.status(200).json({ message: 'Removed from wishlist' });
-  } catch (err) {
-    console.error('removeFromWishlist error:', err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-}
+//     const before = wishlist.products.length;
+//     wishlist.products = wishlist.products.filter(p => String(p.ProductId) !== String(productId));
+//     if (wishlist.products.length === before) {
+//       return res.status(404).json({ error: 'Item not found in wishlist' });
+//     }
+//     await wishlist.save();
+//     return res.status(200).json({ message: 'Removed from wishlist' });
+//   } catch (err) {
+//     console.error('removeFromWishlist error:', err);
+//     return res.status(500).json({ error: 'Server error' });
+//   }
+// }
 
 module.exports = {
   pageNotFound,
@@ -703,9 +740,9 @@ module.exports = {
   loadLandingPage,
   logout,
   getProductDetails,
-  addToWishlist,
-  viewWishlist,
-  removeFromWishlist,
+  // addToWishlist,
+  // viewWishlist,
+  // removeFromWishlist,
   apiProducts,
   handleForgotPage,
 }

@@ -1,13 +1,13 @@
-<%-include("../../views/partials/user/header")%>
+<%-include("../partials/user/header")%>
 
-<!-- Link to homepage-specific styles -->
-<link rel="stylesheet" href="/css/home.css">
+    <!-- Link to homepage-specific styles -->
+    <link rel="stylesheet" href="/css/home.css">
 
-<main>
-       
+    <main>
+
 
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 const video = document.getElementById('heroVideo');
                 console.log('Video element found:', video);
                 console.log('Video sources:', video.querySelectorAll('source'));
@@ -15,11 +15,11 @@
                 // Check if video can play the specified type
                 console.log('Can play MP4:', video.canPlayType('video/mp4'));
 
-                video.addEventListener('loadstart', function() {
+                video.addEventListener('loadstart', function () {
                     console.log('Video load started');
                 });
 
-                video.addEventListener('error', function(e) {
+                video.addEventListener('error', function (e) {
                     console.error('Video error:', e);
                     console.error('Error code:', video.error ? video.error.code : 'No error code');
                     console.error('Error message:', video.error ? video.error.message : 'No error message');
@@ -33,16 +33,16 @@
                     }
                 });
 
-                video.addEventListener('canplay', function() {
+                video.addEventListener('canplay', function () {
                     console.log('Video can play');
                 });
 
-                video.addEventListener('loadeddata', function() {
+                video.addEventListener('loadeddata', function () {
                     console.log('Video data loaded, duration:', video.duration, 'seconds');
                     console.log('Video dimensions:', video.videoWidth + 'x' + video.videoHeight);
                 });
 
-                video.addEventListener('abort', function() {
+                video.addEventListener('abort', function () {
                     console.log('Video loading aborted');
                 });
 
@@ -58,7 +58,7 @@
                 const muteSlash = document.getElementById('muteSlash');
                 let isMuted = true;
 
-                soundToggle.addEventListener('click', function() {
+                soundToggle.addEventListener('click', function () {
                     if (isMuted) {
                         video.muted = false;
                         soundToggle.title = 'Mute video';
@@ -73,7 +73,7 @@
                 });
 
                 // Auto-play with sound after user interaction (required by browsers)
-                document.addEventListener('click', function() {
+                document.addEventListener('click', function () {
                     if (video.muted && video.paused === false) {
                         // Video is playing but muted, user can click to unmute
                         console.log('Video is ready for unmute');
@@ -88,9 +88,10 @@
                 <img src="/images/banner1.png" alt="COLINGUEST Logo" id="imgLogo">
             </div>
             <div id="banner2">
-                 <video autoplay muted loop playsinline id="heroVideo" style="background: #000; width: 35%; height: 100%; object-fit: cover;">
-                <source src="/videos/copy_5EBCFB1D-B9B8-40C4-8950-636CF10444C8.mp4" type="video/mp4">
-            </video>
+                <video autoplay muted loop playsinline id="heroVideo"
+                    style="background: #000; width: 35%; height: 100%; object-fit: cover;">
+                    <source src="/videos/copy_5EBCFB1D-B9B8-40C4-8950-636CF10444C8.mp4" type="video/mp4">
+                </video>
                 <p>"Your Offer, Your Time!” ?Lock exclusive deals and claim them even after they're gone!<br>
                     - Coming Soon... !
                 </p>
@@ -106,13 +107,45 @@
                 <div class="text2line"></div>
             </div>
 
+            <style>
+                .categoryIcon ul { list-style: none; display: flex; gap: 180px; justify-content: center; padding: 0; flex-wrap: wrap; row-gap: 64px; }
+                .categoryIcon li a { display: inline-flex; flex-direction: column; align-items: center; text-decoration: none; color: inherit; }
+                .categoryIcon li img { display: block; height: 68px; width: auto; object-fit: contain; }
+                .categoryIcon .cat-label { margin-top: 10px; font-weight: 700; letter-spacing: 1px; font-size: 12px; text-transform: uppercase; color: #1f2937; }
+                @media (max-width: 768px){ .categoryIcon ul { gap: 64px; row-gap: 40px; } }
+            </style>
             <div class="categoryIcon">
                 <ul>
-                    <li><img src="/images/banner2.png" alt="">UNISEX</li>
-                    <li><img src="/images/banner3.png" alt="">WOMEN'S</li>
-                    <li><img src="/images/banner4.png" alt="">MEN"S</li>
-                    <li><img src="/images/banner5.png" alt="">FORMAL'S</li>
-                    <li><img src="/images/banner6.png" alt="">CASUAL'S</li>
+                    <li>
+                        <a href="/productListing?category=UNISEX">
+                            <img src="/images/banner2.png" alt="UNISEX">
+                            <span class="cat-label">UNISEX</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/productListing?category=WOMEN%27S">
+                            <img src="/images/banner3.png" alt="WOMEN'S">
+                            <span class="cat-label">WOMEN'S</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/productListing?category=MEN%27S">
+                            <img src="/images/banner4.png" alt="MEN'S">
+                            <span class="cat-label">MEN'S</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/productListing?category=FORMAL%27S">
+                            <img src="/images/banner5.png" alt="FORMAL'S">
+                            <span class="cat-label">FORMAL'S</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/productListing?category=CASUAL%27S">
+                            <img src="/images/banner6.png" alt="CASUAL'S">
+                            <span class="cat-label">CASUAL'S</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
             <div class="trendingText">
@@ -120,65 +153,29 @@
                 <p>TRENDING</p>
             </div>
             <div id="shopProductSection">
-                <!-- Product 1 -->
-                <div class="product">
-                    <div class="product-image">
-                        <img src="/images/banner7.png" alt="Regular Fit Short-sleeved jersey shirt">
+                <% (products || []).forEach(function(p){ %>
+                    <div class="product">
+                        <div class="product-image">
+                            <img src="<%= (p.productImage && p.productImage[0]) ? p.productImage[0] : '/images/banner7.png' %>" alt="<%= p.productNmae || 'Product' %>">
+                        </div>
+                        <div class="product-details">
+                            <p><%= p.productNmae || '-' %></p>
+                            <p class="price">
+                                <span class="original-price">Rs. <%= (p.reqularPrice || 0).toFixed ? p.reqularPrice.toFixed(2) : p.reqularPrice %></span>
+                                <% if (p.salePrice && Number(p.salePrice) > 0 && Number(p.salePrice) < Number(p.reqularPrice || 0)) { %>
+                                    <span class="discount-price">Rs. <%= Number(p.salePrice).toFixed(2) %></span>
+                                <% } %>
+                            </p>
+                        </div>
                     </div>
-                    <div class="product-details">
-                        <p>Regular Fit Short-Sleeved Jersey Shirt</p>
-                        <p class="price">
-                            <span class="original-price">Rs. 1,999.00</span>
-                            <span class="discount-price">Rs. 1,499.00</span>
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Product 2 -->
-                <div class="product">
-                    <div class="product-image">
-                        <img src="/images/image 106.png" alt="ZW COLLECTION OPENWORK BLOUSE">
-                    </div>
-                    <div class="product-details">
-                        <p>ZW COLLECTION OPENWORK BLOUSE</p>
-                        <p class="price">
-                            <span class="original-price">Rs. 4,200.00</span>
-                            <span class="discount-price">Rs. 3,500.00</span>
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Product 3 -->
-                <div class="product">
-                    <div class="product-image">
-                        <img src="/images/banner8.png" alt="Regular Fit Linen shirt">
-                    </div>
-                    <div class="product-details">
-                        <p>Regular Fit Linen shirt</p>
-                        <p class="price">
-                            <span class="original-price">Rs. 3,599.00</span>
-                            <span class="discount-price">Rs. 2,999.00</span>
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Product 4 -->
-                <div class="product">
-                    <div class="product-image">
-                        <img src="/images/banner9.png" alt="ZW COLLECTION CULOTTES">
-                    </div>
-                    <div class="product-details">
-                        <p>ZW COLLECTION CULOTTES</p>
-                        <p class="price">
-                            <span class="original-price">Rs. 4,200.00</span>
-                            <span class="discount-price">Rs. 3,500.00</span>
-                        </p>
-                    </div>
-                </div>
+                <% }) %>
+                <% if (!products || products.length === 0) { %>
+                    <p class="text-muted">No products to show yet.</p>
+                <% } %>
             </div>
 
             <div class="shopButton">
-                <a href="/login" style="text-decoration: none;"><button type="submit">Explore Fashion
+                <a href="/productListing" style="text-decoration: none;"><button type="submit">Explore Fashion
                         ></button></a>
             </div>
         </div>
@@ -262,4 +259,4 @@
 
 
     </main>
-    <%-include("../../views/partials/user/footer")%>
+    <%-include("../partials/user/footer")%>

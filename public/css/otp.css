@@ -160,7 +160,9 @@ main {
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    margin-left: 30px;
+    /* center by default to match new UI */
+    margin: 0 auto;
+    display: inline-block;
     
 }
 .imageLogo {
@@ -188,8 +190,9 @@ main {
     cursor: pointer;
     transition: background-color 0.3s ease;
 
-    margin-top: 20px; /* 🔽 pushes button down */
-    margin-left: 70px;
+    /* center the verify button to match .btn-confirm */
+    margin: 16px auto 8px;
+    display: block;
 }
 
 
@@ -241,6 +244,89 @@ main {
 #loginButton button:hover {
     background-color: rgba(255, 255, 255, 0.2);
 }
+
+/* ===== New OTP UI styles ===== */
+.otp-boxes {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin: 24px 0 16px;
+}
+
+.otp-input {
+    width: 56px;
+    height: 56px;
+    text-align: center;
+    font-size: 24px;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: #0a372f;
+    outline: none;
+
+    /* 3D effect using shadows */
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.6),  /* light top highlight */
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1),       /* subtle inner shadow */
+        0 4px 6px rgba(0, 0, 0, 0.15);             /* outer shadow (depth) */
+
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.otp-input:focus {
+    border-color: #0f7a5f;
+    box-shadow: 0 0 0 3px rgba(15, 122, 95, 0.15);
+}
+
+.btn-confirm {
+    display: block;
+    margin: 16px auto 8px;
+    width: 320px;
+    max-width: 90%;
+    padding: 14px 20px;
+    background: #0f7a5f;
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-confirm:hover { background: #0c5f4b; }
+
+.resend-wrap {
+    text-align: center;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.resend-hint { color: #b40d0d; font-weight: 500; }
+
+.btn-resend {
+    background: #ffffff;
+    color: #0f7a5f;
+    border: 2px solid #cde7df;
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.btn-resend:disabled {
+    background: #f3f5f6;
+    color: #9aa3a7;
+    border-color: #e3ece9;
+    cursor: not-allowed;
+}
+
+.btn-resend:hover:not(:disabled) { background: #eef7f4; }
+
+.back-login { text-align: center; margin-top: 24px; }
+.back-link { color: #0f7a5f; font-weight: 700; text-decoration: none; }
+.back-link:hover { text-decoration: underline; }
 
 @media (max-width: 600px) {
     header {

@@ -25,31 +25,36 @@
         <div class="mainhead">
             <img src="/images/colinguest.png" class="imageLogo" alt="Logo">
             <div class="buttons">
-                <input type="text" class="searchBar" placeholder="Search product...">
-                <i class="fas fa-user" id="profileIcon"></i>
-                <form action="/logout" method="GET" style="display:inline;">
-                    <button type="submit">Logout</button>
-                </form>
+             
+                <a href="/wishlist" class="header-icon" aria-label="Wishlist" title="Wishlist">
+                    <i class="fas fa-heart"></i>
+                </a>
+                <a href="/cart" class="header-icon" aria-label="Cart" title="Cart">
+                    <i class="fas fa-cart-shopping"></i>
+                </a>
                 <% if (user) { %>
-                    <p>Welcome, <%= user.fullName %>!</p>
-                    <% } else { %>
-                        <p>Welcome, Guest!</p>
-                        <% } %>
+                <div class="user-menu">
+                    <button id="userMenuToggle" class="user-toggle">
+                      
+                        <span><%= user.fullName %></span>
+                      
+                    </button>
+                
+                    <div id="userDropdown" class="user-dropdown" aria-hidden="true">
+                       
+                        <a href="/profile"><i class="fas fa-user"></i> <span>Profile</span></a>
+                        <a href="/orders"><i class="fas fa-bag-shopping"></i> <span>My Orders</span></a>
+                        <a href="/wallet"><i class="fas fa-wallet"></i> <span>My Wallet</span></a>
+                        <hr>
+                        <a href="/logout" class="logout"><i class="fas fa-right-from-bracket"></i> <span>Logout</span></a>
+                    </div>
+                </div>
+                <% } else { %>
+                    <a href="/login">Login</a>
+                <% } %>
             </div>
         </div>
-        <div id="profileViewModal" class="modal1">
-            <div class="modal-content" onmouseleave="closeViewModal()">
-
-                <ul>
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/user/productListing">Shop</a></li>
-                    <li><a href="/customListing">Custom</a></li>
-                    <li><a href="/about">About</a></li>
-                    <li><a href="/contact">Contact</a></li>
-                </ul>
-            </div>
-        </div>
-         <div class="subhead">
+        <div class="subhead">
             <nav>
                 <ul>
                     <li>Home</li>
@@ -95,13 +100,45 @@
                 <div class="text2line"></div>
             </div>
 
+            <style>
+                .categoryIcon ul { list-style: none; display: flex; gap: 180px; justify-content: center; padding: 0; flex-wrap: wrap; row-gap: 64px; }
+                .categoryIcon li a { display: inline-flex; flex-direction: column; align-items: center; text-decoration: none; color: inherit; }
+                .categoryIcon li img { display: block; height: 68px; width: auto; object-fit: contain; }
+                .categoryIcon .cat-label { margin-top: 10px; font-weight: 700; letter-spacing: 1px; font-size: 12px; text-transform: uppercase; color: #1f2937; }
+                @media (max-width: 768px){ .categoryIcon ul { gap: 64px; row-gap: 40px; } }
+            </style>
             <div class="categoryIcon">
                 <ul>
-                    <li><img src="/images/banner2.png" alt="">UNISEX</li>
-                    <li><img src="/images/banner3.png" alt="">WOMEN'S</li>
-                    <li><img src="/images/banner4.png" alt="">MEN'S</li>
-                    <li><img src="/images/banner5.png" alt="">FORMAL'S</li>
-                    <li><img src="/images/banner6.png" alt="">CASUAL'S</li>
+                    <li>
+                        <a href="/productListing?category=UNISEX">
+                            <img src="/images/banner2.png" alt="UNISEX">
+                            <span class="cat-label">UNISEX</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/productListing?category=WOMEN%27S">
+                            <img src="/images/banner3.png" alt="WOMEN'S">
+                            <span class="cat-label">WOMEN'S</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/productListing?category=MEN%27S">
+                            <img src="/images/banner4.png" alt="MEN'S">
+                            <span class="cat-label">MEN'S</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/productListing?category=FORMAL%27S">
+                            <img src="/images/banner5.png" alt="FORMAL'S">
+                            <span class="cat-label">FORMAL'S</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/productListing?category=CASUAL%27S">
+                            <img src="/images/banner6.png" alt="CASUAL'S">
+                            <span class="cat-label">CASUAL'S</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
 
@@ -221,30 +258,28 @@
 
 </html>
 <script>
-    const profileIcon = document.getElementById("profileIcon");
-    const modal = document.getElementById("profileViewModal");
+    // User dropdown toggle and outside-click handling
+    document.addEventListener('click', (e) => {
+        const toggle = document.getElementById('userMenuToggle');
+        const dropdown = document.getElementById('userDropdown');
+        if (!toggle || !dropdown) return;
 
-    // Show modal when mouse enters icon
-    profileIcon.addEventListener("mouseenter", () => {
-        modal.style.display = "block";
+        if (toggle.contains(e.target)) {
+            dropdown.classList.toggle('open');
+            dropdown.setAttribute('aria-hidden', dropdown.classList.contains('open') ? 'false' : 'true');
+        } else if (!dropdown.contains(e.target)) {
+            dropdown.classList.remove('open');
+            dropdown.setAttribute('aria-hidden', 'true');
+        }
     });
 
-    // Keep it open while mouse is inside modal
-    modal.addEventListener("mouseenter", () => {
-        modal.style.display = "block";
-    });
-
-    // Hide when leaving icon or modal
-    profileIcon.addEventListener("mouseleave", () => {
-        setTimeout(() => {
-            if (!modal.matches(":hover")) {
-                modal.style.display = "none";
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown) {
+                dropdown.classList.remove('open');
+                dropdown.setAttribute('aria-hidden', 'true');
             }
-        }, 200);
+        }
     });
-
-    modal.addEventListener("mouseleave", () => {
-        modal.style.display = "none";
-    });
-
 </script>

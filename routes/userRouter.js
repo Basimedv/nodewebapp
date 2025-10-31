@@ -13,15 +13,21 @@ router.get('/', usercontroller.loadHomepage);
 
 router.get("/signup", blockAdminOnUserLogin, ensureGuest, usercontroller.loadSignup);
 router.post("/signup", blockAdminOnUserLogin, ensureGuest, usercontroller.signup);
-router.get("/productListing", blockAdminFromUserPages, ensureAuth, usercontroller.loadShopping);
+router.get("/productListing", usercontroller.loadShopping);
 // Alias used by productListing.ejs filter/search forms
-router.get('/shop', blockAdminFromUserPages, ensureAuth, usercontroller.loadShopping);
+router.get('/shop', usercontroller.loadShopping);
 // Product details page
-router.get('/productDetails/:id', blockAdminFromUserPages, ensureAuth, usercontroller.getProductDetails);
+router.get('/productDetails/:id', usercontroller.getProductDetails);
 // Public API for products (client-side fetch)
 router.get('/api/products', usercontroller.apiProducts);
+//sample 
 router.get('/pro', usercontroller.showPro);
+//
+// Alias for verifyOTP to match frontend expectations
+router.post('/verifyOtp', usercontroller.verifyOtp);
 router.post('/verifyOTP', usercontroller.verifyOtp);
+// Alias for resendOtp to match frontend expectations
+router.post('/resendOtp', usercontroller.resendOtp);
 router.post("/resendOTP", usercontroller.resendOtp);
 router.get("/login", blockAdminOnUserLogin, ensureGuest, usercontroller.loadLogin)
 router.get("/landingPage", ensureAuth, usercontroller.loadLandingPage)
@@ -30,10 +36,8 @@ router.post('/login', blockAdminOnUserLogin, ensureGuest, usercontroller.login)
 router.get('/forgotPassword', profileController.getForgotPage);
 router.post('/forgot-Email-valid', profileController.forgotEmailValid)
 router.post('/verify-passForgot-otp',profileController.verifyForgotPassOtp);
-router.get('/resetpassword', (req, res) => {
-  res.render('user/resetPassword', { error: null });
-});
-router.post('/resetpassword',profileController.resetPassword);
+router.get('/resetpassword', profileController.ensureOtpVerified, profileController.getResetPassPage);
+router.post('/resetpassword', profileController.ensureOtpVerified, profileController.resetPassword);
 router.post('/resend-otp', profileController.resendOtp);
 
 // router.get('/test-otp', (req, res) => {
@@ -51,11 +55,11 @@ router.post('/resend-otp', profileController.resendOtp);
 // router.post('/resetPassword', usercontroller.handleResetPassword);
 
 // Wishlist add route (EJS uses POST /user/addToWishlist)
-router.post('/user/addToWishlist', ensureAuth, usercontroller.addToWishlist);
+// router.post('/user/addToWishlist', ensureAuth, usercontroller.addToWishlist);
 
 // Wishlist routes (paths aligned with EJS fetch and links)
-router.get('/user/wishlist', ensureAuth, usercontroller.viewWishlist);
-router.post('/user/removeFromWishlist', ensureAuth, usercontroller.removeFromWishlist);
+// router.get('/user/wishlist', ensureAuth, usercontroller.viewWishlist);
+// router.post('/user/removeFromWishlist', ensureAuth, usercontroller.removeFromWishlist);
 
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 router.get(

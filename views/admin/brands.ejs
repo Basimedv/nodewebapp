@@ -587,7 +587,7 @@
                                     </div>
                                 </div>
                                 <input type="hidden" id="addBrandImage" name="brandImage">
-                                <div class="form-text">Supported formats: JPG, PNG, GIF. Max size: 5MB</div>
+                                <div class="form-text">Supported formats: JPG, PNG, GIF, WebP, SVG, BMP, TIFF, ICO, HEIC, AVIF, JFIF. Max size: 5MB</div>
                             </div>
                             <div class="mb-4">
                                 <label for="addBrandStatus" class="form-label fw-semibold">Visibility Status</label>
@@ -645,7 +645,7 @@
                                     </div>
                                 </div>
                                 <input type="hidden" id="editBrandImage" name="editBrandImage">
-                                <div class="form-text">Supported formats: JPG, PNG, GIF. Max size: 5MB</div>
+                                <div class="form-text">Supported formats: JPG, PNG, GIF, WebP, SVG, BMP, TIFF, ICO, HEIC, AVIF, JFIF. Max size: 5MB</div>
                             </div>
                             <div class="d-flex justify-content-between align-items-end">
                                 <div class="w-50 me-2">
@@ -779,36 +779,104 @@
 
         // Image handling functions
         function validateImageFile(file) {
+            console.log('Validating file:', {
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                lastModified: new Date(file.lastModified)
+            });
+
             const maxSize = 5 * 1024 * 1024; // 5MB
-            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+            const allowedTypes = [
+                'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
+                'image/webp', 'image/svg+xml', 'image/bmp', 'image/tiff',
+                'image/ico', 'image/heic', 'image/avif', 'image/jfif',
+                'image/x-icon', 'image/vnd.microsoft.icon' // Additional icon types
+            ];
 
-            if (!allowedTypes.includes(file.type)) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Invalid file type',
-                    text: 'Please select a valid image file (JPG, PNG, GIF)'
-                });
-                return false;
-            }
-
+            // Check file size first
             if (file.size > maxSize) {
                 Swal.fire({
                     icon: 'error',
                     title: 'File too large',
-                    text: 'Please select an image smaller than 5MB'
+                    text: `File size is ${(file.size / 1024 / 1024).toFixed(2)}MB. Please select an image smaller than 5MB`
                 });
                 return false;
             }
 
+            // Check MIME type
+            if (!allowedTypes.includes(file.type.toLowerCase())) {
+                console.log('MIME type not in allowed list:', file.type);
+                console.log('Allowed types:', allowedTypes);
+
+                // Try to validate by file extension as fallback
+                const fileName = file.name.toLowerCase();
+                const hasValidExtension = /\.(jpg|jpeg|png|gif|webp|svg|bmp|tiff|tif|ico|heic|avif|jfif)$/i.test(fileName);
+
+                if (!hasValidExtension) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid file type',
+                        text: `File type "${file.type}" is not supported. Please select a valid image file (JPG, PNG, GIF, WebP, SVG, BMP, TIFF, ICO, HEIC, AVIF, JFIF)`
+                    });
+                    return false;
+                } else {
+                    console.log('File extension validation passed, proceeding despite MIME type mismatch');
+                }
+            }
+
+            // Additional validation - check if file is actually an image
+            if (!file.type.startsWith('image/') && !file.name.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp|tiff|tif|ico|heic|avif|jfif)$/i)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Not an image file',
+                    text: 'Please select a valid image file'
+                });
+                return false;
+            }
+
+            console.log('File validation passed');
             return true;
         }
 
         function convertToBase64(file) {
             return new Promise((resolve, reject) => {
+                console.log('Starting FileReader for:', file.name);
+
                 const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
+
+                reader.onload = () => {
+                    console.log('FileReader onload successful, result length:', reader.result?.length);
+                    resolve(reader.result);
+                };
+
+                reader.onerror = (error) => {
+                    console.error('FileReader error:', error);
+                    reject(new Error(`Failed to read file: ${error.target?.error?.message || 'Unknown error'}`));
+                };
+
+                reader.onabort = () => {
+                    console.log('FileReader aborted');
+                    reject(new Error('File reading was aborted'));
+                };
+
+                reader.onloadstart = () => {
+                    console.log('FileReader started loading');
+                };
+
+                reader.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                        console.log(`FileReader progress: ${(event.loaded / event.total * 100).toFixed(2)}%`);
+                    }
+                };
+
+                try {
+                    reader.readAsDataURL(file);
+                    console.log('FileReader.readAsDataURL called successfully');
+                } catch (error) {
+                    console.error('Error calling readAsDataURL:', error);
+                    reject(new Error(`Failed to start reading file: ${error.message}`));
+                }
             });
         }
 
@@ -851,8 +919,17 @@
                 const dt = e.dataTransfer;
                 const files = dt.files;
 
+                console.log('Drop event triggered, files received:', files.length);
+
                 if (files.length > 0) {
+                    console.log('Processing dropped file:', {
+                        name: files[0].name,
+                        type: files[0].type,
+                        size: files[0].size
+                    });
                     handleFile(files[0]);
+                } else {
+                    console.log('No files in drop event');
                 }
             }
 
@@ -863,10 +940,23 @@
             });
 
             async function handleFile(file) {
-                if (!validateImageFile(file)) return;
+                console.log('Handling file:', {
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    lastModified: new Date(file.lastModified)
+                });
+
+                if (!validateImageFile(file)) {
+                    console.log('File validation failed');
+                    return;
+                }
+
+                console.log('Starting base64 conversion...');
 
                 try {
                     const base64 = await convertToBase64(file);
+                    console.log('Base64 conversion successful, length:', base64.length);
 
                     // Show preview
                     preview.style.display = 'block';
@@ -876,11 +966,14 @@
                     // Store base64 in hidden input
                     hiddenInput.value = base64;
 
+                    console.log('Image upload and preview successful');
+
                 } catch (error) {
+                    console.error('Error processing image:', error);
                     Swal.fire({
                         icon: 'error',
                         title: 'Error processing image',
-                        text: 'Please try again'
+                        text: `Error: ${error.message}. Please try again or use a different image.`
                     });
                 }
             }

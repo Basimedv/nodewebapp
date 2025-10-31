@@ -27,17 +27,20 @@
         <div class="mainhead">
             <img src="/images/colinguest.png" class="imageLogo" alt="">
             <div class="buttons">
-                <input type="text" class="searchBar" placeholder="Search product...">
+                
 
                 <!-- <img src="/images/project_icons/profile.png" alt="profile" onmouseover="profileViewModal()"  class="profileImg"> -->
-                <i class="fas fa-user" id="profileIcon" onmouseover="profileViewModal()"></i>
+               <a href="/cart" class="header-icon" aria-label="Cart" title="Cart">
+            <i class="fas fa-cart-shopping"></i>
+          </a>
+            <a href="/wishlist" class="header-icon" aria-label="Wishlist" title="Wishlist">
+            <i class="fas fa-heart"></i>
+          </a>
 
                 <form action="/login" method="GET" style="display:inline;">
-                    <button type="submit">Login</button>
+                    <button type="submit">Sign In</button>
                 </form>
-                <form action="/signup" method="GET" style="display:inline;">
-                    <button type="submit">signup</button>
-                </form>
+                
             </div>
             <div id="profileViewModal" class="modal">
                 <div class="modal-content" onmouseleave="closeViewModal()">
@@ -69,7 +72,7 @@
                         <li>Home</li>
                     </a>
 
-                    <a href="/login">
+                    <a href="/productListing">
                         <li>Shop</li>
                     </a>
                     <a href="/customListing">
