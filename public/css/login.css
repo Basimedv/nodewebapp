@@ -92,10 +92,7 @@ body {
     width: 120px;
     height: auto;
     display: block;
-    margin-left: 100px;
-    /* moves logo to the right */
-    margin-top: -350px;
-    /* moves logo upward (optional) */
+    margin: 0 auto 10px;
 }
 
 .p1 {
@@ -104,8 +101,9 @@ body {
     letter-spacing: 2px;
     margin-top: 10px;
     color: white;
-    margin-left: 50px;
-    /* smaller value = more left */
+    margin-left: 0;
+    white-space: nowrap;
+    text-align: center;
 }
 
 .rightBody {
@@ -128,26 +126,18 @@ body {
     display: flex;
     flex-direction: column;
     gap: 18px;
-    align-items: flex-start;
+    align-items: stretch;
     font-size: 12px;
     /* ⬅️ pushes inputs & labels to the left */
-
-    margin-left: -500px;
-    /* ⬅️ removes any centering */
-    margin-top: 150px;
-    /* ⬅️ pushes form downward */
+    margin: 20px auto 0;
 }
 
 .or {
     width: 100%;
     /* take full width of login box */
-    text-align: left;
-    /* push text to the left */
-    margin: 0;
-    /* reset default margins */
-    padding-left: 10px;
-    margin-left: -500px;
-    /* optional small spacing */
+    text-align: center;
+    margin: 20px 0 0;
+    padding-left: 0;
 }
 
 span {
@@ -163,6 +153,7 @@ span {
     margin-top: 10px;
     text-align: center;
     color: white;
+    white-space: nowrap;
 }
 
 .rightBody {
@@ -204,6 +195,14 @@ span {
     background-color: #751f1f;
 }
 
+.form-links {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
 .forgotLink {
     display: inline-block;
     color: #992828;
@@ -216,11 +215,6 @@ span {
     color: #992828;
     text-decoration: none;
     font-size: 14px;
-    position: relative;
-    left: 100%;
-    /* push them to right */
-    transform: translateX(-100%);
-    /* keep them inside container */
 }
 
 
@@ -257,8 +251,7 @@ span {
     gap: 10px;
     cursor: pointer;
     transition: background-color 0.3s;
-    margin-left: -250px;
-    margin-top: 30px;
+    margin: 30px auto 0;
 }
 
 a {
