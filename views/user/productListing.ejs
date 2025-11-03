@@ -415,7 +415,7 @@
             /* top | left/right | bottom */
             font-size: 0.9rem;
             border: none;
-            border-radius: 4px;
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -426,7 +426,8 @@
 
 
         .btn-add-cart .bi-cart {
-            margin-right: 0.5rem;
+            margin-right: 0.3rem;
+            font-size: 0.9em;
         }
 
         .btn-add-cart:hover {
@@ -677,9 +678,9 @@
             }
 
             .btn-add-cart {
-                padding: 0.4rem;
-                font-size: 0.85rem;
-                border-radius: 4px;
+                padding: 0.35rem 0.7rem;
+                font-size: 0.8rem;
+                border-radius: 20px;
                 margin-top: 0.3rem;
             }
 
@@ -907,20 +908,20 @@
             <nav>
                 <ul>
                     <a href="/landingPage">
-                        <li>Home</li>
+                        <li style="margin-bottom: 8px;">Home</li>
                     </a>
 
                     <a href="/productListing">
-                        <li>Shop</li>
+                        <li style="margin-bottom: 8px;">Shop</li>
                     </a>
                     <a href="/customListing">
-                        <li>Custom</li>
+                        <li style="margin-bottom: 8px;">Custom</li>
                     </a>
                     <a href="/about">
-                        <li>About</li>
+                        <li style="margin-bottom: 8px;">About</li>
                     </a>
                     <a href="/contact">
-                        <li>Contact</li>
+                        <li style="margin-bottom: 8px;">Contact</li>
                     </a>
                 </ul>
             </nav>
@@ -952,6 +953,14 @@
     </script>
 
     <div class="container-fluid px-4">
+        <!-- Breadcrumb Navigation -->
+        <%- include('../partials/user/breadcrumb', {
+          breadcrumbs: [
+            { name: 'Home', url: '/landingPage' },
+            { name: 'Products' }
+          ]
+        }) %>
+        
         <div class="row">
             <div class="col-lg-2">
                 <button class="btn btn-primary d-lg-none mb-3 w-100 mt-3" type="button" data-bs-toggle="offcanvas"
@@ -969,9 +978,9 @@
                             value="<%= appliedFilters && appliedFilters.sort ? appliedFilters.sort : 'newest' %>">
                         <div class="filter-section">
                             <h6>Category</h6>
-                            <ul class="list-unstyled">
+                            <ul class="list-unstyled" style="margin-bottom: 0;">
                                 <% category.forEach(cat=> { %>
-                                    <li>
+                                    <li style="margin-bottom: 8px;">
                                         <div class="Category-list" style="background-color: transparent;" onclick="toggleFilter()">
                                             <input type="checkbox" name="category" value="<%= cat.name %>" <%=appliedFilters
                                                 && appliedFilters.category && appliedFilters.category.includes(cat.name)
@@ -996,11 +1005,11 @@
                         </div>
                         <div class="filter-section">
                             <h6>Brands</h6>
-                            <ul class="list-unstyled">
+                            <ul class="list-unstyled" style="margin-bottom: 0;">
                                 <% const uniqueBrands=[...new Set(brand.map(b => b.name))]; uniqueBrands.forEach(brandName=> {
                                     const brandObj = brand.find(b => b.name === brandName);
                                 %>
-                                    <li>
+                                    <li style="margin-bottom: 8px;">
                                         <div class="filter-item-div" style="background-color: transparent;" onclick="toggleFilter()">
 
                                            
@@ -1018,9 +1027,9 @@
                                     </li>
                                     <% }); %>
                             </ul>
-                            <ul class="list-unstyled">
+                            <ul class="list-unstyled" style="margin-bottom: 0;">
                                 <h6>Availability</h6>
-                                <li>
+                                <li style="margin-bottom: 8px;">
                                     <div class="outOfStock" style="background-color: transparent;" onclick="toggleFilter()">
                                         <input type="checkbox" name="availability" value="outOfStock" <%=appliedFilters &&
                                             appliedFilters.availability ? "checked" : "" %>>
@@ -1052,9 +1061,9 @@
                             value="<%= appliedFilters && appliedFilters.sort ? appliedFilters.sort : 'newest' %>">
                         <div class="filter-section">
                             <h6>Category</h6>
-                            <ul class="list-unstyled">
+                            <ul class="list-unstyled" style="margin-bottom: 0;">
                                 <% category.forEach(cat=> { %>
-                                    <li>
+                                    <li style="margin-bottom: 8px;">
                                         <div class="filter-item-div" style="background-color: #f0f0f0;" onclick="toggleFilter()">
                                             <input type="checkbox" name="category" value="<%= cat.name %>" <%=appliedFilters
                                                 && appliedFilters.category && appliedFilters.category.includes(cat.name)
@@ -1079,11 +1088,11 @@
                         </div>
                         <div class="filter-section">
                             <h6>Brands</h6>
-                            <ul class="list-unstyled">
+                            <ul class="list-unstyled" style="margin-bottom: 0;">
                                 <% const mobileUniqueBrands=[...new Set(brand.map(b => b.name))]; mobileUniqueBrands.forEach(brandName=> {
                                     const brandObj = brand.find(b => b.name === brandName);
                                 %>
-                                    <li>
+                                    <li style="margin-bottom: 8px;">
                                         <div class="filter-item-div" style="background-color: #f0f0f0;" onclick="toggleFilter()">
                                             <label class="brand-filter-item">
                                                 <input type="checkbox" name="brand" value="<%= brandName %>" <%=appliedFilters &&
@@ -1098,9 +1107,9 @@
                                     </li>
                                     <% }); %>
                             </ul>
-                            <ul class="list-unstyled">
+                            <ul class="list-unstyled" style="margin-bottom: 0;">
                                 <h6>Availability</h6>
-                                <li>
+                                <li style="margin-bottom: 8px;">
                                     <div class="filter-item-div" style="background-color: transparent;">
                                         <input type="checkbox" name="availability" value="outOfStock" <%=appliedFilters &&
                                             appliedFilters.availability ? "checked" : "" %>>

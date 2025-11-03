@@ -475,6 +475,13 @@
             font-size: 15px;
             text-decoration: none;
         }
+        #product-quantity {
+  background-color: transparent;
+  border: none;
+  color: #000;
+  text-align: center;
+}
+
     </style>
   </head>
 
@@ -551,6 +558,15 @@
 
     <main>
       <div class="container py-4 pd-wrapper">
+        <!-- Breadcrumb Navigation -->
+        <%- include('../partials/user/breadcrumb', {
+          breadcrumbs: [
+            { name: 'Products', url: '/productListing' },
+            { name: product?.category?.name || 'Category', url: `/productListing?category=${product?.category?._id || ''}` },
+            { name: product?.name || 'Product' }
+          ]
+        }) %>
+        
         <div id="user-data" style="display: none;"
           data-user="<%= typeof user !== 'undefined' && user && user._id ? user._id : '' %>"
           data-images="<%= JSON.stringify(product?.images || []) %>"></div>
@@ -586,9 +602,18 @@
           <div class="col-lg-5">
             <div class="pd-card shadow-lg">
               <div class="product-header">
-                <h4 class="mb-1 fw-bold product-title">
-                  <%= product ? (product.name || 'Product' ) : 'Product' %>
-                </h4>
+                <div class="d-flex justify-content-between align-items-start">
+                  <h2 class="mb-3 fw-bold product-title" style="font-size: 2rem; line-height: 1.2;">
+                    <%= product ? (product.name || 'Product' ) : 'Product' %>
+                  </h2>
+                  <% const isOutOfStock = product && product.status === 'out of stock'; %>
+                  <span class="badge <%= isOutOfStock ? 'bg-danger' : 'bg-success' %>">
+                    <%= isOutOfStock ? 'Out of Stock' : 'In Stock' %>
+                    <% if (!isOutOfStock && product && product.stock) { %>
+                      (<%= product.stock %> available)
+                    <% } %>
+                  </span>
+                </div>
                 <div class="product-meta">
                   <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="rating-stars">
@@ -596,7 +621,6 @@
                       <i class="fa fa-star"></i><i class="fa fa-star-half-alt"></i><i class="far fa-star"></i>
                     </div>
                     <small class="text-muted">(50 Reviews)</small>
-                    <small class="text-success fw-semibold">In Stock</small>
                   </div>
                 </div>
               </div>
@@ -663,14 +687,44 @@
                               <% }) %>
                           </div>
 
+                          <!-- Quantity Selector -->
+                          <% if (!isOutOfStock) { %>
+                            <div class="mb-3">
+                              <div class="d-flex align-items-center">
+                                <span class="me-2 fw-semibold">Quantity:</span>
+                                <div class="input-group" style="width: 150px;">
+                                  <button class="btn btn-outline-secondary px-3" type="button" id="decrement-qty">-</button>
+                                  <input type="number" class="form-control text-center" id="product-quantity" 
+                                         value="1" min="1" 
+                                         max="<%= product && product.stock ? product.stock : 10 %>" 
+                                         readonly>
+                                  <button class="btn btn-outline-secondary px-3" type="button" id="increment-qty">+</button>
+                                </div>
+                                <% if (product && product.stock) { %>
+                                  <small class="ms-2 text-muted">Max: <%= product.stock %></small>
+                                <% } %>
+                              </div>
+                            </div>
+                          <% } %>
+
+                          <!-- Action Buttons -->
                           <div class="d-flex gap-2 mb-2">
-                            <button class="btn btn-dark" data-product-id="<%= product?._id %>"
-                              data-price="<%= finalPrice %>">Buy Now</button>
-                            <button class="btn btn-primary" data-product-id="<%= product?._id %>"
-                              data-price="<%= finalPrice %>">
-                              <i class="fa fa-cart-plus me-1"></i> Add to Cart
-                            </button>
-                            <button class="btn btn-outline-secondary" data-product-id="<%= product?._id %>">
+                            <% if (isOutOfStock) { %>
+                              <button class="btn btn-secondary w-100" disabled>
+                                <i class="fas fa-times-circle me-1"></i> Out of Stock
+                              </button>
+                            <% } else { %>
+                              <button class="btn btn-dark" data-product-id="<%= product?._id %>"
+                                data-price="<%= finalPrice %>" id="buy-now-btn">
+                                Buy Now
+                              </button>
+                              <button class="btn btn-primary" data-product-id="<%= product?._id %>"
+                                data-price="<%= finalPrice %>" id="add-to-cart-btn">
+                                <i class="fa fa-cart-plus me-1"></i> Add to Cart
+                              </button>
+                            <% } %>
+                            <button class="btn btn-outline-secondary" data-product-id="<%= product?._id %>" 
+                                    <%= isOutOfStock ? 'disabled' : '' %>>
                               <i class="fa fa-heart"></i>
                             </button>
                           </div>
@@ -722,6 +776,67 @@
           const userDataElement = document.getElementById('user-data');
           const userId = userDataElement ? userDataElement.getAttribute('data-user') : null;
           const currentUser = userId ? { _id: userId } : null;
+          
+          // Get quantity input and buttons
+          const quantityInput = document.getElementById('product-quantity');
+          const incrementBtn = document.getElementById('increment-qty');
+          const decrementBtn = document.getElementById('decrement-qty');
+          const addToCartBtn = document.getElementById('add-to-cart-btn');
+          const buyNowButton = document.querySelector('button[data-product-id]');
+          
+          // Set initial max quantity based on stock if available
+          const maxQuantity = <%= (product && product.stock) || 10 %>;
+          const isOutOfStock = <%= (product && product.status === 'out of stock') || false %>;
+          
+          // Disable buttons if out of stock
+          if (isOutOfStock) {
+            if (addToCartBtn) addToCartBtn.disabled = true;
+            if (buyNowButton) buyNowButton.disabled = true;
+          }
+          
+          if (quantityInput) {
+            quantityInput.max = maxQuantity;
+            
+            // Disable quantity controls if out of stock
+            if (isOutOfStock) {
+              if (incrementBtn) incrementBtn.disabled = true;
+              if (decrementBtn) decrementBtn.disabled = true;
+              quantityInput.disabled = true;
+            }
+            
+            // Handle increment button click
+            if (incrementBtn) {
+              incrementBtn.addEventListener('click', function() {
+                let value = parseInt(quantityInput.value);
+                if (value < maxQuantity) {
+                  quantityInput.value = value + 1;
+                } else {
+                  Swal.fire({
+                    icon: 'warning',
+                    title: 'Stock Limit',
+                    text: `Only ${maxQuantity} items available in stock`,
+                    confirmButtonText: 'OK'
+                  });
+                }
+              });
+            }
+            
+            // Handle decrement button click
+            if (decrementBtn) {
+              decrementBtn.addEventListener('click', function() {
+                let value = parseInt(quantityInput.value);
+                if (value > 1) {
+                  quantityInput.value = value - 1;
+                }
+              });
+            }
+            
+            // Prevent manual input since we're using buttons
+            quantityInput.addEventListener('keydown', function(e) {
+              e.preventDefault();
+              return false;
+            });
+          }
 
           // Get all product images for switching
           const imagesData = userDataElement.getAttribute('data-images');
@@ -872,14 +987,13 @@
           });
 
           // Handle Buy Now button
-          const buyNowBtn = document.querySelector('button[data-product-id]:first-of-type');
-          if (buyNowBtn) {
-            buyNowBtn.addEventListener('click', function () {
+          if (buyNowButton) {
+            buyNowButton.addEventListener('click', function () {
               if (!currentUser) {
                 Swal.fire({
                   icon: 'warning',
                   title: 'Login Required',
-                  text: 'Please login to add items to cart',
+                  text: 'Please login to continue',
                   confirmButtonText: 'Go to Login'
                 }).then((result) => {
                   if (result.isConfirmed) {
@@ -888,115 +1002,49 @@
                 });
                 return;
               }
-
-              const productId = this.getAttribute('data-product-id');
-              const price = this.getAttribute('data-price');
-
-              // Add to cart first, then redirect to cart
-              fetch('/user/addToCart', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  userId: currentUser._id,
-                  productId: productId,
-                  price: price,
-                  quantity: 1
-                })
-              })
-                .then(response => response.json())
-                .then(data => {
-                  if (data.message === 'Added to cart') {
-                    Swal.fire({
-                      icon: 'success',
-                      title: 'Success!',
-                      text: 'Product added to cart! Redirecting to cart...',
-                      timer: 1500,
-                      showConfirmButton: false,
-                      timerProgressBar: true
-                    }).then(() => {
-                      window.location.href = '/user/cart';
-                    });
-                  } else {
-                    Swal.fire({
-                      icon: 'error',
-                      title: 'Oops...',
-                      text: data.error || 'Failed to add to cart'
-                    });
-                  }
-                })
-                .catch(error => {
-                  console.error('Error:', error);
-                  Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred. Please try again.'
-                  });
-                });
+              // Redirect to cart
+              window.location.href = '/cart';
             });
           }
-
-          // Handle Add to Cart button
-          const addToCartBtn = document.querySelector('button[data-product-id]:nth-of-type(2)');
+          
+          // Add to Cart button click handler
           if (addToCartBtn) {
-            addToCartBtn.addEventListener('click', function () {
-              if (!currentUser) {
+            addToCartBtn.addEventListener('click', async function() {
+              const quantity = parseInt(quantityInput.value) || 1;
+              
+              if (quantity > maxQuantity) {
                 Swal.fire({
-                  icon: 'warning',
-                  title: 'Login Required',
-                  text: 'Please login to add items to cart',
-                  confirmButtonText: 'Go to Login'
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    window.location.href = '/login';
-                  }
+                  icon: 'error',
+                  title: 'Out of Stock',
+                  text: `Only ${maxQuantity} items available in stock`,
+                  confirmButtonText: 'OK'
                 });
                 return;
               }
-
-              const productId = this.getAttribute('data-product-id');
-              const price = this.getAttribute('data-price');
-
-              fetch('/user/addToCart', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  userId: currentUser._id,
-                  productId: productId,
-                  price: price,
-                  quantity: 1
-                })
-              })
-                .then(response => response.json())
-                .then(data => {
-                  if (data.message === 'Added to cart') {
-                    Swal.fire({
-                      icon: 'success',
-                      title: 'Success!',
-                      text: 'Product added to cart successfully!',
-                      timer: 2000,
-                      showConfirmButton: false,
-                      timerProgressBar: true
-                    });
-                  } else {
-                    Swal.fire({
-                      icon: 'error',
-                      title: 'Oops...',
-                      text: data.error || 'Failed to add to cart'
-                    });
-                  }
-                })
-                .catch(error => {
-                  console.error('Error:', error);
-                  Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred. Please try again.'
-                  });
+              
+              await addToCart(false, quantity);
+            });
+          }
+          
+          // Buy Now button click handler
+          if (buyNowButton) {
+            buyNowButton.addEventListener('click', async function() {
+              const quantity = parseInt(quantityInput.value) || 1;
+              
+              if (quantity > maxQuantity) {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Out of Stock',
+                  text: `Only ${maxQuantity} items available in stock`,
+                  confirmButtonText: 'OK'
                 });
+                return;
+              }
+              
+              const success = await addToCart(true, quantity);
+              if (success) {
+                window.location.href = '/cart';
+              }
             });
           }
 
@@ -1281,14 +1329,21 @@
               })
                 .then(response => response.json())
                 .then(data => {
-                  if (data.message === 'Added to cart') {
+                  if (data.success) {
+                    // Update cart count in the header
+                    const cartCount = document.querySelector('.cart-count');
+                    if (cartCount) {
+                      const currentCount = parseInt(cartCount.textContent) || 0;
+                      const quantity = parseInt(document.getElementById('product-quantity').value) || 1;
+                      cartCount.textContent = currentCount + quantity;
+                    }
+                    
                     Swal.fire({
                       icon: 'success',
-                      title: 'Success!',
-                      text: 'Product added to cart successfully!',
-                      timer: 2000,
+                      title: 'Added to Cart',
+                      text: quantity + ' item' + (quantity > 1 ? 's' : '') + ' added to your cart',
                       showConfirmButton: false,
-                      timerProgressBar: true
+                      timer: 1500
                     });
                   } else {
                     Swal.fire({

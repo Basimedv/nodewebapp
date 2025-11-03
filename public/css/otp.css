@@ -304,7 +304,7 @@ main {
     gap: 8px;
 }
 
-.resend-hint { color: #b40d0d; font-weight: 500; }
+.resend-hint { color: #d71111; font-weight: 500; }
 
 .btn-resend {
     background: #ffffff;
@@ -325,7 +325,7 @@ main {
 .btn-resend:hover:not(:disabled) { background: #eef7f4; }
 
 .back-login { text-align: center; margin-top: 24px; }
-.back-link { color: #0f7a5f; font-weight: 700; text-decoration: none; }
+.back-link { color: #5f4e4e; font-weight: 700; text-decoration: none; }
 .back-link:hover { text-decoration: underline; }
 
 @media (max-width: 600px) {

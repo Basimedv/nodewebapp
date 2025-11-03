@@ -3,7 +3,7 @@ const router = express.Router();
 const usercontroller = require('../controllers/user/usercontroller');
 const passport = require('passport');
 const profileController=require('../controllers/user/profileController')
-const { ensureAuth, ensureGuest, preventBack, blockAdminOnUserLogin, stayOnLandingAfterLogin, blockAdminFromUserPages } = require('../middlewares/auth');
+const { ensureAuth, ensureGuest, preventBack } = require('../middlewares/auth');
 
 // Prevent cached pages after logout
 router.use(preventBack);
@@ -11,8 +11,8 @@ router.use(preventBack);
 router.get('/pageNotFound', usercontroller.pageNotFound);
 router.get('/', usercontroller.loadHomepage);
 
-router.get("/signup", blockAdminOnUserLogin, ensureGuest, usercontroller.loadSignup);
-router.post("/signup", blockAdminOnUserLogin, ensureGuest, usercontroller.signup);
+router.get("/signup", ensureGuest, usercontroller.loadSignup);
+router.post("/signup", ensureGuest, usercontroller.signup);
 router.get("/productListing", usercontroller.loadShopping);
 // Alias used by productListing.ejs filter/search forms
 router.get('/shop', usercontroller.loadShopping);
@@ -29,10 +29,10 @@ router.post('/verifyOTP', usercontroller.verifyOtp);
 // Alias for resendOtp to match frontend expectations
 router.post('/resendOtp', usercontroller.resendOtp);
 router.post("/resendOTP", usercontroller.resendOtp);
-router.get("/login", blockAdminOnUserLogin, ensureGuest, usercontroller.loadLogin)
+router.get("/login", ensureGuest, usercontroller.loadLogin)
 router.get("/landingPage", ensureAuth, usercontroller.loadLandingPage)
 router.get('/logout', usercontroller.logout)
-router.post('/login', blockAdminOnUserLogin, ensureGuest, usercontroller.login)
+router.post('/login', ensureGuest, usercontroller.login)
 router.get('/forgotPassword', profileController.getForgotPage);
 router.post('/forgot-Email-valid', profileController.forgotEmailValid)
 router.post('/verify-passForgot-otp',profileController.verifyForgotPassOtp);

@@ -1,0 +1,46 @@
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb bg-transparent p-0 mb-0">
+    <% if (breadcrumbs && breadcrumbs.length) { %>
+      <% breadcrumbs.forEach((crumb, index) => { 
+        const isLast = index === breadcrumbs.length - 1;
+        const itemClass = isLast ? 'active' : '';
+      %>
+        <li class="breadcrumb-item <%= itemClass %>" 
+            <% if (isLast) { %>aria-current="page"<% } %>>
+          <% if (!isLast && crumb.url) { %>
+            <a href="<%= crumb.url %>" class="text-decoration-none"><%= crumb.name %></a>
+          <% } else { %>
+            <%= crumb.name %>
+          <% } %>
+        </li>
+      <% }); %>
+    <% } %>
+  </ol>
+</nav>
+
+<style>
+  .breadcrumb {
+    font-size: 0.9rem;
+    padding: 0.5rem 0;
+  }
+  
+  .breadcrumb-item + .breadcrumb-item::before {
+    content: ">";
+    padding: 0 0.5rem;
+  }
+  
+  .breadcrumb-item a {
+    color: #6c757d;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  
+  .breadcrumb-item a:hover {
+    color: #0d6efd;
+    text-decoration: underline;
+  }
+  
+  .breadcrumb-item.active {
+    color: #495057;
+  }
+</style>

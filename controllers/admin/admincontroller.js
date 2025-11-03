@@ -42,7 +42,7 @@ const login = async (req, res) => {
       return res.render("admin/login", { error: "Incorrect password" });
     }
 
-    // ✅ login successful
+    // ✅ login successful - only set admin session, preserve user session if exists
     req.session.admin = { _id: admin._id, email: admin.email };
     return res.redirect("/admin/dashboard");
 
@@ -66,14 +66,11 @@ const loadDashboard = async (req, res) => {
 };
 const logout = async (req, res) => {
   try {
-    req.session.destroy(err => {
-      if (err) {
-        console.log('Error destroying session', err);
-        return res.redirect('/pageerror');
-      }
-
-      res.clearCookie('connect.sid'); // clear session cookie if using express-session
-      res.redirect('/admin/adminLogin'); // ✅ absolute path
+    // Only clear admin session data, preserving user session if it exists
+    delete req.session.admin;
+    req.session.save(() => {
+      res.clearCookie('connect.sid');
+      res.redirect('/admin/adminLogin');
     });
   } catch (error) {
     console.log("Unexpected error during logout", error);

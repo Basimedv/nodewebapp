@@ -8,7 +8,7 @@ function setNoCache(res){
   res.set('Surrogate-Control', 'no-store');
 }
 
-// Enhanced session isolation for admin and user sessions
+// Clear session data while maintaining the session
 function clearAllSessionData(req, res, next) {
     // Clear any existing admin session data
     if (req.session.admin) {
@@ -20,13 +20,13 @@ function clearAllSessionData(req, res, next) {
         delete req.session.user;
     }
     
-    // Clear session completely to prevent any cross-contamination
-    req.session.destroy((err) => {
+    // Save the empty session
+    req.session.save((err) => {
         if (err) {
-            console.error('Session destruction error:', err);
+            console.error('Error saving cleared session:', err);
         }
+        next();
     });
-    next();
 } 
 
 function preventBack(req,res,next){
@@ -89,27 +89,6 @@ function ensureGuest(req,res,next){
 // If a user is already logged in, keep them on landing page when they hit public pages like homepage (/)
 
 
-// If a user is already logged in, block access to admin login page
-function blockUserOnAdminLogin(req, res, next){
-  setNoCache(res);
-  if (req.session && req.session.user){
-    return res.redirect('/landingPage');
-  }
-  return next();
-}
-
-// If an admin is logged in, block access to user login/signup pages
-function blockAdminOnUserLogin(req, res, next){
-  setNoCache(res);
-  if (req.session && req.session.admin){
-    return res.redirect('/admin/dashboard');
-  }
-  return next();
-}
-
-// If an admin is logged in, block access to user pages
-
-
 // Admin auth: require admin session and confirm isAdmin
 const adminAuth = async (req,res,next)=>{
   try{
@@ -142,11 +121,8 @@ module.exports={
     userAuth,
     ensureAuth,
     ensureGuest,
-    
-    preventBack,
-    blockUserOnAdminLogin,
-    blockAdminOnUserLogin,
-  
     adminAuth,
     ensureAdminGuest,
+    preventBack,
+    clearAllSessionData
 }

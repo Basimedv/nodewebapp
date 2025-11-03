@@ -10,81 +10,80 @@
     <link rel="stylesheet" href="/css/login.css">
 </head>
 
-<body>
-    <main>
-        <div class="loginContainer">
-            <!-- Left side image -->
-            <div class="loginLeft">
-                <img id="loginImage" src="/images/login.png" alt="Line Vector">
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Logo -->
+            <div class="logo-container">
+                <img src="/images/colinguest.png" alt="COLINGUEST Logo" class="logo">
             </div>
-
-            <!-- Right side form -->
-            <div class="loginRight">
-                <div class="rightHeader">
-                    <img src="/images/colinguest.png" alt="COLINGUEST Logo" class="loginHeadLogo">
-                    <h1 class="p1">Welcome to COLINGUEST.</h1>
-
-                </div>
-
-
-                <div class="rightBody">
-
-
-
-                    <!-- Login form -->
-                    <form action="/login" method="POST" class="form-body">
-                        <label for="email">Email</label>
-                        <input type="text" id="email" class="input" name="email" placeholder="Enter your Email">
-
-                        <label for="password">Password</label>
-                        <input type="password" id="password" class="input" name="password"
-                            placeholder="Enter your password">
-
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                            <a href="/forgotPassword" class="forgotLink">Forgot Password?</a>
-                            <a href="/signup" class="signupLink">Sign Up instead</a>
-                        </div>
-
-                        <button type="submit">Login</button>
-                    </form>
-
-                    <div>
-                        <% if (message) { %>
-                            <p class="error-message" id="error message">
-                                <%= message %>
-                            </p>
-                            <% } %>
-                    </div>
-
-
-
-                    <!-- Google button -->
-                    <div class="or">
-
-                        <span>--------------- OR ---------------</span>
-                    </div>
-
-                    <div class="googleLoginButton">
-
-                        <a href="/auth/google">
-                            <button type="button">
-                                <img src="/images/google.png" alt="Google Icon">
-                                Continue with Google
-                            </button>
-                        </a>
-                    </div>
-                </div>
+            
+            <!-- Welcome Text -->
+            <div class="welcome-section">
+                <h1 class="welcome-text">Welcome Back!</h1>
+                <p class="welcome-subtext">Login to your account</p>
             </div>
+            
+            <!-- Login Form -->
+            <form action="/login" method="POST" class="login-form">
+                <div class="form-group">
+                    <input type="email" id="email" name="email" class="form-input" placeholder="Email" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Password" required>
+                </div>
+                
+                <div class="form-actions">
+                    <a href="/forgotPassword" class="forgot-password">Forgot Password?</a>
+                    <button type="submit" class="login-button">Login</button>
+                </div>
+            </form>
+            
+            <!-- Divider -->
+            <div class="divider">
+                <span>or</span>
+            </div>
+            
+            <!-- Google Sign In -->
+            <div class="google-signin">
+                <a href="/auth/google" class="google-button">
+                    <img src="/images/google.png" alt="Google">
+                    <span>Continue with Google</span>
+                </a>
+            </div>
+            
+            <!-- Sign Up Link -->
+            <div class="signup-link">
+                Don't have an account? <a href="/signup">Sign Up</a>
+            </div>
+            
+            <!-- Error Message -->
+            <% if (message) { %>
+                <div class="error-message">
+                    <%= message %>
+                </div>
+            <% } %>
         </div>
-    </main>
+    </div>
+    <script>
+        // Handle error message auto-dismissal
+        document.addEventListener('DOMContentLoaded', function() {
+            // Try to find error message by class first, then by ID
+            let errorMessage = document.querySelector('.error-message') || 
+                             document.getElementById('error-message');
+            
+            if (errorMessage) {
+                // Auto-hide after 3 seconds
+                setTimeout(() => {
+                    errorMessage.style.opacity = '0';
+                    setTimeout(() => {
+                        errorMessage.style.display = 'none';
+                    }, 300);
+                }, 3000);
+            }
+        });
+    </script>
 </body>
 
 </html>
-<script>
-    const removemessage = document.getElementById('error message')
-    if (removemessage) {
-        setTimeout(() => {
-            removemessage.style.display = 'none'
-        }, 3000);
-    }
-</script>

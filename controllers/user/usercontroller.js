@@ -526,16 +526,14 @@ const login = async (req, res) => {
 };
 const logout = async (req, res) => {
   try {
-    req.session.destroy((err) => {
-      if (err) {
-        console.log('session destruction error', err.message);
-        return res.redirect('user/pageNotFound')
-      }
-      return res.redirect('/')
-    })
+    // Only clear user session data, preserving admin session if it exists
+    delete req.session.user;
+    req.session.save(() => {
+      return res.redirect('/');
+    });
   } catch (error) {
-    console.log('Logout error', error)
-    return res.redirect('user/pageNotFound')
+    console.log('Logout error', error);
+    return res.redirect('user/pageNotFound');
   }
 }
 
