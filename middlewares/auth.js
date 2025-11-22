@@ -29,13 +29,12 @@ function clearAllSessionData(req, res, next) {
     });
 } 
 
-function preventBack(req,res,next){
-  // Only prevent caching for authenticated routes to avoid interfering with normal browser navigation on public pages
-  if (req.session && req.session.user) {
-    setNoCache(res);
-  }
-  next();
-}
+const preventBack = (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+};
 
 const userAuth=(req,res,next)=>{
     setNoCache(res);
@@ -58,55 +57,49 @@ if(data&&!data.isBlocked){
     }
 }
 
-// Strong session guard for routes
-const ensureAuth = async (req,res,next)=>{
-  try{
-    setNoCache(res);
-    const u = req.session && req.session.user;
-    if(!u || !u._id){
-      return res.redirect('/');
+const ensureAuth = (req, res, next) => {
+    if (req.session && req.session.user) {
+        return next();
     }
-    const data = await User.findById(u._id).lean();
-    if(data && !data.isBlocked){
-      return next();
-    }
-    return res.redirect('/landingPage');
-  }catch(err){
-    console.log('Error in ensureAuth middleware', err);
-    return res.status(500).send('Internal Server Error');
-  }
-}
+    console.log('⚠️  Not authenticated, redirecting to login');
+    res.redirect('/login');
+};
 
-// Block login/signup for authenticated users
-function ensureGuest(req,res,next){
-  setNoCache(res);
-  if(req.session && req.session.user){
-    return res.redirect('/landingPage');
-  }
-  return next();
-}
+const ensureGuest = (req, res, next) => {
+    if (req.session && req.session.user) {
+        console.log('⚠️  Already authenticated, redirecting to landing page');
+        return res.redirect('/landingPage');
+    }
+    next();
+};
 
 // If a user is already logged in, keep them on landing page when they hit public pages like homepage (/)
 
 
 // Admin auth: require admin session and confirm isAdmin
-const adminAuth = async (req,res,next)=>{
-  try{
-    setNoCache(res);
-    const sess = req.session && req.session.admin;
-    if(!sess || !sess._id){
-      return res.redirect('/admin/adminLogin');
-    }
-    const admin = await User.findById(sess._id).lean();
-    if (admin && admin.isAdmin){
-      return next();
-    }
-    return res.redirect('/admin/adminLogin');
-  }catch(error){
-    console.log('Error in adminAuth middleware', error);
-    return res.status(500).send('Internal Server Error');
+// middlewares/adminAuth.js (or wherever your auth is)
+const adminAuth = (req, res, next) => {
+  if (req.session && req.session.admin) {
+    return next();
   }
-}
+  
+  // Check if it's an API/AJAX request
+  const isApiRequest = req.xhr || 
+                       req.headers.accept?.includes('application/json') ||
+                       req.headers['content-type']?.includes('multipart/form-data');
+  
+  if (isApiRequest) {
+    return res.status(401).json({
+      success: false,
+      message: 'Unauthorized. Please login.'
+    });
+  }
+  
+  // Otherwise redirect to login
+  res.redirect('/admin/adminLogin');
+};
+
+
 
 // Prevent logged-in admin from seeing admin login page
 function ensureAdminGuest(req,res,next){

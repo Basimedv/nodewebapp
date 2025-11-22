@@ -27,7 +27,13 @@ const CategorySchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
+    },
+        size: {
+        type: String,
+        required: true,
+        enum: ['S', 'M', 'L', 'XL', 'XXL']
     }
+
 
 })
 const Category = mongoose.model('Category', CategorySchema)

@@ -1,262 +1,251 @@
-<%-include("../partials/user/header")%>
+<%- include("../partials/user/header") %>
 
-    <!-- Link to homepage-specific styles -->
-    <link rel="stylesheet" href="/css/home.css">
+<link rel="stylesheet" href="/css/home.css">
 
-    <main>
+<main>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const video = document.getElementById('heroVideo');
+      console.log('Video element found:', video);
 
+      video.addEventListener('error', function (e) {
+        console.error('Video error:', e);
+        const fallbackImg = video.querySelector('img');
+        if (fallbackImg) {
+          fallbackImg.style.display = 'block';
+          video.style.display = 'none';
+        }
+      });
 
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const video = document.getElementById('heroVideo');
-                console.log('Video element found:', video);
-                console.log('Video sources:', video.querySelectorAll('source'));
+      // Sound toggle
+      const soundToggle = document.getElementById('soundToggle');
+      const muteSlash = document.getElementById('muteSlash');
+      let isMuted = true;
 
-                // Check if video can play the specified type
-                console.log('Can play MP4:', video.canPlayType('video/mp4'));
+      soundToggle?.addEventListener('click', function () {
+        if (isMuted) {
+          video.muted = false;
+          muteSlash.style.display = 'none';
+        } else {
+          video.muted = true;
+          muteSlash.style.display = 'block';
+        }
+        isMuted = !isMuted;
+      });
+    });
+  </script>
 
-                video.addEventListener('loadstart', function () {
-                    console.log('Video load started');
-                });
+  <!-- Banner Section -->
+  <div id="banner">
+    <div id="banner1">
+      <p>"Unleash your creativity—turn your unique designs into amazing products!"</p>
+      <img src="/images/banner1.png" alt="COLINGUEST Logo" id="imgLogo">
+    </div>
+    <div id="banner2">
+      <video autoplay muted loop playsinline id="heroVideo"
+        style="background: #000; width: 35%; height: 100%; object-fit: cover;">
+        <source src="/videos/copy_5EBCFB1D-B9B8-40C4-8950-636CF10444C8.mp4" type="video/mp4">
+      </video>
+      <p>"Your Offer, Your Time!” Lock exclusive deals and claim them even after they're gone!<br>
+        - Coming Soon... !
+      </p>
+    </div>
+  </div>
 
-                video.addEventListener('error', function (e) {
-                    console.error('Video error:', e);
-                    console.error('Error code:', video.error ? video.error.code : 'No error code');
-                    console.error('Error message:', video.error ? video.error.message : 'No error message');
+  <!-- Shop Section -->
+  <div id="shop">
+    <div id="shopText">
+      <div class="textline"></div>
+      <p>Your one-stop shop for everything you need,<br> just a click away!</p>
+      <div class="text2line"></div>
+    </div>
 
-                    // Show fallback image if video fails
-                    const fallbackImg = video.querySelector('img');
-                    if (fallbackImg) {
-                        fallbackImg.style.display = 'block';
-                        video.style.display = 'none';
-                        console.log('Showing fallback image');
-                    }
-                });
+    <style>
+      .categoryIcon ul {
+        list-style: none;
+        display: flex;
+        gap: 180px;
+        justify-content: center;
+        padding: 0;
+        flex-wrap: wrap;
+        row-gap: 64px;
+      }
 
-                video.addEventListener('canplay', function () {
-                    console.log('Video can play');
-                });
+      .categoryIcon li a {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+      }
 
-                video.addEventListener('loadeddata', function () {
-                    console.log('Video data loaded, duration:', video.duration, 'seconds');
-                    console.log('Video dimensions:', video.videoWidth + 'x' + video.videoHeight);
-                });
+      .categoryIcon li img {
+        display: block;
+        height: 68px;
+        width: auto;
+        object-fit: contain;
+      }
 
-                video.addEventListener('abort', function () {
-                    console.log('Video loading aborted');
-                });
+      .categoryIcon .cat-label {
+        margin-top: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #1f2937;
+      }
 
-                // Add network state logging
-                setTimeout(() => {
-                    console.log('Network state:', video.networkState);
-                    console.log('Ready state:', video.readyState);
-                }, 1000);
+      @media (max-width: 768px) {
+        .categoryIcon ul {
+          gap: 64px;
+          row-gap: 40px;
+        }
+      }
+    </style>
 
-                // Sound toggle functionality
-                const soundToggle = document.getElementById('soundToggle');
-                const volumeIcon = document.getElementById('volumeIcon');
-                const muteSlash = document.getElementById('muteSlash');
-                let isMuted = true;
+    <div class="categoryIcon">
+      <ul>
+        <li><a href="/productListing?category=UNISEX"><img src="/images/banner2.png" alt="UNISEX"><span class="cat-label">UNISEX</span></a></li>
+        <li><a href="/productListing?category=WOMEN%27S"><img src="/images/banner3.png" alt="WOMEN'S"><span class="cat-label">WOMEN'S</span></a></li>
+        <li><a href="/productListing?category=MEN%27S"><img src="/images/banner4.png" alt="MEN'S"><span class="cat-label">MEN'S</span></a></li>
+        <li><a href="/productListing?category=FORMAL%27S"><img src="/images/banner5.png" alt="FORMAL'S"><span class="cat-label">FORMAL'S</span></a></li>
+        <li><a href="/productListing?category=CASUAL%27S"><img src="/images/banner6.png" alt="CASUAL'S"><span class="cat-label">CASUAL'S</span></a></li>
+      </ul>
+    </div>
 
-                soundToggle.addEventListener('click', function () {
-                    if (isMuted) {
-                        video.muted = false;
-                        soundToggle.title = 'Mute video';
-                        muteSlash.style.display = 'none';
-                        isMuted = false;
-                    } else {
-                        video.muted = true;
-                        soundToggle.title = 'Unmute video';
-                        muteSlash.style.display = 'block';
-                        isMuted = true;
-                    }
-                });
+    <div class="trendingText">
+      <div class="point"></div>
+      <p>TRENDING</p>
+    </div>
 
-                // Auto-play with sound after user interaction (required by browsers)
-                document.addEventListener('click', function () {
-                    if (video.muted && video.paused === false) {
-                        // Video is playing but muted, user can click to unmute
-                        console.log('Video is ready for unmute');
-                    }
-                }, { once: true });
-            });
-        </script>
-
-        <div id="banner">
-            <div id="banner1">
-                <p>"Unleash your creativity—turn your unique designs into amazing products!"</p>
-                <img src="/images/banner1.png" alt="COLINGUEST Logo" id="imgLogo">
-            </div>
-            <div id="banner2">
-                <video autoplay muted loop playsinline id="heroVideo"
-                    style="background: #000; width: 35%; height: 100%; object-fit: cover;">
-                    <source src="/videos/copy_5EBCFB1D-B9B8-40C4-8950-636CF10444C8.mp4" type="video/mp4">
-                </video>
-                <p>"Your Offer, Your Time!” ?Lock exclusive deals and claim them even after they're gone!<br>
-                    - Coming Soon... !
-                </p>
-            </div>
+   <div id="shopProductSection">
+  <% (products || []).forEach(function(p){ %>
+    <div class="product">
+      <a href="/productDetails/<%= p._id %>" style="text-decoration: none; color: inherit;">
+        <div class="product-image">
+          <img src="<%= (p.productImage && p.productImage[0]) ? p.productImage[0] : '/images/banner7.png' %>" 
+               alt="<%= p.productName || 'Product' %>">
         </div>
-
-        <div id="shop">
-            <div id="shopText">
-                <div class="textline"></div>
-                <p>Your one-stop shop everything you need,<br>
-                    just a click away!
-                </p>
-                <div class="text2line"></div>
-            </div>
-
-            <style>
-                .categoryIcon ul { list-style: none; display: flex; gap: 180px; justify-content: center; padding: 0; flex-wrap: wrap; row-gap: 64px; }
-                .categoryIcon li a { display: inline-flex; flex-direction: column; align-items: center; text-decoration: none; color: inherit; }
-                .categoryIcon li img { display: block; height: 68px; width: auto; object-fit: contain; }
-                .categoryIcon .cat-label { margin-top: 10px; font-weight: 700; letter-spacing: 1px; font-size: 12px; text-transform: uppercase; color: #1f2937; }
-                @media (max-width: 768px){ .categoryIcon ul { gap: 64px; row-gap: 40px; } }
-            </style>
-            <div class="categoryIcon">
-                <ul>
-                    <li>
-                        <a href="/productListing?category=UNISEX">
-                            <img src="/images/banner2.png" alt="UNISEX">
-                            <span class="cat-label">UNISEX</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/productListing?category=WOMEN%27S">
-                            <img src="/images/banner3.png" alt="WOMEN'S">
-                            <span class="cat-label">WOMEN'S</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/productListing?category=MEN%27S">
-                            <img src="/images/banner4.png" alt="MEN'S">
-                            <span class="cat-label">MEN'S</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/productListing?category=FORMAL%27S">
-                            <img src="/images/banner5.png" alt="FORMAL'S">
-                            <span class="cat-label">FORMAL'S</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/productListing?category=CASUAL%27S">
-                            <img src="/images/banner6.png" alt="CASUAL'S">
-                            <span class="cat-label">CASUAL'S</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            <div class="trendingText">
-                <div class="point"></div>
-                <p>TRENDING</p>
-            </div>
-            <div id="shopProductSection">
-                <% (products || []).forEach(function(p){ %>
-                    <div class="product">
-                        <div class="product-image">
-                            <img src="<%= (p.productImage && p.productImage[0]) ? p.productImage[0] : '/images/banner7.png' %>" alt="<%= p.productNmae || 'Product' %>">
-                        </div>
-                        <div class="product-details">
-                            <p><%= p.productNmae || '-' %></p>
-                            <p class="price">
-                                <span class="original-price">Rs. <%= (p.reqularPrice || 0).toFixed ? p.reqularPrice.toFixed(2) : p.reqularPrice %></span>
-                                <% if (p.salePrice && Number(p.salePrice) > 0 && Number(p.salePrice) < Number(p.reqularPrice || 0)) { %>
-                                    <span class="discount-price">Rs. <%= Number(p.salePrice).toFixed(2) %></span>
-                                <% } %>
-                            </p>
-                        </div>
-                    </div>
-                <% }) %>
-                <% if (!products || products.length === 0) { %>
-                    <p class="text-muted">No products to show yet.</p>
-                <% } %>
-            </div>
-
-            <div class="shopButton">
-                <a href="/productListing" style="text-decoration: none;"><button type="submit">Explore Fashion
-                        ></button></a>
-            </div>
+        <div class="product-details">
+          <p><%= p.productName || 'Product Name' %></p>
+          <p class="price">
+            <%
+              // Calculate proper prices with fallbacks
+              const baseRegular = Number(p.regularPrice || p.price || 0);
+              const saleCandidate = Number(p.salePrice || p.sale || 0);
+              const offerPercent = Number(p.offerPercent || p.productOffer || 0);
+              
+              // Calculate offer price if discount exists
+              const offerPrice = offerPercent > 0 
+                ? Math.round(baseRegular - (baseRegular * offerPercent / 100)) 
+                : 0;
+              
+              // Determine final price
+              const hasSale = saleCandidate > 0 && saleCandidate < baseRegular;
+              const finalPrice = offerPrice > 0 
+                ? offerPrice 
+                : (hasSale ? saleCandidate : baseRegular);
+            %>
+            
+            <% if (finalPrice < baseRegular) { %>
+              <!-- Show strikethrough original price and discounted price -->
+              <span class="original-price">Rs. <%= baseRegular.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></span>
+              <span class="discount-price">Rs. <%= finalPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></span>
+            <% } else { %>
+              <!-- Show only regular price if no discount -->
+              <span class="original-price">Rs. <%= baseRegular.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></span>
+            <% } %>
+          </p>
         </div>
+      </a>
+    </div>
+  <% }) %>
 
-        <div id="custom">
-            <div id="shopText">
-                <div class="textline"></div>
-                <p>Your Way, Your Style .<br>
-                    Upload your image and customize the product effortlessly. Personalization made simple, right on your
-                    website - U-Craft.
-                </p>
-                <div class="text2line"></div>
-            </div>
+  <% if (!products || products.length === 0) { %>
+    <p class="text-muted">No products to show yet.</p>
+  <% } %>
+</div>
+    <div class="shopButton">
+      <a href="/productListing" style="text-decoration: none;">
+        <button type="submit">Explore Fashion ></button>
+      </a>
+    </div>
+  </div>
 
-            <div id="customProductSection">
-                <!-- Product 1 -->
-                <div class="customProduct">
-                    <div class="pointText">
-                        <div class="point"></div>
-                        <p>T-SHIRT</p>
-                    </div>
-                    <div class="product-image">
-                        <img src="/images/banner8.png" alt="Custom T-Shirt">
-                    </div>
-                    <div class="product-details">
-                        <p class="price">
-                            <span class="original-price">Rs. 1,299.00</span>
-                            <span class="discount-price">Rs. 999.00</span>
-                        </p>
-                    </div>
-                </div>
+  <!-- Custom Section -->
+  <div id="custom">
+    <div id="shopText">
+      <div class="textline"></div>
+      <p>Your Way, Your Style.<br>
+        Upload your image and customize the product effortlessly. Personalization made simple, right on your website - U-Craft.
+      </p>
+      <div class="text2line"></div>
+    </div>
 
-                <!-- Product 2 -->
-                <div class="customProductMain">
-                    <div class="pointText">
-                        <div class="point"></div>
-                        <p>HOODIE'S</p>
-                    </div>
-                    <div class="product-image">
-                        <div class="model-container">
-                            <img src="/images/image 116.png" alt="Custom Hoodie">
-                            <model-viewer id="modelViewer" class="model"
-                                src="/models/Fashion_Duo_0401103937_texture.glb" alt="3D Model" auto-rotate
-                                camera-controls>
-                            </model-viewer>
-                        </div>
-                    </div>
-                    <div class="product-details">
-                        <p class="price">
-                            <span class="original-price">Rs. 2,999.00</span>
-                            <span class="discount-price">Rs. 2,399.00</span>
-                        </p>
-                    </div>
-                </div>
-
-
-                <!-- Product 3 -->
-                <div class="customProduct">
-                    <div class="pointText">
-                        <div class="point"></div>
-                        <p>SLEEVELESS</p>
-                    </div>
-                    <div class="product-image">
-                        <img src="/images/banner8.png" alt="Custom Sleeveless">
-                    </div>
-                    <div class="product-details">
-                        <img src="//images/banner9.png" alt="">
-                        <p class="price">
-
-                            <span class="original-price">Rs. 1,599.00</span>
-                            <span class="discount-price">Rs. 1,199.00</span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="customShopButton">
-                <button type="submit">Get Into Custom World ></button>
-            </div>
+    <div id="customProductSection">
+      <!-- Product 1 -->
+      <div class="customProduct">
+        <div class="pointText">
+          <div class="point"></div>
+          <p>T-SHIRT</p>
         </div>
+        <div class="product-image">
+          <img src="/images/banner8.png" alt="Custom T-Shirt">
+        </div>
+        <div class="product-details">
+          <p class="price">
+            <span class="original-price">Rs. 1,299.00</span>
+            <span class="discount-price">Rs. 999.00</span>
+          </p>
+        </div>
+      </div>
 
+      <!-- Product 2 -->
+      <div class="customProductMain">
+        <div class="pointText">
+          <div class="point"></div>
+          <p>HOODIE'S</p>
+        </div>
+        <div class="product-image">
+          <div class="model-container">
+            <img src="/images/image 116.png" alt="Custom Hoodie">
+            <model-viewer id="modelViewer" class="model"
+              src="/models/Fashion_Duo_0401103937_texture.glb"
+              alt="3D Model" auto-rotate camera-controls>
+            </model-viewer>
+          </div>
+        </div>
+        <div class="product-details">
+          <p class="price">
+            <span class="original-price">Rs. 2,999.00</span>
+            <span class="discount-price">Rs. 2,399.00</span>
+          </p>
+        </div>
+      </div>
 
+      <!-- Product 3 -->
+      <div class="customProduct">
+        <div class="pointText">
+          <div class="point"></div>
+          <p>SLEEVELESS</p>
+        </div>
+        <div class="product-image">
+          <img src="/images/banner8.png" alt="Custom Sleeveless">
+        </div>
+        <div class="product-details">
+          <img src="/images/banner9.png" alt="">
+          <p class="price">
+            <span class="original-price">Rs. 1,599.00</span>
+            <span class="discount-price">Rs. 1,199.00</span>
+          </p>
+        </div>
+      </div>
+    </div>
 
-    </main>
-    <%-include("../partials/user/footer")%>
+    <div class="customShopButton">
+      <button type="submit">Get Into Custom World ></button>
+    </div>
+  </div>
+</main>
+
+<%- include("../partials/user/footer") %>

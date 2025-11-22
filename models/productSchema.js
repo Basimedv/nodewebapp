@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const productSchema = new Schema({
-    productNmae: {
+    productName: {            
         type: String,
         required: true
     },
@@ -10,17 +10,13 @@ const productSchema = new Schema({
         type: String,
         required: true
     },
-    brand: {
-        type: String,
-        required: true
-    },
+ 
     category: {
         type: Schema.Types.ObjectId,
         ref: 'Category',
         required: true
-
     },
-    reqularPrice: {
+    regularPrice: {           
         type: Number,
         required: true
     },
@@ -30,17 +26,26 @@ const productSchema = new Schema({
     },
     productOffer: {
         type: Number,
-        default: 0,
+        default: 0
     },
-    quantity: {
-        type: Number,
-        default: true
+    // Stock tracking for each size
+    stock: {
+        S: { type: Number, default: 0 },
+        M: { type: Number, default: 0 },
+        L: { type: Number, default: 0 },
+        XL: { type: Number, default: 0 },
+        XXL: { type: Number, default: 0 }
     },
-    color: {
-        type: String,
+    // Available sizes array (auto-populated from stock)
+  size: {
+        type: [String],
+        enum: ['S', 'M', 'L', 'XL', 'XXL'],
         required: true
     },
-    productImage: {
+    // Total quantity (sum of all size stocks)
+   
+  
+    productImage: {           
         type: [String],
         required: true
     },
@@ -50,11 +55,11 @@ const productSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["Available", "out of stock", "Discountinued"],
-        required: true,
+        enum: ["Available", "Out of Stock", "Discontinued"],
         default: "Available"
     }
-
 }, { timestamps: true });
-const Product = mongoose.model('Product', productSchema)
+
+
+const Product = mongoose.model('Product', productSchema);
 module.exports = Product;

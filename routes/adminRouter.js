@@ -1,124 +1,97 @@
 // routes/admin.js
 const express = require('express');
 const router = express.Router();
+
+// ======================= Controllers =======================
 const admincontroller = require('../controllers/admin/admincontroller');
 const customercontroller = require('../controllers/admin/customercontroller');
-const { userAuth, adminAuth, ensureAdminGuest, preventBack } = require('../middlewares/auth');
 const categorycontroller = require('../controllers/admin/categorycontroller');
 const categoryOfferController = require('../controllers/admin/categoryOfferController');
 const productcontroller = require('../controllers/admin/productcontroller');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    // Create a temporary directory for uploads
-    const tempDir = path.join(__dirname, '../public/uploads/temp');
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-    cb(null, tempDir);
-  },
-  filename: function (req, file, cb) {
-    // Generate a unique filename with original extension
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, 'img-' + uniqueSuffix + ext);
-  }
-});
+// ======================= Middleware =======================
+const { userAuth, adminAuth, ensureAdminGuest, preventBack } = require('../middlewares/auth');
+const upload = require('../middlewares/multer');
 
-// File filter to accept only images
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG and WebP files are allowed.'), false);
-  }
-};
+// Prevent cached pages in admin area
+router.use(preventBack);
 
-// Initialize multer with configuration
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit per file
-    files: 10 // Maximum 10 files per upload
-  }
-});
-const brandcontroller=require('../controllers/admin/brandcontroller')
-// Prevent cached pages in admin area so Back doesn't show login/dashboard incorrectly
-router.use(preventBack)
-router.get('/pageerror', admincontroller.pageerror)
-router.get("/adminLogin", ensureAdminGuest, admincontroller.loadLogin);
-router.post("/adminLogin", ensureAdminGuest, admincontroller.login);
-router.get("/dashboard", adminAuth,admincontroller.loadDashboard);
-router.get('/logout',admincontroller.logout)
-router.get('/customers', adminAuth, customercontroller.customerinfo)
-router.put("/customers/:id", adminAuth, customercontroller.userBlock);
-router.get('/customers/filter',adminAuth,customercontroller.filterCustomers);
+// ======================= Admin Authentication =======================
+router.get('/pageerror', admincontroller.pageerror);
+router.get('/adminLogin', ensureAdminGuest, admincontroller.loadLogin);
+router.post('/adminLogin', ensureAdminGuest, admincontroller.login);
+router.get('/dashboard', adminAuth, admincontroller.loadDashboard);
+router.get('/logout', admincontroller.logout);
+
+// ======================= Customer Management =======================
+router.get('/customers', adminAuth, customercontroller.customerinfo);
+router.put('/customers/:id', adminAuth, customercontroller.userBlock);
+router.get('/customers/filter', adminAuth, customercontroller.filterCustomers);
+
+// ======================= Category Management =======================
 router.get('/categories', adminAuth, categorycontroller.categoryinfo);
 router.post('/addCategory', adminAuth, categorycontroller.addCategory);
-router.put('/categories',adminAuth,categorycontroller.editCategory);
+router.put('/categories', adminAuth, categorycontroller.editCategory);
+router.get('/Category', adminAuth, categorycontroller.getCategories); // ✅ Added adminAuth
 
+// ======================= Category Offers =======================
+router.get('/offers', adminAuth, categoryOfferController.loadOffersPage); // ✅ Added adminAuth
+router.put('/category/offer/:id', adminAuth, categoryOfferController.updateCategoryOffer); // ✅ Added adminAuth
 
-router.get('/offers', categoryOfferController.loadOffersPage);
-router.put('/category/offer/:id', categoryOfferController.updateCategoryOffer);
-router.get('/Category',categorycontroller. getCategories);
+// ======================= Product Management =======================
 
+// ⚠️ IMPORTANT: Specific routes MUST come BEFORE parameterized routes
+// Otherwise /products/add would match /products/:id
 
-router.get('/offers', categoryOfferController.loadOffersPage);
-router.put('/category/offer/:id', categoryOfferController.updateCategoryOffer);
+// Add product page (must be before /:id routes)
+router.get('/products/add', adminAuth, productcontroller.getAddProductPage);
 
-// Brands
-router.get('/brands', adminAuth, brandcontroller.brandInfo);
-router.post('/brands', adminAuth, brandcontroller.addBrand);
-router.put('/brands', adminAuth, brandcontroller.editBrand);
-router.put('/brands/block', adminAuth, brandcontroller.blockBrand);
-router.put('/brands/unblock', adminAuth, brandcontroller.unblockBrand);
-router.delete('/brands', adminAuth, brandcontroller.deleteBrand);
+// Get all products (list view)
+router.get('/products', adminAuth, productcontroller.getProducts);
 
-// Products routes
-router.get('/products', adminAuth, productcontroller.getProductAddPage);
+// Edit product page (must be before generic /:id route)
+router.get('/products/edit/:id', adminAuth, productcontroller.getEditProductPage);
 
-// Handle product creation with file uploads
-router.post('/products', 
-  adminAuth, 
-  upload.array('images', 10), // Allow up to 10 files
+// Get product by ID (API endpoint)
+router.get('/products/api/:id', adminAuth, productcontroller.getProductById);
+
+// Create new product
+router.post(
+  '/products',
+  adminAuth,
+  upload.array('images', 3),
   productcontroller.createProduct
 );
 
-// Get single product
-router.get('/products/:id', adminAuth, productcontroller.getOne);
+// Update existing product
+router.put(
+  '/products/:id',
+  adminAuth,
+  upload.array('images', 3),
+  productcontroller.updateProduct
+);
 
-// Update product details (without images)
-router.put('/products/:id', adminAuth, productcontroller.updateOne);
-
-// Update product images (replace by default; append with ?append=true)
-router.put('/products/:id/images', adminAuth, upload.array('images', 8), productcontroller.updateImages);
-
-// Delete specific product images
-router.delete('/products/:id/images', adminAuth, productcontroller.deleteImages);
-
+// Toggle product block/unblock status
 router.put('/products/:id/block', adminAuth, productcontroller.toggleBlock);
+
+// Toggle product list/unlist status
 router.put('/products/:id/list', adminAuth, productcontroller.toggleList);
-// router.post('/addproducts', adminAuth, upload.array('images', 8), productcontroller.createProduct);
 
+// Toggle product active/inactive status
+router.patch('/products/:id/status', adminAuth, productcontroller.toggleProductStatus);
 
+// Delete product permanently
+router.delete('/products/:id', adminAuth, productcontroller.deleteProduct);
 
+// ⚠️ REMOVED: These routes don't have corresponding controller methods
+// If you need them later, implement them in productcontroller.js first
+// router.put('/products/:id/images', adminAuth, upload.array('images', 10), productcontroller.updateImages);
+// router.delete('/products/:id/images', adminAuth, productcontroller.deleteImages);
 
-
-
+// ======================= Error Handler (Optional) =======================
+// Catch-all for unmatched admin routes
+router.use((req, res) => {
+  res.status(404).redirect('/admin/pageerror');
+});
 
 module.exports = router;
-
-
-
-
-
-
-
-
-

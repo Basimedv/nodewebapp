@@ -20,6 +20,11 @@ const cartSchema = new Schema({
       min: 1,
       default: 1
     },
+     size: {
+        type: String,
+        enum: ['S', 'M', 'L', 'XL', 'XXL'],
+        required: true
+    },
     price: {
       type: Number,
       required: true,

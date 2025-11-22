@@ -1,7 +1,7 @@
 const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
-const Brand = require("../../models/brandSchema");
+
 const Wishlist = require("../../models/wishlistSchema");
 const nodemailer = require('nodemailer')
 const env = require('dotenv').config();
@@ -85,16 +85,16 @@ const loadShopping = async (req, res) => {
   try {
     // Pagination
     const page = Math.max(parseInt(req.query.page) || 1, 1);
-    const limit = 12;
+    const limit = 8;
     const skip = (page - 1) * limit;
 
     // Parse filters from query
     const result = (req.query.result || req.query.q || '').trim();
     const pickArray = (v) => (Array.isArray(v) ? v : (v ? [v] : []));
     const selectedCategories = pickArray(req.query.category).filter(Boolean);
-    const selectedBrands = pickArray(req.query.brand).filter(Boolean);
+    // ❌ REMOVED: const selectedBrands = pickArray(req.query.brand).filter(Boolean);
     const maxPrice = Number.parseInt(req.query.price, 10);
-    const includeOutOfStock = !!req.query.availability; // any truthy presence means include OOS
+    const includeOutOfStock = !!req.query.availability;
     const sortParam = (req.query.sort || 'newest').trim();
 
     // Build Mongo filter
@@ -105,12 +105,10 @@ const loadShopping = async (req, res) => {
     const allowedStatuses = includeOutOfStock ? ['Available', 'out of stock'] : ['Available'];
     filter.status = { $in: allowedStatuses };
 
-    // Text search by name/brand
+    // Text search by name only (removed brand search)
     if (result) {
-      filter.$or = [
-        { productNmae: { $regex: result, $options: 'i' } },
-        { brand: { $regex: result, $options: 'i' } },
-      ];
+      filter.productNmae = { $regex: result, $options: 'i' };
+      // ❌ REMOVED: filter.$or with brand search
     }
 
     // Category filter: UI sends names; map to ids
@@ -125,31 +123,40 @@ const loadShopping = async (req, res) => {
       }
     }
 
-    // Brand filter
-    if (selectedBrands.length) {
-      filter.brand = { $in: selectedBrands };
-    }
+    // ❌ REMOVED: Brand filter
+    // if (selectedBrands.length) {
+    //   filter.brand = { $in: selectedBrands };
+    // }
 
     // Price filter (treat as max price cap)
     const andConds = [];
     if (!Number.isNaN(maxPrice) && maxPrice > 0) {
-      andConds.push({ $or: [ { reqularPrice: { $lte: maxPrice } }, { price: { $lte: maxPrice } } ] });
+      andConds.push({ 
+        $or: [ 
+          { regularPrice
+: { $lte: maxPrice } }, 
+          { price: { $lte: maxPrice } } 
+        ] 
+      });
     }
     // Never include discontinued
     andConds.push({ status: { $ne: 'Discountinued' } });
     if (andConds.length) {
       // Merge into filter with $and if needed
-      if (filter.$and) filter.$and.push(...andConds); else filter.$and = andConds;
+      if (filter.$and) filter.$and.push(...andConds); 
+      else filter.$and = andConds;
     }
 
     // Sorting
     let sortObj = { createdAt: -1 };
     switch (sortParam) {
       case 'priceLowToHigh':
-        sortObj = { reqularPrice: 1, price: 1, createdAt: -1 };
+        sortObj = { regularPrice
+: 1, price: 1, createdAt: -1 };
         break;
       case 'priceHighToLow':
-        sortObj = { reqularPrice: -1, price: -1, createdAt: -1 };
+        sortObj = { regularPrice
+: -1, price: -1, createdAt: -1 };
         break;
       case 'aToZ':
         sortObj = { productNmae: 1 };
@@ -166,44 +173,59 @@ const loadShopping = async (req, res) => {
         sortObj = { createdAt: -1 };
     }
 
-    const [itemsRaw, total, brandsDocs] = await Promise.all([
-      Product.find(filter).populate('category', 'offer').sort(sortObj).skip(skip).limit(limit).lean(),
+    // ❌ REMOVED: Brand.find() from Promise.all
+    const [itemsRaw, total] = await Promise.all([
+      Product.find(filter)
+        .populate('category', 'offer')
+        .sort(sortObj)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
       Product.countDocuments(filter),
-      Brand.find({ isBlocked: false }).select('brandName brandImage').lean(),
     ]);
 
     // Normalize fields for the view
     const items = (itemsRaw || []).map(p => {
-      const regular = typeof p.reqularPrice === 'number' ? p.reqularPrice : (typeof p.price === 'number' ? p.price : 0);
-      const sale = typeof p.salePrice === 'number' ? p.salePrice : 0;
-      const offerPercent = Math.max(p.productOffer || 0, (p.category && p.category.offer) || 0);
-      const offerPrice = offerPercent > 0 ? Math.round(regular - (regular * offerPercent / 100)) : (sale > 0 && sale < regular ? sale : regular);
+       const regular = Number(p.regularPrice || p.price || 0);
+    const sale = Number(p.salePrice || 0);
+      const offerPercent = Math.max(
+        p.productOffer || 0, 
+        (p.category && p.category.offer) || 0
+      );
+      const offerPrice = offerPercent > 0 
+        ? Math.round(regular - (regular * offerPercent / 100)) 
+        : (sale > 0 && sale < regular ? sale : regular);
+      
       return {
         ...p,
-        name: p.productNmae ?? p.name,
-        images: Array.isArray(p.productImage) && p.productImage.length ? p.productImage : (Array.isArray(p.images) ? p.images : []),
-        price: regular,
-        sale,
+        name: p.productName ?? p.name,
+        images: Array.isArray(p.productImage) && p.productImage.length 
+          ? p.productImage 
+          : (Array.isArray(p.images) ? p.images : []),
+            regularPrice: regular,   // send to UI
+    salePrice: sale,         // send to UI
         offerPercent,
         offerPrice,
-        regularPrice: regular,
+       
       };
     });
 
     const totalPages = Math.max(Math.ceil(total / limit), 1);
-    const brand = (brandsDocs || []).map(b => ({
-      name: b.brandName,
-      image: b.brandImage || null
-    })).filter(b => b.name);
+
+    // ❌ REMOVED: brand mapping
+    // const brand = (brandsDocs || []).map(b => ({
+    //   name: b.brandName,
+    //   image: b.brandImage || null
+    // })).filter(b => b.name);
 
     const appliedFilters = {
       result,
       category: selectedCategories,
       price: !Number.isNaN(maxPrice) && maxPrice > 0 ? String(maxPrice) : '',
-      brand: selectedBrands,
+      // ❌ REMOVED: brand: selectedBrands,
       availability: includeOutOfStock ? 'outOfStock' : '',
       sort: sortParam || 'newest',
-      // For pagination link builder in EJS which expects min/max keys
+      // For pagination link builder in EJS
       minPrice: '0',
       maxPrice: !Number.isNaN(maxPrice) && maxPrice > 0 ? String(maxPrice) : '',
     };
@@ -217,18 +239,15 @@ const loadShopping = async (req, res) => {
       total,
       user: req.session && req.session.user ? req.session.user : null,
       category: categoriesList || [],
-      brand,
+      // ❌ REMOVED: brand,
       appliedFilters,
       sortOption,
     });
   } catch (error) {
-    console.log('shopping page not loading', error)
-    res.status(500).send('Server Error')
-
+    console.log('shopping page not loading', error);
+    res.status(500).send('Server Error');
   }
-
-}
-
+};
 
 
 
@@ -247,7 +266,9 @@ async function getProductDetails(req, res) {
       return res.status(404).render('user/page-404');
     }
 
-    const regular = typeof p.reqularPrice === 'number' ? p.reqularPrice : (typeof p.price === 'number' ? p.price : 0);
+    const regular = typeof p.regularPrice
+ === 'number' ? p.regularPrice
+ : (typeof p.price === 'number' ? p.price : 0);
     const sale = typeof p.salePrice === 'number' ? p.salePrice : 0;
     const offerPercent = Math.max(p.productOffer || 0, (p.category && p.category.offer) || 0);
     const offerPrice = offerPercent > 0 ? Math.round(regular - (regular * offerPercent / 100)) : (sale > 0 && sale < regular ? sale : regular);
@@ -636,7 +657,9 @@ async function apiProducts(req, res){
       Product.countDocuments(filter),
     ]);
     const items = (itemsRaw || []).map(p => {
-      const regular = typeof p.reqularPrice === 'number' ? p.reqularPrice : (typeof p.price === 'number' ? p.price : 0);
+      const regular = typeof p.regularPrice
+ === 'number' ? p.regularPrice
+ : (typeof p.price === 'number' ? p.price : 0);
       const sale = typeof p.salePrice === 'number' ? p.salePrice : 0;
       const offerPercent = Math.max(p.productOffer || 0, (p.category && p.category.offer) || 0);
       const offerPrice = offerPercent > 0 ? Math.round(regular - (regular * offerPercent / 100)) : (sale > 0 && sale < regular ? sale : regular);
