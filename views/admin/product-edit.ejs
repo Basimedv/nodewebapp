@@ -341,45 +341,45 @@
           </div>
 
           <!-- Product Images Section -->
-          <div class="mb-4">
-            <label class="form-label fw-bold">Product Images <span class="text-danger">*</span></label>
-            <p class="text-muted small">Current images or upload new ones</p>
-            
-            <div class="row g-3">
-              <% 
-                const images = product?.images || []; 
-                for (let i = 0; i < 3; i++) { 
-                  const img = images[i] || null;
-              %>
-                <div class="col-md-4">
-                  <div class="image-upload-slot" data-slot="<%= i %>">
-                    
-                    <!-- Dropzone (shown when no image) -->
-                    <div class="image-upload-dropzone <%= img ? 'd-none' : '' %>">
-                      <i class="bi bi-cloud-upload" style="font-size: 2.5rem; color: #bbb;"></i>
-                      <p class="mb-0 mt-2 small">Add Image</p>
-                    </div>
+<div class="mb-4">
+  <label class="form-label fw-bold">Product Images <span class="text-danger">*</span></label>
+  <p class="text-muted small">Current images or upload new ones</p>
+  
+  <div class="row g-3">
+    <% 
+      const images = product?.images || []; 
+      for (let i = 0; i < 4; i++) { 
+        const img = images[i] || null;
+    %>
+      <div class="col-md-3">  <!-- FIXED: 4 images in one row -->
+        <div class="image-upload-slot" data-slot="<%= i %>">
 
-                    <!-- Preview (shown when image exists) -->
-                    <div class="image-preview <%= img ? '' : 'd-none' %>">
-                      <% if (img) { %>
-                        <div class="img-wrapper">
-                          <img src="<%= img %>" class="img-fit" alt="Product image <%= i + 1 %>">
-                          <button type="button" class="remove-image-btn">×</button>
-                          <button type="button" class="recrop-image-btn">
-                            <i class="bi bi-crop"></i> Re-crop
-                          </button>
-                        </div>
-                      <% } %>
-                    </div>
-
-                  </div>
-                </div>
-              <% } %>
-            </div>
-
-            <div id="imageError" class="text-danger mt-2 small"></div>
+          <!-- Dropzone -->
+          <div class="image-upload-dropzone <%= img ? 'd-none' : '' %>">
+            <i class="bi bi-cloud-upload" style="font-size: 2.5rem; color: #bbb;"></i>
+            <p class="mb-0 mt-2 small">Add Image</p>
           </div>
+
+          <!-- Preview -->
+          <div class="image-preview <%= img ? '' : 'd-none' %>">
+            <% if (img) { %>
+              <div class="img-wrapper">
+                <img src="<%= img %>" class="img-fit" alt="Product image <%= i + 1 %>">
+                <button type="button" class="remove-image-btn">×</button>
+                <button type="button" class="recrop-image-btn">
+                  <i class="bi bi-crop"></i> Re-crop
+                </button>
+              </div>
+            <% } %>
+          </div>
+
+        </div>
+      </div>
+    <% } %>
+  </div>
+
+  <div id="imageError" class="text-danger mt-2 small"></div>
+</div>
 
           <!-- Form Actions -->
           <hr class="my-4">

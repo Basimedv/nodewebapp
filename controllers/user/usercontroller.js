@@ -1,8 +1,9 @@
 const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
+const mongoose = require('mongoose');
+const Review = require('../../models/reviewSchema');
 
-const Wishlist = require("../../models/wishlistSchema");
 const nodemailer = require('nodemailer')
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt')
@@ -24,50 +25,45 @@ const loadHomepage = async (req, res) => {
       userData = await User.findOne({ email: req.session.user.email }).lean();
     }
 
-    const products = await Product.find({ status: { $ne: 'Discountinued' } })
+    const products = await Product.find({ status: { $ne: 'Discontinued' } })
       .sort({ createdAt: -1 })
-      .limit(8)
+      .limit(4)
       .lean();
 
     return res.render('user/home', { user: userData, products });
   } catch (error) {
-    console.log('homepage error', error)
-    res.status(500).send('Server error')
+    console.log('homepage error', error);
+    res.status(500).send('Server error');
   }
-
 };
+
 const loadLandingPage = async (req, res) => {
   try {
-    // console.log("Session user:", req.session.user); // debug log
-
     let userData = null;
-
-    // If session has _id → query by id
     if (req.session.user && req.session.user._id) {
-      console.log("Looking up user by ID:", req.session.user._id);
       userData = await User.findById(req.session.user._id).lean();
-    }
-    // Else if session has email → query by email
-    else if (req.session.user && req.session.user.email) {
-      console.log("Looking up user by email:", req.session.user.email);
+    } else if (req.session.user && req.session.user.email) {
       userData = await User.findOne({ email: req.session.user.email }).lean();
     }
 
-    // Fetch latest available products for homepage (e.g., 8 items)
-    const products = await Product.find({ status: { $ne: 'Discountinued' } })
+    // Fetch products with category populated
+    const products = await Product.find({ 
+      status: "Available",
+      isBlocked: false 
+    })
+      .populate('category')
       .sort({ createdAt: -1 })
-      .limit(8)
       .lean();
 
-    // ✅ Render with user and products
-    return res.render("user/landingpage", { user: userData, products });
-  } catch (err) {
-    console.error("❌ Homepage error:", err);
-    return res.status(500).send("Server error");
+    return res.render('user/landingpage', { 
+      user: userData, 
+      products: products
+    });
+  } catch (error) {
+    console.log('landing page error', error);
+    res.status(500).send('Server error');
   }
 };
-
-
 
 const loadSignup = async (req, res) => {
   try {
@@ -92,8 +88,9 @@ const loadShopping = async (req, res) => {
     const result = (req.query.result || req.query.q || '').trim();
     const pickArray = (v) => (Array.isArray(v) ? v : (v ? [v] : []));
     const selectedCategories = pickArray(req.query.category).filter(Boolean);
-    // ❌ REMOVED: const selectedBrands = pickArray(req.query.brand).filter(Boolean);
-    const maxPrice = Number.parseInt(req.query.price, 10);
+
+    const minPrice = Number.parseInt(req.query.minPrice, 10);
+    const maxPrice = Number.parseInt(req.query.maxPrice, 10);
     const includeOutOfStock = !!req.query.availability;
     const sortParam = (req.query.sort || 'newest').trim();
 
@@ -105,10 +102,9 @@ const loadShopping = async (req, res) => {
     const allowedStatuses = includeOutOfStock ? ['Available', 'out of stock'] : ['Available'];
     filter.status = { $in: allowedStatuses };
 
-    // Text search by name only (removed brand search)
+    // Text search by name - FIXED TYPO
     if (result) {
-      filter.productNmae = { $regex: result, $options: 'i' };
-      // ❌ REMOVED: filter.$or with brand search
+      filter.productName = { $regex: result, $options: 'i' };
     }
 
     // Category filter: UI sends names; map to ids
@@ -123,18 +119,20 @@ const loadShopping = async (req, res) => {
       }
     }
 
-    // ❌ REMOVED: Brand filter
-    // if (selectedBrands.length) {
-    //   filter.brand = { $in: selectedBrands };
-    // }
-
-    // Price filter (treat as max price cap)
+    // Price filter
     const andConds = [];
+    if (!Number.isNaN(minPrice) && minPrice > 0) {
+      andConds.push({ 
+        $or: [ 
+          { regularPrice: { $gte: minPrice } }, 
+          { price: { $gte: minPrice } } 
+        ] 
+      });
+    }
     if (!Number.isNaN(maxPrice) && maxPrice > 0) {
       andConds.push({ 
         $or: [ 
-          { regularPrice
-: { $lte: maxPrice } }, 
+          { regularPrice: { $lte: maxPrice } }, 
           { price: { $lte: maxPrice } } 
         ] 
       });
@@ -147,22 +145,20 @@ const loadShopping = async (req, res) => {
       else filter.$and = andConds;
     }
 
-    // Sorting
+    // Sorting - FIXED TYPO
     let sortObj = { createdAt: -1 };
     switch (sortParam) {
       case 'priceLowToHigh':
-        sortObj = { regularPrice
-: 1, price: 1, createdAt: -1 };
+        sortObj = { regularPrice: 1, price: 1, createdAt: -1 };
         break;
       case 'priceHighToLow':
-        sortObj = { regularPrice
-: -1, price: -1, createdAt: -1 };
+        sortObj = { regularPrice: -1, price: -1, createdAt: -1 };
         break;
       case 'aToZ':
-        sortObj = { productNmae: 1 };
+        sortObj = { productName: 1 };
         break;
       case 'zToA':
-        sortObj = { productNmae: -1 };
+        sortObj = { productName: -1 };
         break;
       case 'ratingHighToLow':
         // Placeholder: if rating not stored, fallback to newest
@@ -173,7 +169,6 @@ const loadShopping = async (req, res) => {
         sortObj = { createdAt: -1 };
     }
 
-    // ❌ REMOVED: Brand.find() from Promise.all
     const [itemsRaw, total] = await Promise.all([
       Product.find(filter)
         .populate('category', 'offer')
@@ -186,8 +181,8 @@ const loadShopping = async (req, res) => {
 
     // Normalize fields for the view
     const items = (itemsRaw || []).map(p => {
-       const regular = Number(p.regularPrice || p.price || 0);
-    const sale = Number(p.salePrice || 0);
+      const regular = Number(p.regularPrice || p.price || 0);
+      const sale = Number(p.salePrice || 0);
       const offerPercent = Math.max(
         p.productOffer || 0, 
         (p.category && p.category.offer) || 0
@@ -202,32 +197,22 @@ const loadShopping = async (req, res) => {
         images: Array.isArray(p.productImage) && p.productImage.length 
           ? p.productImage 
           : (Array.isArray(p.images) ? p.images : []),
-            regularPrice: regular,   // send to UI
-    salePrice: sale,         // send to UI
+        regularPrice: regular,
+        salePrice: sale,
         offerPercent,
         offerPrice,
-       
       };
     });
 
     const totalPages = Math.max(Math.ceil(total / limit), 1);
 
-    // ❌ REMOVED: brand mapping
-    // const brand = (brandsDocs || []).map(b => ({
-    //   name: b.brandName,
-    //   image: b.brandImage || null
-    // })).filter(b => b.name);
-
     const appliedFilters = {
       result,
       category: selectedCategories,
-      price: !Number.isNaN(maxPrice) && maxPrice > 0 ? String(maxPrice) : '',
-      // ❌ REMOVED: brand: selectedBrands,
+      minPrice: !Number.isNaN(minPrice) && minPrice > 0 ? String(minPrice) : '',
+      maxPrice: !Number.isNaN(maxPrice) && maxPrice > 0 ? String(maxPrice) : '',
       availability: includeOutOfStock ? 'outOfStock' : '',
       sort: sortParam || 'newest',
-      // For pagination link builder in EJS
-      minPrice: '0',
-      maxPrice: !Number.isNaN(maxPrice) && maxPrice > 0 ? String(maxPrice) : '',
     };
     const sortOption = appliedFilters.sort;
 
@@ -239,7 +224,6 @@ const loadShopping = async (req, res) => {
       total,
       user: req.session && req.session.user ? req.session.user : null,
       category: categoriesList || [],
-      // ❌ REMOVED: brand,
       appliedFilters,
       sortOption,
     });
@@ -254,21 +238,24 @@ const loadShopping = async (req, res) => {
 
 
 
-
 // Product details page
 async function getProductDetails(req, res) {
   try {
     const id = req.params.id;
-    const p = await Product.findById(id).populate('category', 'offer').lean();
+    
+    // ✅ Populate category with name and offer
+    const p = await Product.findById(id)
+      .populate('category', 'name offer')  // ✅ Added 'name' to get category name
+      .lean();
+      
     if (!p) return res.status(404).render('user/page-404');
+    
     // Hide blocked or discontinued products from public
     if (p.isBlocked === true || p.status === 'Discountinued') {
       return res.status(404).render('user/page-404');
     }
 
-    const regular = typeof p.regularPrice
- === 'number' ? p.regularPrice
- : (typeof p.price === 'number' ? p.price : 0);
+    const regular = typeof p.regularPrice === 'number' ? p.regularPrice : (typeof p.price === 'number' ? p.price : 0);
     const sale = typeof p.salePrice === 'number' ? p.salePrice : 0;
     const offerPercent = Math.max(p.productOffer || 0, (p.category && p.category.offer) || 0);
     const offerPrice = offerPercent > 0 ? Math.round(regular - (regular * offerPercent / 100)) : (sale > 0 && sale < regular ? sale : regular);
@@ -282,9 +269,27 @@ async function getProductDetails(req, res) {
       offerPercent,
       offerPrice,
       regularPrice: regular,
+      categoryName: p.category?.name || 'Uncategorized',  // ✅ Added category name
     };
 
-    return res.render('user/productDetails', { user: req.session?.user || null, product });
+    // ✅ Fetch reviews for this product
+    const reviews = await Review.find({ productId: id })
+      .sort({ createdAt: -1 })  // Newest first
+      .lean();
+    
+    // ✅ Calculate average rating
+    const averageRating = reviews.length > 0 
+      ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
+      : 0;
+
+    return res.render('user/productDetails', { 
+      user: req.session?.user || null, 
+      product,
+      reviews,              // ✅ Pass reviews
+      reviewCount: reviews.length,
+      averageRating
+    });
+    
   } catch (err) {
     console.error('getProductDetails error:', err);
     return res.status(500).render('user/page-404');
@@ -532,14 +537,22 @@ const login = async (req, res) => {
       return res.render("user/login", { message: "Incorrect Password" });
     }
 
-    // ✅ Save user in session
+    // ✅ Save user in session with consistent property name
     req.session.user = {
       _id: findUser._id,
       email: findUser.email,
-      name: findUser.fullName,
+      fullName: findUser.fullName,  // ✅ Changed to 'fullName'
     };
 
-    res.redirect("landingPage"); // redirect to home
+    // ✅ Explicitly save the session
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.render("user/login", { message: "Session error, please try again" });
+      }
+      res.redirect("/user/landingPage");  // ✅ Added leading slash for proper redirect
+    });
+
   } catch (error) {
     console.error("login error", error);
     res.render("user/login", { message: "Login failed, please try again later" });
@@ -746,8 +759,37 @@ async function apiProducts(req, res){
 //     return res.status(500).json({ error: 'Server error' });
 //   }
 // }
+ const addReview = async (req, res) => {
+    try {
+        const userId = req.session.user?._id;
+        const userName = req.session.user?.fullName;
+        const productId = req.params.id;
+        const { rating, comment } = req.body;
 
+        if (!userId || !userName) {
+            return res.status(400).json({ error: "User not logged in" });
+        }
+
+        const review = new Review({
+            userId,
+            productId,
+            userName,
+            rating: Number(rating),
+            comment
+        });
+
+        await review.save();
+        
+        // ✅ Correct redirect - matches your route
+        res.redirect(`/productDetails/${productId}`);
+
+    } catch (error) {
+        console.error("Review Error:", error);
+        res.status(500).send("Server Error Adding Review");
+    }
+};
 module.exports = {
+  addReview,
   pageNotFound,
   loadHomepage,
   loadShopping,

@@ -88,4 +88,7 @@ router.get('/auth/google/callback',
     }
 );
 
+
+router.post("/product/:id/addReview", usercontroller.addReview);
+
 module.exports = router;

@@ -19,72 +19,224 @@
     <!-- Local version -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-
+    
 </head>
 
 <body>
-    <header>
-        <div class="mainhead">
-            <img src="/images/colinguest.png" class="imageLogo" alt="">
-            <div class="buttons">
-                
+   <!-- views/partials/user/header.ejs -->
+<header>
+    <div class="mainhead">
+        <a href="<%= user ? '/home' : '/landingPage' %>" class="logo-link">
+            <img src="/images/colinguest.png" class="imageLogo" alt="ElectroMania Logo">
+        </a>
 
-                <!-- <img src="/images/project_icons/profile.png" alt="profile" onmouseover="profileViewModal()"  class="profileImg"> -->
-               <a href="/cart" class="header-icon" aria-label="Cart" title="Cart">
-            <i class="fas fa-cart-shopping"></i>
-          </a>
+        <div class="buttons">
+            <!-- Cart Icon -->
+            <a href="/cart" class="header-icon" aria-label="Cart" title="Cart">
+                <i class="fas fa-cart-shopping"></i>
+             
+            </a>
+
+            <!-- Wishlist Icon -->
             <a href="/wishlist" class="header-icon" aria-label="Wishlist" title="Wishlist">
-            <i class="fas fa-heart"></i>
-          </a>
+                <i class="fas fa-heart"></i>
+            </a>
 
-                <form action="/login" method="GET" style="display:inline;">
-                    <button type="submit">Sign In</button>
-                </form>
-                
-            </div>
-            <div id="profileViewModal" class="modal">
-                <div class="modal-content" onmouseleave="closeViewModal()">
+            <!-- User Menu / Auth Section -->
+            <% if (user) { %>
+                <!-- User Logged In - Display Username -->
+                <div class="user-menu-container">
+                    <button id="userMenuToggle" class="user-profile-btn" aria-label="Profile Menu">
+                        <span class="username-display"><%= user.fullName || user.email %></span>
+                       
+                    </button>
 
-
-                    <ul>
-                        <a href="/profile">
-                            <li>Profile</li>
-                        </a>
-                        <a href="/wishlist">
-                            <li>Wish List</li>
-                        </a>
-                        <a href="/cart">
-                            <li>Cart</li>
-                        </a>
-                        <a href="/wallet">
-                            <li>Wallet</li>
-                        </a>
-                    </ul>
+                    <div id="profileViewModal" class="modal">
+                        <div class="modal-content" onmouseleave="closeViewModal()">
+                            <ul>
+                                <a href="/profile">
+                                    <li><i class="fas fa-user"></i> Profile</li>
+                                </a>
+                                <a href="/wishlist">
+                                    <li><i class="fas fa-heart"></i> Wish List</li>
+                                </a>
+                                <a href="/cart">
+                                    <li><i class="fas fa-shopping-cart"></i> Cart</li>
+                                </a>
+                                <a href="/wallet">
+                                    <li><i class="fas fa-wallet"></i> Wallet</li>
+                                </a>
+                                <a href="/orders">
+                                    <li><i class="fas fa-box"></i> My Orders</li>
+                                </a>
+                                <hr>
+                                <a href="/logout">
+                                    <li><i class="fas fa-sign-out-alt"></i> Logout</li>
+                                </a>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
+            <% } else { %>
+                <!-- User Not Logged In -->
+                <form action="/login" method="GET" style="display:inline;">
+                    <button type="submit" class="sign-in-btn">Sign In</button>
+                </form>
+            <% } %>
+        </div>
+    </div>
 
+    <!-- Navigation Menu -->
+    <div class="subhead">
+        <nav>
+            <ul>
+                <a href="<%= user ? '/' : '/' %>">
+                    <li>Home</li>
+                </a>
+                <a href="/productListing">
+                    <li>Shop</li>
+                </a>
+                <a href="/about">
+                    <li>About</li>
+                </a>
+               
+                <a href="/contact">
+                    <li>Contact</li>
+                </a>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Login Prompt - Simple Popup (Only for non-logged-in users) -->
+    <% if (!user) { %>
+    <div id="loginPromptOverlay" class="login-prompt-overlay">
+        <div class="login-prompt-modal">
+            <div class="login-prompt-content">
+               
+                <button class="prompt-login-btn" onclick="window.location.href='/login'">
+                    <i class="fas fa-user"></i> Login
+                </button>
+                 <div class="login-prompt-message">
+                           <p>👋 Hey! Login to unlock exclusive deals</p>
+                </div>
             </div>
-
         </div>
-        <div class="subhead">
-            <nav>
-                <ul>
-                    <a href="/landingPage">
-                        <li>Home</li>
-                    </a>
+    </div>
+    <% } %>
+</header>
 
-                    <a href="/productListing">
-                        <li>Shop</li>
-                    </a>
-                    <a href="/customListing">
-                        <li>Custom</li>
-                    </a>
-                    <a href="/about">
-                        <li>About</li>
-                    </a>
-                    <a href="/contact">
-                        <li>Contact</li>
-                    </a>
-                </ul>
-            </nav>
-        </div>
-    </header>
+<!-- JavaScript for Header Functionality -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userMenuToggle = document.getElementById('userMenuToggle');
+    const profileViewModal = document.getElementById('profileViewModal');
+
+    if (userMenuToggle && profileViewModal) {
+        // Toggle modal on click
+        userMenuToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            profileViewModal.classList.toggle('show');
+        });
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!userMenuToggle.contains(e.target) && !profileViewModal.contains(e.target)) {
+                profileViewModal.classList.remove('show');
+            }
+        });
+
+        // Close modal when clicking on a link
+        const modalLinks = profileViewModal.querySelectorAll('a');
+        modalLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                profileViewModal.classList.remove('show');
+            });
+        });
+
+        // Close with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                profileViewModal.classList.remove('show');
+            }
+        });
+    }
+
+    // Update cart count on page load
+    function updateCartCount() {
+        fetch('/api/cart/count')
+            .then(response => response.json())
+            .then(data => {
+                const cartBadge = document.getElementById('cartCount');
+                if (cartBadge) {
+                    cartBadge.textContent = data.count || 0;
+                }
+            })
+            .catch(error => console.log('Cart count error:', error));
+    }
+
+    updateCartCount();
+
+    // Listen for cart updates
+    document.addEventListener('cartUpdated', updateCartCount);
+
+    // Show login popup for non-logged-in users with setInterval
+    const loginPromptOverlay = document.getElementById('loginPromptOverlay');
+    if (loginPromptOverlay) {
+        // Show popup every 8 seconds
+        setInterval(() => {
+            loginPromptOverlay.classList.remove('hide');
+            loginPromptOverlay.classList.add('show');
+            
+            // Hide with scratching animation after 4 seconds
+            setTimeout(() => {
+                loginPromptOverlay.classList.remove('show');
+                loginPromptOverlay.classList.add('hide');
+                
+                // Completely hide after animation
+                setTimeout(() => {
+                    loginPromptOverlay.classList.remove('hide');
+                }, 300);
+            }, 4000);
+        }, 30000);
+        
+        // Show immediately on page load
+        setTimeout(() => {
+            loginPromptOverlay.classList.add('show');
+            setTimeout(() => {
+                loginPromptOverlay.classList.remove('show');
+                loginPromptOverlay.classList.add('hide');
+                setTimeout(() => {
+                    loginPromptOverlay.classList.remove('hide');
+                }, 300);
+            }, 4000);
+        }, 500);
+
+        // Close on button click
+        loginPromptOverlay.addEventListener('click', function(e) {
+            loginPromptOverlay.classList.remove('show');
+            loginPromptOverlay.classList.add('hide');
+            setTimeout(() => {
+                loginPromptOverlay.classList.remove('hide');
+            }, 300);
+        });
+    }
+});
+
+// Close modal function
+function closeViewModal() {
+    const modal = document.getElementById('profileViewModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+function profileViewModal() {
+    const modal = document.getElementById('profileViewModal');
+    if (modal) {
+        modal.classList.toggle('show');
+    }
+}
+</script>
+
+</body>
+</html>

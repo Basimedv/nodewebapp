@@ -7,7 +7,7 @@ const admincontroller = require('../controllers/admin/admincontroller');
 const customercontroller = require('../controllers/admin/customercontroller');
 const categorycontroller = require('../controllers/admin/categorycontroller');
 const categoryOfferController = require('../controllers/admin/categoryOfferController');
-const productcontroller = require('../controllers/admin/productcontroller');
+const productcontroller = require('../controllers/admin/Productcontroller');
 
 // ======================= Middleware =======================
 const { userAuth, adminAuth, ensureAdminGuest, preventBack } = require('../middlewares/auth');
@@ -59,7 +59,7 @@ router.get('/products/api/:id', adminAuth, productcontroller.getProductById);
 router.post(
   '/products',
   adminAuth,
-  upload.array('images', 3),
+  upload.array('images', 4),
   productcontroller.createProduct
 );
 
@@ -67,7 +67,7 @@ router.post(
 router.put(
   '/products/:id',
   adminAuth,
-  upload.array('images', 3),
+  upload.array('images', 4),
   productcontroller.updateProduct
 );
 

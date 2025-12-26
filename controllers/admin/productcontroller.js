@@ -332,7 +332,7 @@ const updateProduct = async (req, res) => {
     if (req.files && req.files.length > 0) {
       finalImages = [...finalImages, ...req.files.map(file => file.path)];
     }
-    finalImages = finalImages.slice(0, 3);
+    finalImages = finalImages.slice(0, 4);
 
     if (finalImages.length === 0) {
       return res.status(400).json({

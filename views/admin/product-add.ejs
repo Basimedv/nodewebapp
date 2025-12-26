@@ -363,27 +363,24 @@
                 </select>
               </div>
 
-              <!-- Product Images Section -->
-              <div class="mb-4">
-                <label class="form-label fw-bold">Product Images <span class="text-danger">*</span></label>
-                <p class="text-muted small">Upload & crop up to 3 images (Recommended: Square images, 800x800px)</p>
-                
-                <div class="row g-3">
-                  <% for (let i = 0; i < 3; i++) { %>
-                    <div class="col-md-4">
-                      <div class="image-upload-slot" data-slot="<%= i %>">
-                        <!-- Dropzone -->
-                        <div class="image-upload-dropzone">
-                          <i class="bi bi-cloud-upload" style="font-size: 2.5rem; color: #bbb;"></i>
-                          <p class="mb-0 mt-2 small">Add Image</p>
-                        </div>
+             <div class="row g-3">
+  <% for (let i = 0; i < 4; i++) { %>
+    <div class="col-md-3">
+      <div class="image-upload-slot" data-slot="<%= i %>">
+        
+        <!-- Dropzone -->
+        <div class="image-upload-dropzone">
+          <i class="bi bi-cloud-upload" style="font-size: 2.5rem; color: #bbb;"></i>
+          <p class="mb-0 mt-2 small">Add Image</p>
+        </div>
 
-                        <!-- Preview (initially hidden) -->
-                        <div class="image-preview d-none"></div>
-                      </div>
-                    </div>
-                  <% } %>
-                </div>
+        <!-- Preview (hidden initially) -->
+        <div class="image-preview d-none"></div>
+
+      </div>
+    </div>
+  <% } %>
+</div>
 
                 <div id="imageError" class="text-danger mt-2 small"></div>
               </div>

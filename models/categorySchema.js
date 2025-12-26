@@ -3,17 +3,14 @@ const mongoose = require('mongoose')
 const { Schema } = mongoose
 
 const CategorySchema = new mongoose.Schema({
-
     name: {
         type: String,
         required: true,
         unique: true
     },
-
     description: {
         type: String,
         required: true,
-
     },
     isListed: {
         type: Boolean,
@@ -22,19 +19,13 @@ const CategorySchema = new mongoose.Schema({
     categoryOffer: {
         type: Number,
         default: 0,
-
     },
     createdAt: {
         type: Date,
         default: Date.now
-    },
-        size: {
-        type: String,
-        required: true,
-        enum: ['S', 'M', 'L', 'XL', 'XXL']
     }
-
-
+    // ❌ size removed - it belongs in Product schema
 })
+
 const Category = mongoose.model('Category', CategorySchema)
 module.exports = Category;
