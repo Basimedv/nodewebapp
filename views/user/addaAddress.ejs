@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/profile-section.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <%- include('../partials/userNavbar', { activePage: '' }) %> 
+
+    <main class="container mt-4">
+        <div class="row g-5">
+            <%- include('../partials/profileSidebar', { activePage: 'address' }) %> 
+
+            <!-- Add New Address Form -->
+            <div class="col-md-9">
+                <div class="py-3 px-5 h-100" style="border-radius: 12px; background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div class="d-flex align-items-center mb-4">
+                        <a href="/user/address" class="btn btn-outline-secondary btn-sm me-3">
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
+                        <h4 class="mb-0" style="color: #5b3f64;">Add New Address</h4>
+                    </div>
+
+                    <form id="addAddressForm">
+                        <!-- Address Type -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Address Type <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="addressType" id="addressHome" value="Home" checked>
+                                    <label class="form-check-label" for="addressHome">
+                                        <i class="fas fa-home me-1"></i> Home
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="addressType" id="addressWork" value="Work">
+                                    <label class="form-check-label" for="addressWork">
+                                        <i class="fas fa-briefcase me-1"></i> Work
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="addressTypeError" style="font-size: 0.8em; color: #ff0101;"></div>
+                        </div>
+
+                        <!-- Full Name & Phone -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="fullName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" id="fullName" name="fullName" class="form-control" placeholder="Enter your full name">
+                                <div id="fullNameError" style="font-size: 0.8em; color: #ff0101;"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" id="phone" name="phone" class="form-control" placeholder="10-digit mobile number" pattern="[0-9]{10}" maxlength="10">
+                                <div id="phoneError" style="font-size: 0.8em; color: #ff0101;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Alternate Phone -->
+                        <div class="mb-3">
+                            <label for="altPhone" class="form-label">Alternate Phone Number <span class="text-danger">*</span></label>
+                            <input type="tel" id="altPhone" name="altPhone" class="form-control" placeholder="10-digit mobile number" pattern="[0-9]{10}" maxlength="10">
+                            <div id="altPhoneError" style="font-size: 0.8em; color: #ff0101;"></div>
+                        </div>
+
+                        <!-- Landmark -->
+                        <div class="mb-3">
+                            <label for="landMark" class="form-label">Landmark/Address <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="landMark" name="landMark" rows="2" placeholder="House No., Street Name, Area"></textarea>
+                            <div id="landMarkError" style="font-size: 0.8em; color: #ff0101;"></div>
+                        </div>
+
+                        <!-- City & State -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">City <span class="text-danger">*</span></label>
+                                <input type="text" id="city" name="city" class="form-control" placeholder="Enter your city">
+                                <div id="cityError" style="font-size: 0.8em; color: #ff0101;"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="state" class="form-label">State <span class="text-danger">*</span></label>
+                                <select id="state" name="state" class="form-select">
+                                    <option value="" disabled selected>Select your state</option>
+                                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                    <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                    <option value="Assam">Assam</option>
+                                    <option value="Bihar">Bihar</option>
+                                    <option value="Chhattisgarh">Chhattisgarh</option>
+                                    <option value="Goa">Goa</option>
+                                    <option value="Gujarat">Gujarat</option>
+                                    <option value="Haryana">Haryana</option>
+                                    <option value="Himachal Pradesh">Himachal Pradesh</option>
+                                    <option value="Jharkhand">Jharkhand</option>
+                                    <option value="Karnataka">Karnataka</option>
+                                    <option value="Kerala">Kerala</option>
+                                    <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                    <option value="Maharashtra">Maharashtra</option>
+                                    <option value="Manipur">Manipur</option>
+                                    <option value="Meghalaya">Meghalaya</option>
+                                    <option value="Mizoram">Mizoram</option>
+                                    <option value="Nagaland">Nagaland</option>
+                                    <option value="Odisha">Odisha</option>
+                                    <option value="Punjab">Punjab</option>
+                                    <option value="Rajasthan">Rajasthan</option>
+                                    <option value="Sikkim">Sikkim</option>
+                                    <option value="Tamil Nadu">Tamil Nadu</option>
+                                    <option value="Telangana">Telangana</option>
+                                    <option value="Tripura">Tripura</option>
+                                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                    <option value="Uttarakhand">Uttarakhand</option>
+                                    <option value="West Bengal">West Bengal</option>
+                                </select>
+                                <div id="stateError" style="font-size: 0.8em; color: #ff0101;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Pin Code -->
+                        <div class="mb-4">
+                            <label for="pinCode" class="form-label">Pin Code <span class="text-danger">*</span></label>
+                            <input type="text" id="pinCode" name="pinCode" class="form-control" placeholder="6-digit pin code" pattern="[0-9]{6}" maxlength="6">
+                            <div id="pinCodeError" style="font-size: 0.8em; color: #ff0101;"></div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
+                                <i class="fas fa-save"></i> 
+                                <span>Save Address</span>
+                            </button>
+                            <a href="/user/address" class="btn btn-secondary d-flex align-items-center gap-2">
+                                <i class="fas fa-times"></i> 
+                                <span>Cancel</span>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Real-time formatting
+        document.getElementById('phone').addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').substring(0, 10);
+        });
+
+        document.getElementById('altPhone').addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').substring(0, 10);
+        });
+
+        document.getElementById('pinCode').addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '').substring(0, 6);
+        });
+
+        document.getElementById("addAddressForm").addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const fullName = document.getElementById('fullName').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const altPhone = document.getElementById('altPhone').value.trim();
+            const landMark = document.getElementById('landMark').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const state = document.getElementById('state').value;
+            const pinCode = document.getElementById('pinCode').value.trim();
+            const addressType = document.querySelector('input[name="addressType"]:checked')?.value;
+
+            const errors = {
+                fullName: document.getElementById("fullNameError"),
+                phone: document.getElementById("phoneError"),
+                altPhone: document.getElementById("altPhoneError"),
+                landMark: document.getElementById("landMarkError"),
+                city: document.getElementById("cityError"),
+                state: document.getElementById("stateError"),
+                pinCode: document.getElementById("pinCodeError"),
+                addressType: document.getElementById("addressTypeError"),
+            };
+
+            // Clear previous errors
+            Object.values(errors).forEach((el) => el.innerText = "");
+
+            let hasError = false;
+
+            // Validation
+            if (!fullName || fullName.length < 3) {
+                errors.fullName.innerText = "Full name is required (minimum 3 characters)";
+                hasError = true;
+            }
+
+            if (!phone) {
+                errors.phone.innerText = "Phone number is required";
+                hasError = true;
+            } else if (!/^\d{10}$/.test(phone)) {
+                errors.phone.innerText = "Phone number must be 10 digits";
+                hasError = true;
+            }
+
+            if (!altPhone) {
+                errors.altPhone.innerText = "Alternate phone number is required";
+                hasError = true;
+            } else if (!/^\d{10}$/.test(altPhone)) {
+                errors.altPhone.innerText = "Alternate phone number must be 10 digits";
+                hasError = true;
+            }
+
+            if (!landMark || landMark.length < 3) {
+                errors.landMark.innerText = "Landmark/Address is required";
+                hasError = true;
+            }
+
+            if (!city) {
+                errors.city.innerText = "City is required";
+                hasError = true;
+            }
+
+            if (!state) {
+                errors.state.innerText = "State is required";
+                hasError = true;
+            }
+
+            if (!pinCode) {
+                errors.pinCode.innerText = "Pin Code is required";
+                hasError = true;
+            } else if (!/^\d{6}$/.test(pinCode)) {
+                errors.pinCode.innerText = "Pin Code must be 6 digits";
+                hasError = true;
+            }
+
+            if (!addressType) {
+                errors.addressType.innerText = "Address type is required";
+                hasError = true;
+            }
+
+            if (hasError) return;
+
+            const formData = { 
+                fullName, 
+                phone, 
+                altPhone, 
+                landMark, 
+                city, 
+                state, 
+                pinCode, 
+                addressType 
+            };
+
+            try {
+                const response = await fetch('/user/address', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Something went wrong");
+                }
+
+                Swal.fire({
+                    icon: "success",
+                    text: data.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = "/user/address";
+                });
+            } catch (error) {
+                console.log(error);
+                Swal.fire({
+                    icon: "error",
+                    text: error.message || "An error occurred. Please try again.",
+                });
+            }
+        });
+    </script>
+</body>
+</html>

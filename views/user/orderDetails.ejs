@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'Order Details' %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .page-container {
+            display: flex;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+        
+        .col-md-3 {
+            width: 250px;
+            flex-shrink: 0;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 0;
+            padding: 40px 60px;
+            background: transparent;
+        }
+        
+        .page-header {
+            margin-bottom: 30px;
+        }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0 0 8px 0;
+        }
+        
+        .page-subtitle {
+            color: #999;
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        .order-card {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        
+        .order-id {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0 0 5px 0;
+        }
+        
+        .order-date {
+            color: #999;
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        .order-status-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .status-badge {
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-delivered {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .btn-return {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        
+        .btn-return:hover {
+            background: #218838;
+        }
+        
+        .btn-invoice {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        
+        .btn-invoice:hover {
+            background: #0056b3;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0 0 25px 0;
+        }
+        
+        .order-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid #e5e5e5;
+            background: #f8f9fa;
+        }
+        
+        .item-details {
+            flex: 1;
+        }
+        
+        .item-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0 0 10px 0;
+        }
+        
+        .item-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .item-price {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .order-summary {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid #e5e5e5;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            font-size: 15px;
+        }
+        
+        .summary-label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .summary-value {
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+        
+        .summary-total {
+            margin-top: 15px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e5e5;
+        }
+        
+        .total-label {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .total-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        
+        .address-card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+        
+        .address-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0 0 15px 0;
+        }
+        
+        .address-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #666;
+        }
+        
+        .address-name {
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        
+        .btn-back {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-back:hover {
+            background: #218838;
+            color: white;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 768px) {
+            .col-md-3 {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include("../partials/user/header") %>
+    
+    <div class="page-container">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <%- include('../partials/user/profileSidebar', { activePage: 'orderDetails', user: user }) %>
+        </div>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Order Details</h1>
+                <p class="page-subtitle">View complete order information</p>
+            </div>
+            
+            <% if (order) { %>
+                <!-- Order Card -->
+                <div class="order-card">
+                    <!-- Order Header -->
+                    <div class="order-header">
+                        <div>
+                            <h2 class="order-id">Order #<%= order.orderId %></h2>
+                            <p class="order-date"><%= new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+                        </div>
+                        <div class="order-status-actions">
+                            <span class="status-badge status-<%= order.status.toLowerCase() %>">
+                                <%= order.status %>
+                            </span>
+                            <% if (returnRequest && returnRequest.status) { %>
+                                <span class="status-badge status-<%= returnRequest.status.toLowerCase() %>">
+                                    <%= returnRequest.status %>
+                                </span>
+                            <% } else if (order.status === 'Delivered') { %>
+                                <button class="btn-return" onclick="returnOrder('<%= order._id %>')">
+                                    <i class="fas fa-undo"></i> Return
+                                </button>
+                            <% } %>
+                            <button class="btn-invoice" onclick="downloadInvoice('<%= order._id %>')">
+                                <i class="fas fa-download"></i> Invoice
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Order Items -->
+                    <h3 class="section-title">Order Items</h3>
+                    <% if (order.orderedItems && order.orderedItems.length > 0) { %>
+                        <% order.orderedItems.forEach(function(item) { %>
+                            <div class="order-item">
+                                <% if (item.productImage && item.productImage.length > 0) { %>
+                                    <img src="<%= item.productImage[0] %>" 
+                                         alt="<%= item.productName %>" 
+                                         class="item-image"
+                                         onerror="this.src='/images/placeholder.png';">
+                                <% } else { %>
+                                    <div class="item-image"></div>
+                                <% } %>
+                                <div class="item-details">
+                                    <h4 class="item-name"><%= item.productName %></h4>
+                                    <div class="item-meta">
+                                        <span>Quantity: <%= item.quantity %></span>
+                                        <% if (item.size) { %>
+                                            <span>Size: <%= item.size %></span>
+                                        <% } %>
+                                        <span>Price: ₹<%= item.price.toLocaleString('en-IN') %></span>
+                                    </div>
+                                </div>
+                                <div class="item-price">₹<%= (item.price * item.quantity).toLocaleString('en-IN') %></div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div style="text-align: center; padding: 40px; color: #999;">
+                            <i class="fas fa-box-open" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i>
+                            <p>No items found in this order</p>
+                        </div>
+                    <% } %>
+                    
+                    <!-- Order Summary -->
+                    <div class="order-summary">
+                        <h3 class="section-title">Order Summary</h3>
+                        
+                        <div class="summary-row">
+                            <span class="summary-label">Order ID:</span>
+                            <span class="summary-value"><%= order.orderId %></span>
+                        </div>
+                        
+                        <div class="summary-row">
+                            <span class="summary-label">Order Date:</span>
+                            <span class="summary-value"><%= new Date(order.createdAt).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: '2-digit' }) %>, <%= new Date(order.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) %></span>
+                        </div>
+                        
+                        <div class="summary-row">
+                            <span class="summary-label">Subtotal</span>
+                            <span class="summary-value">₹<%= ((order.finalAmount || 0) + (order.discount || 0) - (order.deliveryCharge || 0)).toLocaleString('en-IN') %></span>
+                        </div>
+                        
+                        <% if (order.discount && order.discount > 0) { %>
+                            <div class="summary-row">
+                                <span class="summary-label">Discount</span>
+                                <span class="summary-value" style="color: #28a745;">-₹<%= order.discount.toLocaleString('en-IN') %></span>
+                            </div>
+                        <% } %>
+                        
+                        <% if (order.deliveryCharge && order.deliveryCharge > 0) { %>
+                            <div class="summary-row">
+                                <span class="summary-label">Delivery Charge</span>
+                                <span class="summary-value">₹<%= order.deliveryCharge.toLocaleString('en-IN') %></span>
+                            </div>
+                        <% } %>
+                        
+                        <div class="summary-row summary-total">
+                            <span class="total-label">Total Amount</span>
+                            <span class="total-value">₹<%= (order.finalAmount || 0).toLocaleString('en-IN') %></span>
+                        </div>
+                        
+                        <div class="summary-row">
+                            <span class="summary-label">Payment Method:</span>
+                            <span class="summary-value"><%= order.paymentMethod || 'Cash on Delivery' %></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Shipping Address -->
+                <% if (address) { %>
+                    <div class="address-card">
+                        <h3 class="address-title">Shipping Address</h3>
+                        <div class="address-content">
+                            <div class="address-name"><%= address.name %> | <%= address.phone %></div>
+                            <p style="margin: 0;">
+                                <%= address.addressLine1 %>
+                                <% if (address.addressLine2) { %>, <%= address.addressLine2 %><% } %>
+                                <% if (address.landMark || address.landmark) { %><br><%= address.landMark || address.landmark %><% } %>
+                                <br><%= address.city %>, <%= address.state %>, India - <%= address.pinCode || address.pincode %>
+                            </p>
+                        </div>
+                    </div>
+                <% } %>
+                
+                <!-- Back Button -->
+                <a href="/user/orders" class="btn-back">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Orders
+                </a>
+            <% } else { %>
+                <div class="order-card" style="text-align: center; padding: 60px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #ddd; margin-bottom: 20px;"></i>
+                    <h2 style="margin-bottom: 15px;">Order Not Found</h2>
+                    <p style="color: #999; margin-bottom: 25px;">The order you're looking for doesn't exist or has been removed.</p>
+                    <a href="/user/orders" class="btn-back">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Orders
+                    </a>
+                </div>
+            <% } %>
+        </main>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function returnOrder(orderId) {
+            Swal.fire({
+                title: 'Return Product Request',
+                html: `
+                    <div style="text-align: left;">
+                        <div style="margin-bottom: 15px;">
+                            <strong>Order ID:</strong> ${orderId}
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Return Reason:</label>
+                            <select id="returnReason" class="swal2-select" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">Select a reason...</option>
+                                <option value="Wrong product">Wrong product</option>
+                                <option value="Damaged product">Damaged product</option>
+                                <option value="Not as described">Not as described</option>
+                                <option value="Size issue">Size issue</option>
+                                <option value="Quality issue">Quality issue</option>
+                                <option value="Changed mind">Changed mind</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Upload Images:</label>
+                            <input type="file" id="returnImages" multiple accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <small style="color: #666;">Upload images to support your return request</small>
+                        </div>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Submit Return',
+                cancelButtonText: 'Cancel',
+                preConfirm: () => {
+                    const reason = document.getElementById('returnReason').value;
+                    const images = document.getElementById('returnImages').files;
+                    
+                    if (!reason) {
+                        Swal.showValidationMessage('Please select a return reason');
+                        return false;
+                    }
+                    
+                    return { reason, images };
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    Swal.fire({
+                        title: 'Processing...',
+                        text: 'Please wait while we process your return request.',
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    const formData = new FormData();
+                    formData.append('orderId', orderId);
+                    formData.append('reason', result.value.reason);
+                    
+                    for (let i = 0; i < result.value.images.length; i++) {
+                        formData.append('returnImages', result.value.images[i]);
+                    }
+
+                    fetch('/user/order/return', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Return Request Submitted!',
+                                text: data.message,
+                                icon: 'success',
+                                confirmButtonColor: '#28a745'
+                            }).then(() => window.location.reload());
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.error || 'Failed to submit return request',
+                                icon: 'error',
+                                confirmButtonColor: '#dc3545'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Failed to submit return request. Please try again.',
+                            icon: 'error',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    });
+                }
+            });
+        }
+        
+        function downloadInvoice(orderId) {
+            Swal.fire({
+                title: 'Generating Invoice...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => Swal.showLoading()
+            });
+            
+            fetch(`/user/order/${orderId}/invoice`)
+            .then(response => {
+                if (response.ok) return response.blob();
+                throw new Error('Failed to generate invoice');
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `invoice_${orderId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                Swal.fire({
+                    title: 'Invoice Downloaded!',
+                    icon: 'success',
+                    confirmButtonColor: '#007bff'
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to generate invoice.',
+                    icon: 'error'
+                });
+            });
+        }
+    </script>
+</body>
+</html>

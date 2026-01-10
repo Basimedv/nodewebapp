@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'My Profile' %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .profile-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+       .sidebar {
+    width: 280px;
+    height: 600px;
+    background: transparent;
+    padding: 30px 0;
+
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+
+    box-shadow:
+        2px 0 4px rgba(0, 0, 0, 0.08),
+        6px 0 12px rgba(0, 0, 0, 0.12),
+        12px 0 24px rgba(0, 0, 0, 0.16);
+
+    position: relative;
+}
+
+        
+        .sidebar-header {
+            text-align: center;
+            padding: 0 20px 30px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 12px;
+        }
+        
+        .profile-avatar-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+        
+        .sidebar-menu {
+            margin-top: 20px;
+        }
+        
+        .sidebar-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 25px;
+            color: #333;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-menu-item:hover {
+            background-color:#f8f9fa;
+            color: #198754;
+        }
+        
+        .sidebar-menu-item.active {
+            background-color: #198754;
+            color: white;
+            border-left-color: #146c43;
+        }
+        
+        .sidebar-menu-item i {
+            width: 20px;
+            margin-right: 12px;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 40px 50px;
+        }
+        
+        .profile-header-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+        
+        .profile-info-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .profile-large-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .profile-large-placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-edit-profile {
+            background-color: #198754;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-edit-profile:hover {
+            background-color: #146c43;
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .info-cards-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+       .info-card {
+    background: transparent;
+    padding: 24px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.08),
+        0 6px 12px rgba(0, 0, 0, 0.12);
+}
+
+        
+        .info-card-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .info-card-value {
+            font-size: 16px;
+            color: #1a1a1a;
+        }
+     
+        .referral-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+      
+        
+        .btn-copy {
+            background-color: #198754;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-copy:hover {
+            background-color: #146c43;
+        }
+    </style>
+
+</head>
+
+<body>
+    
+
+ <%- include("../partials/user/header") %>
+    
+           
+    <div class="profile-container">
+       
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <% if (user.profileImage) { %>
+                    <img src="<%= user.profileImage %>" alt="Profile" class="profile-avatar">
+                <% } else { %>
+                    <div class="profile-avatar-placeholder">
+                        <i class="fas fa-user" style="font-size: 35px; color: white;"></i>
+                    </div>
+                <% } %>
+                <h6 style="margin: 0; font-size: 15px;">Hello, <%= user.fullName.split(' ')[0] %></h6>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="/user/orders" class="sidebar-menu-item">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>My Orders</span>
+                </a>
+                <a href="/profile" class="sidebar-menu-item active">
+                    <i class="fas fa-user"></i>
+                    <span>Profile Information</span>
+                </a>
+                <a href="/manage-addresses" class="sidebar-menu-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Manage Addresses</span>
+                </a>
+                <a href="/privacy-settings" class="sidebar-menu-item">
+                    <i class="fas fa-key"></i>
+                    <span>Privacy Settings</span>
+                </a>
+                <a href="/my-coupons" class="sidebar-menu-item">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>My Coupons</span>
+                </a>
+                <a href="/my-wallet" class="sidebar-menu-item">
+                    <i class="fas fa-wallet"></i>
+                    <span>My Wallet</span>
+                </a>
+            </nav>
+        </aside>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Profile Header -->
+            <div class="profile-header-section">
+                <div class="profile-info-header">
+                    <% if (user.profileImage) { %>
+                        <img src="<%= user.profileImage %>" alt="Profile" class="profile-large-avatar">
+                    <% } else { %>
+                        <div class="profile-large-placeholder">
+                            <i class="fas fa-user" style="font-size: 45px; color: white;"></i>
+                        </div>
+                    <% } %>
+                    <div>
+                        <h4 style="margin: 0 0 5px 0; font-size: 24px; font-weight: 600;"><%= user.fullName %></h4>
+                        <p style="margin: 0; color: #666; font-size: 14px;">Member since <%= new Date(user.createdOn).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) %></p>
+                    </div>
+                </div>
+                <a href="/profile/edit" class="btn-edit-profile">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </a>
+            </div>
+
+            <!-- Info Cards -->
+            <div class="info-cards-row">
+                <div class="info-card">
+                    <div class="info-card-label">Email Address</div>
+                    <div class="info-card-value"><%= user.email %></div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Mobile Number</div>
+                    <div class="info-card-value"><%= user.phone || 'Not provided' %></div>
+                </div>
+            </div>
+
+            <div class="info-cards-row">
+                <div class="info-card">
+                    <div class="info-card-label">Gender</div>
+                    <div class="info-card-value"><%= user.gender || 'Not specified' %></div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-label">Username</div>
+                    <div class="info-card-value"><%= user.username || 'Username not set yet' %></div>
+                </div>
+            </div>
+
+          
+        </main>
+    </div>
+
+    <script>
+        function copyReferralCode() {
+            const input = document.getElementById('referralCode');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            
+            navigator.clipboard.writeText(input.value).then(() => {
+                const button = event.currentTarget;
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                button.style.backgroundColor = '#0d6efd';
+                
+                setTimeout(() => {
+                    button.innerHTML = originalHTML;
+                    button.style.backgroundColor = '#198754';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

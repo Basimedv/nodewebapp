@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'Edit Profile' %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .profile-container {
+            min-height: 100vh;
+            padding: 40px 0;
+        }
+        
+        .col-md-9 {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        
+        .edit-form {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .profile-image-section {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        
+        .profile-image-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        
+        .profile-edit-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #f0f0f0;
+        }
+        
+        .profile-edit-placeholder {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid #f0f0f0;
+            margin: 0 auto;
+        }
+        
+        .camera-button {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: #198754;
+            border: 4px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        
+        .camera-button:hover {
+            background-color: #146c43;
+            transform: scale(1.05);
+        }
+        
+        .remove-photo-btn {
+            margin-top: 15px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .form-group {
+            margin-bottom: 0;
+        }
+        
+        .form-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .form-group input.form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        
+        .form-group input.form-control:focus {
+            outline: none;
+            border-color: #198754;
+            box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.1);
+        }
+        
+        .form-group input.form-control:disabled {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+        
+        .gender-options {
+            padding-top: 12px;
+        }
+        
+        .form-check-inline {
+            margin-right: 20px;
+        }
+        
+        .form-check-input:checked {
+            background-color: #198754;
+            border-color: #198754;
+        }
+        
+        .action-buttons {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #e5e5e5;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn-update {
+            background-color: #198754;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-update:hover {
+            background-color: #146c43;
+            transform: translateY(-1px);
+        }
+        
+        .btn-cancel {
+            background-color: transparent;
+            color: #6c757d;
+            border: 1px solid #6c757d;
+            padding: 12px 30px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <%- include("../partials/user/header") %>
+    
+    <div class="profile-container">
+        <div class="row">
+            <div class="col-md-3">
+                <%- include('../partials/user/profileSidebar', { activePage: 'profile', user: user }) %>
+            </div>
+            <div class="col-md-9">
+                <h1>Update Profile</h1>
+
+                <form id="profileForm" class="edit-form" enctype="multipart/form-data">
+                    <!-- Profile Image Section -->
+                    <div class="profile-image-section">
+                        <div class="profile-image-wrapper">
+                            <div id="profilePreview">
+                                <% if (user.profileImage) { %>
+                                    <img src="<%= user.profileImage %>" alt="Profile" class="profile-edit-avatar">
+                                <% } else { %>
+                                    <div class="profile-edit-placeholder">
+                                        <i class="fas fa-user" style="font-size: 60px; color: white;"></i>
+                                    </div>
+                                <% } %>
+                            </div>
+                            
+                            <label for="profileImageInput" class="camera-button">
+                                <i class="fas fa-camera" style="color: white; font-size: 18px;"></i>
+                            </label>
+                            <input type="file" id="profileImageInput" name="profileImage" accept="image/*" style="display: none;">
+                        </div>
+                        
+                        <% if (user.profileImage) { %>
+                            <div class="remove-photo-btn">
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="deleteImageBtn">
+                                    <i class="fas fa-trash"></i> Remove Photo
+                                </button>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <!-- Form Fields -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" class="form-control" id="firstName" name="firstName" value="<%= user.fullName.split(' ')[0] %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" class="form-control" id="lastName" name="lastName" value="<%= user.fullName.split(' ').slice(1).join(' ') %>" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" class="form-control" value="<%= user.email %>" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="<%= user.phone || '' %>" placeholder="Enter mobile Number">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="username">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" value="<%= (user.username && user.username !== 'Username not set yet') ? user.username : '' %>" placeholder="Enter username">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label>Gender</label>
+                        <div class="gender-options">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="gender" id="male" value="Male" <%= user.gender === 'Male' ? 'checked' : '' %>>
+                                <label class="form-check-label" for="male">Male</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="gender" id="female" value="Female" <%= user.gender === 'Female' ? 'checked' : '' %>>
+                                <label class="form-check-label" for="female">Female</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button type="submit" class="btn-update">Update</button>
+                        <a href="/profile" class="btn-cancel">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Preview image before upload
+        document.getElementById('profileImageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    Swal.fire('Error', 'File size must be less than 5MB', 'error');
+                    this.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('profilePreview').innerHTML = 
+                        '<img src="' + event.target.result + '" alt="Profile" class="profile-edit-avatar">';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Delete profile image
+        document.getElementById('deleteImageBtn')?.addEventListener('click', async function() {
+            const result = await Swal.fire({
+                title: 'Remove Profile Photo?',
+                text: 'Are you sure you want to remove your profile photo?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Yes, remove it'
+            });
+            
+            if (!result.isConfirmed) return;
+            
+            try {
+                const response = await fetch('/profile/image', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire('Success', data.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Something went wrong', 'error');
+            }
+        });
+        
+        // Handle form submission
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            // Debug: Log form data
+            console.log('Form Data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ': ' + value);
+            }
+            
+            Swal.fire({
+                title: 'Updating Profile...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+            
+            try {
+                const response = await fetch('/profile/update', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: data.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        window.location.href = '/profile';
+                    });
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                Swal.fire('Error', 'Something went wrong', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <!-- Profile image with exact design from picture -->
+        <div class="profile-section">
+            <% if (user && user.profileImage) { %>
+                <img src="<%= user.profileImage %>" alt="Profile" class="profile-avatar">
+            <% } else { %>
+                <div class="profile-avatar-placeholder">
+                    <i class="fas fa-user"></i>
+                </div>
+            <% } %>
+        </div>
+        <div class="user-info">
+            <h4 class="user-name"><%= user ? user.fullName : 'User' %></h4>
+            <p class="user-email"><%= user ? user.email : 'user@example.com' %></p>
+        </div>
+    </div>
+    
+    <nav class="sidebar-menu">
+        <a href="/user/orders" class="menu-item <%= (activePage === 'orders' || activePage === 'orderDetails') ? 'active' : '' %>">
+            <i class="fas fa-shopping-bag"></i>
+            <span>My Orders</span>
+        </a>
+        <a href="/user/profile" class="menu-item <%= activePage === 'profile' ? 'active' : '' %>">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+        <a href="/user/address" class="menu-item <%= activePage === 'address' ? 'active' : '' %>">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>Addresses</span>
+        </a>
+        <a href="/user/privacy" class="menu-item <%= activePage === 'privacy' ? 'active' : '' %>">
+            <i class="fas fa-key"></i>
+            <span>Privacy</span>
+        </a>
+        <a href="/user/coupons" class="menu-item <%= activePage === 'coupons' ? 'active' : '' %>">
+            <i class="fas fa-ticket-alt"></i>
+            <span>Coupons</span>
+        </a>
+        <a href="/user/wallet" class="menu-item <%= activePage === 'wallet' ? 'active' : '' %>">
+            <i class="fas fa-wallet"></i>
+            <span>Wallet</span>
+        </a>
+       
+        <a href="/user/logout" class="menu-item logout">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
+    </nav>
+</aside>
+
+<style>
+.sidebar {
+    width: 280px;
+    height: 700px;
+    background: transparent;
+    padding: 30px 0;
+    border-radius: 16px;
+    box-shadow:
+        2px 0 4px rgba(0, 0, 0, 0.08),
+        6px 0 12px rgba(0, 0, 0, 0.12),
+        12px 0 24px rgba(0, 0, 0, 0.16);
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+    position: relative;
+}
+
+.sidebar-header {
+    text-align: center;
+    padding: 0 0 30px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+}
+
+.profile-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #fff;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.profile-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 4px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.profile-avatar-placeholder i {
+    font-size: 32px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.user-info {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.user-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 10px;
+}
+
+.user-email {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+}
+
+.sidebar-menu {
+    margin-top: 20px;
+}
+
+/* Sidebar menu container */
+.sidebar-menu {
+    margin-top: 20px;
+}
+
+/* Menu item */
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 25px;
+    color: #333;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    border-radius: 0; /* remove rounded look */
+    margin-bottom: 0;
+}
+
+/* Hover */
+.menu-item:hover {
+    background-color: #f8f9fa;
+    color: #198754;
+    transform: none; /* remove slide animation */
+}
+
+/* Active item */
+.menu-item.active {
+    background-color: #198754;
+    color: #fff;
+    border-left-color: #146c43;
+    font-weight: normal;
+}
+
+/* Icon */
+.menu-item i {
+    width: 20px;
+    margin-right: 12px;
+    font-size: 16px;
+    color: inherit;
+}
+
+/* Text */
+.menu-item span {
+    flex: 1;
+}
+
+/* Logout (optional styling tweak) */
+.menu-item.logout {
+    color: #dc3545;
+}
+
+.menu-item.logout:hover {
+    background-color: #f8d7da;
+    color: #dc3545;
+}
+
+.sidebar {
+    width: 280px;
+    height: 600px;
+    background: transparent;
+    padding: 30px 0;
+
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+
+    box-shadow:
+        2px 0 4px rgba(0, 0, 0, 0.08),
+        6px 0 12px rgba(0, 0, 0, 0.12),
+        12px 0 24px rgba(0, 0, 0, 0.16);
+
+    position: relative;
+}
+
+/* Sidebar header */
+.sidebar-header {
+    text-align: center;
+    padding: 0 20px 30px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* Profile avatar */
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 12px;
+}
+
+.profile-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+}
+
+.sidebar-menu {
+    margin-top: 20px;
+}
+
+</style>
