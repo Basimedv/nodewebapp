@@ -3,6 +3,42 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 
+// Get Profile Page
+const getProfilePage = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.redirect('/login');
+    }
+    
+    const user = await User.findById(req.session.user._id);
+    res.render('user/profile', { 
+      user: user,
+      title: 'My Profile'
+    });
+  } catch (error) {
+    console.error('Error loading profile:', error);
+    res.redirect('/pageNotFound');
+  }
+};
+
+// Get Edit Profile Page
+const getEditProfilePage = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.redirect('/login');
+    }
+    
+    const user = await User.findById(req.session.user._id);
+    res.render('user/editProfile', { 
+      user: user,
+      title: 'Edit Profile'
+    });
+  } catch (error) {
+    console.error('Error loading edit profile:', error);
+    res.redirect('/pageNotFound');
+  }
+};
+
 // Generate 4-digit OTP
 function generateOtp() {
   const digits = '1234567890';
@@ -222,6 +258,8 @@ const resendOtp = async (req, res) => {
 
 
 module.exports = {
+  getProfilePage,
+  getEditProfilePage,
   getForgotPage,
   forgotEmailValid,
   getResetPassPage,

@@ -3,6 +3,7 @@ const router = express.Router();
 const usercontroller = require('../controllers/user/usercontroller');
 const passport = require('passport');
 const profileController = require('../controllers/user/profileController');
+const walletController = require('../controllers/user/walletController');
 const { ensureAuth, ensureGuest, preventBack } = require('../middlewares/auth');
 
 // Prevent cached pages after logout
@@ -28,6 +29,16 @@ router.get("/login", ensureGuest, usercontroller.loadLogin);
 router.post('/login', ensureGuest, usercontroller.login);
 router.get("/landingPage", ensureAuth, usercontroller.loadLandingPage);
 router.get('/logout', usercontroller.logout);
+router.get('/profile', ensureAuth, profileController.getProfilePage);
+router.get('/profile/edit', ensureAuth, profileController.getEditProfilePage);
+router.get('/wallet', ensureAuth, walletController.loadWallet);
+router.get('/my-wallet', ensureAuth, walletController.loadWallet);
+router.get('/orders', ensureAuth, usercontroller.viewOrders);
+router.get('/cart', ensureAuth, usercontroller.loadCart);
+router.post('/addToCart', ensureAuth, usercontroller.addToCart);
+router.post('/user/updateCartQuantity', ensureAuth, usercontroller.updateCartQuantity);
+router.post('/user/removeFromCart', ensureAuth, usercontroller.removeFromCart);
+router.post('/user/addToCart', ensureAuth, usercontroller.addToCart);
 
 router.get('/forgotPassword', profileController.getForgotPage);
 router.post('/forgot-Email-valid', profileController.forgotEmailValid);

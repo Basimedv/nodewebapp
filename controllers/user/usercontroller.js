@@ -1,20 +1,20 @@
 const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
-
+const Cart = require("../../models/cartSchema");
 const Wishlist = require("../../models/wishlistSchema");
 const nodemailer = require('nodemailer')
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt')
 const pageNotFound = async (req, res) => {
   try {
-    res.render('page-404')
+    res.render('user/page-404')
   } catch (error) {
-    console.log('user error', error)
-    res.redirect('user/pageNotFound')
+    console.error("Error rendering 404 page:", error);
+    res.status(500).send("Internal Server Error");
   }
+};
 
-}
 const loadHomepage = async (req, res) => {
   try {
     let userData = null;
@@ -409,7 +409,7 @@ const securePassword = async (password) => {
   try {
     return await bcrypt.hash(password, 10);
   } catch (error) {
-    console.error("Password hash error:", error);
+    console.error("Error hashing password:", error);
     throw error;
   }
 }
@@ -747,6 +747,211 @@ async function apiProducts(req, res){
 //   }
 // }
 
+// View Orders
+const viewOrders = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.redirect('/login');
+    }
+    
+    const userId = req.session.user._id;
+    const Order = require('../../models/orderSchema');
+    
+    const orders = await Order.find({ userId })
+      .sort({ createdAt: -1 })
+      .populate('orderedItems.product', 'productName productImage')
+      .lean();
+    
+    res.render('user/viewOrders', { 
+      orders: orders,
+      title: 'My Orders'
+    });
+  } catch (error) {
+    console.error('Error loading orders:', error);
+    res.redirect('/pageNotFound');
+  }
+};
+
+// Load Cart
+const loadCart = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.redirect('/login');
+    }
+    
+    const userId = req.session.user._id;
+    const Cart = require('../../models/cartSchema');
+    
+    const cart = await Cart.findOne({ userId })
+      .populate('items.productId', 'productName productImage price')
+      .lean();
+    
+    // Extract cart items for the view
+    const cartItems = cart ? cart.items : [];
+    
+    // Get user data for the view
+    const User = require('../../models/userSchema');
+    const user = await User.findById(userId);
+    
+    res.render('user/cart', { 
+      cart: cart,
+      cartItems: cartItems,
+      user: user,
+      title: 'My Cart'
+    });
+  } catch (error) {
+    console.error('Error loading cart:', error);
+    res.redirect('/pageNotFound');
+  }
+};
+
+// Add to Cart
+const addToCart = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+    
+    const { productId, quantity, size } = req.body;
+    const userId = req.session.user._id;
+    
+    if (!productId || !quantity) {
+      return res.status(400).json({ success: false, error: 'Product ID and quantity are required' });
+    }
+    
+
+    
+    const Cart = require('../../models/cartSchema');
+    const Product = require('../../models/productSchema');
+    
+    // Check if product exists
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, error: 'Product not found' });
+    }
+    
+    // Validate product price
+    const productPrice = product.price || product.regularPrice || 0;
+    if (!productPrice || productPrice <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid product price' });
+    }
+    
+    // Find or create user cart
+    let cart = await Cart.findOne({ userId });
+    if (!cart) {
+      cart = new Cart({ userId, items: [] });
+    }
+    
+    // Check if item already exists in cart
+    const existingItemIndex = cart.items.findIndex(item => 
+      item.productId.toString() === productId && item.size === size
+    );
+    
+    if (existingItemIndex > -1) {
+      // Update existing item
+      const newQuantity = cart.items[existingItemIndex].quantity + parseInt(quantity);
+      cart.items[existingItemIndex].quantity = newQuantity;
+      cart.items[existingItemIndex].totalPrice = productPrice * newQuantity;
+    } else {
+      // Add new item
+      cart.items.push({
+        productId: productId,
+        quantity: parseInt(quantity),
+        size: size,
+        price: productPrice,
+        totalPrice: productPrice * parseInt(quantity)
+      });
+    }
+    
+    await cart.save();
+    
+    res.json({ 
+      success: true, 
+      message: 'Item added to cart',
+      cartCount: cart.items.length
+    });
+    
+  } catch (error) {
+    console.error('Error adding to cart:', error);
+    res.status(500).json({ success: false, error: 'Failed to add item to cart' });
+  }
+};
+
+// Update Cart Quantity
+const updateCartQuantity = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+    
+    const { userId, itemId, quantity } = req.body;
+    const Cart = require('../../models/cartSchema');
+    
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return res.status(404).json({ success: false, error: 'Cart not found' });
+    }
+    
+    // Find item in cart
+    const itemIndex = cart.items.findIndex(item => 
+      item._id.toString() === itemId
+    );
+    
+    if (itemIndex === -1) {
+      return res.status(404).json({ success: false, error: 'Item not found in cart' });
+    }
+    
+    // Update quantity
+    cart.items[itemIndex].quantity = parseInt(quantity);
+    cart.items[itemIndex].totalPrice = cart.items[itemIndex].price * parseInt(quantity);
+    
+    await cart.save();
+    
+    res.json({ 
+      success: true, 
+      message: 'Cart updated successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error updating cart:', error);
+    res.status(500).json({ success: false, error: 'Failed to update cart' });
+  }
+};
+
+// Remove from Cart
+const removeFromCart = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+    
+    const { userId, productId: itemId } = req.body;
+    const Cart = require('../../models/cartSchema');
+    
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return res.status(404).json({ success: false, error: 'Cart not found' });
+    }
+    
+    // Remove item from cart
+    cart.items = cart.items.filter(item => 
+      !(item.productId.toString() === productId && item._id.toString() === itemId)
+    );
+    
+    await cart.save();
+    
+    res.json({ 
+      success: true, 
+      message: 'Item removed from cart',
+      cartCount: cart.items.length
+    });
+    
+  } catch (error) {
+    console.error('Error removing from cart:', error);
+    res.status(500).json({ success: false, error: 'Failed to remove item from cart' });
+  }
+};
+
 module.exports = {
   pageNotFound,
   loadHomepage,
@@ -766,6 +971,11 @@ module.exports = {
   // removeFromWishlist,
   apiProducts,
   handleForgotPage,
+  viewOrders,
+  loadCart,
+  addToCart,
+  updateCartQuantity,
+  removeFromCart,
 }
   
 
