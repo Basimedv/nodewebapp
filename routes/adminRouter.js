@@ -8,6 +8,8 @@ const customercontroller = require('../controllers/admin/customercontroller');
 const categorycontroller = require('../controllers/admin/categorycontroller');
 const categoryOfferController = require('../controllers/admin/categoryOfferController');
 const productcontroller = require('../controllers/admin/productcontroller');
+const ordersController = require('../controllers/admin/ordersController');
+const refundController = require('../controllers/admin/refundController');
 
 // ======================= Middleware =======================
 const { userAuth, adminAuth, ensureAdminGuest, preventBack } = require('../middlewares/auth');
@@ -27,6 +29,23 @@ router.get('/logout', admincontroller.logout);
 router.get('/customers', adminAuth, customercontroller.customerinfo);
 router.put('/customers/:id', adminAuth, customercontroller.userBlock);
 router.get('/customers/filter', adminAuth, customercontroller.filterCustomers);
+
+// ======================= Order Management =======================
+router.get('/orders', adminAuth, ordersController.loadOrders);
+router.get('/orders/:id', adminAuth, ordersController.getOrderDetails);
+router.get('/order-detail/:id', adminAuth, admincontroller.loadOrderDetailPage);
+router.put('/orders/:id/status', adminAuth, ordersController.updateOrderStatus);
+router.put('/orders/:id/out-for-delivery', adminAuth, ordersController.markOutForDelivery);
+router.put('/orders/:id/delivered', adminAuth, ordersController.markAsDelivered);
+router.put('/orders/:id/approve-return', adminAuth, ordersController.approveReturnRequest);
+router.put('/orders/:id/reject-return', adminAuth, ordersController.rejectReturnRequest);
+
+// ======================= Refund Management =======================
+router.post('/refunds/request', adminAuth, refundController.requestRefund);
+router.post('/refunds/cancel', adminAuth, refundController.cancelOrder);
+router.get('/refunds', adminAuth, refundController.loadReturnPage);
+router.patch('/refunds/update', adminAuth, refundController.updateRefundStatus);
+router.patch('/refunds', adminAuth, ordersController.updateRefundStatus);
 
 // ======================= Category Management =======================
 router.get('/categories', adminAuth, categorycontroller.categoryinfo);

@@ -352,22 +352,21 @@
             <table class="table">
                 <thead>
                     <tr>
+                        <th>SL No</th>
                         <th>Order ID</th>
                         <th>Customer</th>
-                        <th>Shipping Address</th>
                         <th>Date</th>
-                        <th>Items</th>
-                        <th>Size</th>
+                        <th>No of Products</th>
                         <th>Amount</th>
-                        <th>Payment</th>
                         <th>Status</th>
-                        <th>Actions</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="ordersTableBody">
                     <% if (orders && orders.length > 0) { %>
-                        <% orders.forEach(order => { %>
+                        <% orders.forEach((order, index) => { %>
                             <tr>
+                                <td><%= (currentPage - 1) * 10 + index + 1 %></td>
                                 <td><span class="order-id"><%= order.orderId %></span></td>
                                 <td>
                                     <% if (order.userId) { %>
@@ -388,61 +387,15 @@
                                         </div>
                                     <% } %>
                                 </td>
-                                <td>
-                                    <% if (order.shippingAddress) { %>
-                                        <div class="shipping-address">
-                                            <div class="address-name"><%= order.shippingAddress.name %></div>
-                                            <div class="address-details">
-                                                <%= order.shippingAddress.addressLine1 %>
-                                                <% if (order.shippingAddress.addressLine2) { %>, <%= order.shippingAddress.addressLine2 %><% } %>
-                                                <% if (order.shippingAddress.landMark || order.shippingAddress.landmark) { %>, <%= order.shippingAddress.landMark || order.shippingAddress.landmark %><% } %>
-                                            </div>
-                                            <div class="address-location">
-                                                <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %>, India - <%= order.shippingAddress.pinCode || order.shippingAddress.pincode %>
-                                            </div>
-                                            <div class="address-phone">
-                                                Phone: <%= order.shippingAddress.phone %>
-                                                <% if (order.shippingAddress.altPhone) { %>
-                                                    | Alt: <%= order.shippingAddress.altPhone %>
-                                                <% } %>
-                                            </div>
-                                            <% if (order.shippingAddress.addressType) { %>
-                                                <div class="address-type">
-                                                    <small class="text-muted">Address Type: <%= order.shippingAddress.addressType %></small>
-                                                </div>
-                                            <% } %>
-                                        </div>
-                                    <% } else { %>
-                                        <span class="text-muted">No address</span>
-                                    <% } %>
-                                </td>
-                                <td><%= new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }) %></td>
+                                <td><%= new Date(order.createdOn).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }) %></td>
                                 <td>
                                     <% if (order.orderedItems && order.orderedItems.length > 0) { %>
-                                        <% order.orderedItems.forEach((item, index) => { %>
-                                            <% if (index > 0) { %><br><% } %>
-                                            <%= item.quantity %>x <%= item.productName %>
-                                        <% }) %>
+                                        <%= order.orderedItems.reduce((total, item) => total + item.quantity, 0) %>
                                     <% } else { %>
-                                        No items
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <% if (order.orderedItems && order.orderedItems.length > 0) { %>
-                                        <% order.orderedItems.forEach((item, index) => { %>
-                                            <% if (index > 0) { %><br><% } %>
-                                            <% if (item.variant) { %>
-                                                <%= Object.keys(item.variant).map(key => item.variant[key]).filter(val => val).join(', ') || 'N/A' %>
-                                            <% } else { %>
-                                                N/A
-                                            <% } %>
-                                        <% }) %>
-                                    <% } else { %>
-                                        N/A
+                                        0
                                     <% } %>
                                 </td>
                                 <td><span class="amount">₹<%= order.finalAmount.toLocaleString() %></span></td>
-                                <td><%= order.paymentMethod === 'COD' ? 'Cash on Delivery' : order.paymentMethod %></td>
                                 <td>
                                     <span class="status-badge status-<%= order.status.toLowerCase() %>">
                                         <%= order.status %>
@@ -453,6 +406,21 @@
                                         <a href="#" onclick="viewOrder('<%= order._id %>')" title="View">
                                             <i class="bi bi-eye"></i>
                                         </a>
+                                        
+                                        <% if (order.status === 'Shipped') { %>
+                                            <button class="btn btn-sm btn-success" onclick="markOutForDelivery('<%= order._id %>')" title="Mark as Out for Delivery">
+                                                <i class="bi bi-truck"></i>
+                                                Out for Delivery
+                                            </button>
+                                        <% } %>
+                                        
+                                        <% if (order.status === 'Out for Delivery') { %>
+                                            <button class="btn btn-sm btn-primary" onclick="markAsDelivered('<%= order._id %>')" title="Mark as Delivered">
+                                                <i class="bi bi-check-circle"></i>
+                                                Delivered
+                                            </button>
+                                        <% } %>
+                                      
                                     </div>
                                 </td>
                             </tr>
@@ -470,8 +438,7 @@
                     <% } %>
                 </tbody>
             </table>
-
-            <!-- Pagination -->
+        </div>     <!-- Pagination -->
             <% if (totalPages > 1) { %>
                 <nav aria-label="Page navigation" class="d-flex justify-content-center mt-4">
                     <ul class="pagination">
@@ -541,7 +508,7 @@
 
         function viewOrder(orderId) {
             // Redirect to order details page
-            window.location.href = `/admin/orders/${orderId}`;
+            window.location.href = `/admin/order-detail/${orderId}`;
         }
 
         function updateOrderStatus(orderId, currentStatus) {
@@ -600,6 +567,102 @@
 
         function resetFilters() {
             window.location.href = '/admin/orders';
+        }
+
+        function markOutForDelivery(orderId) {
+            Swal.fire({
+                title: 'Mark as Out for Delivery',
+                text: 'Are you sure you want to mark this order as Out for Delivery?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Mark Out for Delivery',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/orders/${orderId}/out-for-delivery`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Order marked as Out for Delivery',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.error || 'Failed to update order status',
+                                icon: 'error'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error marking order as Out for Delivery:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Failed to update order status',
+                            icon: 'error'
+                        });
+                    });
+                }
+            });
+        }
+
+        function markAsDelivered(orderId) {
+            Swal.fire({
+                title: 'Mark as Delivered',
+                text: 'Are you sure you want to mark this order as Delivered?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Mark as Delivered',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/orders/${orderId}/delivered`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Order marked as Delivered',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.error || 'Failed to update order status',
+                                icon: 'error'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error marking order as Delivered:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Failed to update order status',
+                            icon: 'error'
+                        });
+                    });
+                }
+            });
         }
     </script>
 </body>

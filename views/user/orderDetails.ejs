@@ -128,14 +128,59 @@
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
-            display: flex;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.2s;
         }
         
-        .btn-return:hover {
-            background: #218838;
+        .btn-cancel {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-return {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-cancel {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .btn-invoice {
@@ -151,6 +196,14 @@
             align-items: center;
             gap: 8px;
             transition: all 0.2s;
+        }
+        
+        .btn-return:hover {
+            background: #218838;
+        }
+        
+        .btn-cancel:hover {
+            background: #c82333;
         }
         
         .btn-invoice:hover {
@@ -339,23 +392,36 @@
                             <h2 class="order-id">Order #<%= order.orderId %></h2>
                             <p class="order-date"><%= new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
                         </div>
-                        <div class="order-status-actions">
-                            <span class="status-badge status-<%= order.status.toLowerCase() %>">
-                                <%= order.status %>
-                            </span>
-                            <% if (returnRequest && returnRequest.status) { %>
-                                <span class="status-badge status-<%= returnRequest.status.toLowerCase() %>">
-                                    <%= returnRequest.status %>
-                                </span>
-                            <% } else if (order.status === 'Delivered') { %>
-                                <button class="btn-return" onclick="returnOrder('<%= order._id %>')">
-                                    <i class="fas fa-undo"></i> Return
-                                </button>
-                            <% } %>
-                            <button class="btn-invoice" onclick="downloadInvoice('<%= order._id %>')">
-                                <i class="fas fa-download"></i> Invoice
-                            </button>
-                        </div>
+                      <div class="order-status-actions">
+    <% if (returnRequest && returnRequest.status === 'Approved') { %>
+        <span class="status-badge status-approved">
+            Refund Approved
+        </span>
+    <% } else { %>
+        <span class="status-badge status-<%= order.status.toLowerCase().replace(' ', '-') %>">
+            <%= order.status %>
+        </span>
+    <% } %>
+    <% if (returnRequest) { %>
+        <span class="status-badge status-<%= returnRequest.status.toLowerCase() %>">
+            Return: <%= returnRequest.status %>
+        </span>
+    <% } %>
+    
+    <% if (order.status === 'Delivered' && !returnRequest) { %>
+      <button class="btn-return" onclick="returnOrder('<%= order.orderId %>')">
+    <i class="fas fa-undo"></i> Return
+</button>
+    <% } else if (order.status !== 'Cancelled' && order.status !== 'Delivered' && order.status !== 'Return Request' && order.status !== 'Returned') { %>
+        <button class="btn-cancel" onclick="cancelOrder('<%= order.orderId %>')">
+            <i class="fas fa-times"></i> Cancel Order
+        </button>
+    <% } %>
+    
+    <button class="btn-invoice" onclick="downloadInvoice('<%= order._id %>')">
+        <i class="fas fa-download"></i> Invoice
+    </button>
+</div>
                     </div>
                     
                     <!-- Order Items -->
@@ -363,11 +429,30 @@
                     <% if (order.orderedItems && order.orderedItems.length > 0) { %>
                         <% order.orderedItems.forEach(function(item) { %>
                             <div class="order-item">
-                                <% if (item.productImage && item.productImage.length > 0) { %>
-                                    <img src="<%= item.productImage[0] %>" 
-                                         alt="<%= item.productName %>" 
+                                <% 
+                                    // Get product image from multiple sources - comprehensive logic
+                                    let productImage = null;
+                                    if (item.productImage && Array.isArray(item.productImage) && item.productImage.length > 0) {
+                                        productImage = item.productImage[0];
+                                    } else if (item.product && item.product.productImage && Array.isArray(item.product.productImage) && item.product.productImage.length > 0) {
+                                        productImage = item.product.productImage[0];
+                                    } else if (item.product && item.product.productImage) {
+                                        productImage = item.product.productImage;
+                                    } else if (item.productImage) {
+                                        productImage = item.productImage;
+                                    }
+                                    
+                                    // Get product name from multiple sources - comprehensive logic
+                                    let productName = item.productName;
+                                    if (item.product && item.product.product && item.product.product.name) {
+                                        productName = item.product.product.name.trim();
+                                    }
+                                %>
+                                <% if (productImage) { %>
+                                    <img src="<%= productImage %>" 
+                                         alt="<%= productName %>" 
                                          class="item-image"
-                                         onerror="this.src='/images/placeholder.png';">
+                                         onerror="this.src='/images/background.jpg';">
                                 <% } else { %>
                                     <div class="item-image"></div>
                                 <% } %>
@@ -388,6 +473,49 @@
                         <div style="text-align: center; padding: 40px; color: #999;">
                             <i class="fas fa-box-open" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i>
                             <p>No items found in this order</p>
+                        </div>
+                    <% } %>
+                    
+                    <!-- Shipping Address Section -->
+                    <% if (address) { %>
+                        <div class="address-card">
+                            <h3 class="section-title">Shipping Address</h3>
+                            <div class="address-content">
+                                <% if (address.name) { %>
+                                    <div class="address-name"><%= address.name %> | <%= address.phone || 'No phone' %></div>
+                                <% } %>
+                                <p style="margin: 0;">
+                                    <% if (address.addressLine1) { %>
+                                        <%= address.addressLine1 %>
+                                        <% if (address.addressLine2) { %>, <%= address.addressLine2 %><% } %>
+                                        <% if (address.landMark || address.landmark) { %><br><%= address.landMark || address.landmark %><% } %>
+                                        <br><%= address.city || 'No city' %>, <%= address.state || 'No state' %>, India - <%= address.pinCode || address.pincode || 'No pincode' %>
+                                    <% } else if (address.address) { %>
+                                        <%= address.address %>
+                                        <br><%= address.city || 'No city' %>, <%= address.state || 'No state' %>, India - <%= address.pinCode || address.pincode || 'No pincode' %>
+                                    <% } else if (address.fullAddress) { %>
+                                        <%= address.fullAddress %>
+                                    <% } else if (address.street) { %>
+                                        <%= address.street %>
+                                        <br><%= address.city || 'No city' %>, <%= address.state || 'No state' %>, India - <%= address.pinCode || address.pincode || 'No pincode' %>
+                                    <% } else { %>
+                                        <% if (address.landMark) { %>
+                                            <%= address.landMark %><br>
+                                        <% } %>
+                                        <%= address.city || 'No city' %>, <%= address.state || 'No state' %>, India - <%= address.pinCode || address.pincode || 'No pincode' %>
+                                        <% if (address.altPhone && address.altPhone !== address.phone) { %>
+                                            <br><small>Alt Phone: <%= address.altPhone %></small>
+                                        <% } %>
+                                    <% } %>
+                                </p>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <div class="address-card" style="opacity: 0.7;">
+                            <h3 class="section-title">Shipping Address</h3>
+                            <div class="address-content">
+                                <p style="margin: 0; color: #666;">No shipping address available</p>
+                            </div>
                         </div>
                     <% } %>
                     
@@ -436,22 +564,6 @@
                     </div>
                 </div>
                 
-                <!-- Shipping Address -->
-                <% if (address) { %>
-                    <div class="address-card">
-                        <h3 class="address-title">Shipping Address</h3>
-                        <div class="address-content">
-                            <div class="address-name"><%= address.name %> | <%= address.phone %></div>
-                            <p style="margin: 0;">
-                                <%= address.addressLine1 %>
-                                <% if (address.addressLine2) { %>, <%= address.addressLine2 %><% } %>
-                                <% if (address.landMark || address.landmark) { %><br><%= address.landMark || address.landmark %><% } %>
-                                <br><%= address.city %>, <%= address.state %>, India - <%= address.pinCode || address.pincode %>
-                            </p>
-                        </div>
-                    </div>
-                <% } %>
-                
                 <!-- Back Button -->
                 <a href="/user/orders" class="btn-back">
                     <i class="fas fa-arrow-left"></i>
@@ -473,96 +585,198 @@
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function returnOrder(orderId) {
+   function returnOrder(orderMongoId) {
+    console.log('🔄 Starting return request');
+    console.log('📦 Order MongoDB ID:', orderMongoId);
+    
+    // Get the orderId (UUID) from the page
+    const orderIdElement = document.querySelector('.order-id');
+    const orderIdText = orderIdElement.textContent.replace('Order #', '').trim();
+    
+    console.log('🔑 Order UUID:', orderIdText);
+    
+    Swal.fire({
+        title: 'Return Product Request',
+        html: `
+            <div style="text-align: left; font-family: 'Outfit', sans-serif;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #192430; font-size: 14px; text-align: left;">Order ID:</label>
+                    <input type="text" value="${orderIdText}" readonly style="width: 100%; padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #f8f9fa; color: #495057; font-size: 14px; font-family: 'Outfit', sans-serif;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #192430; font-size: 14px; text-align: left;">Return Reason:</label>
+                    <select id="returnReason" style="width: 100%; padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #ffffff; color: #495057; font-size: 14px; font-family: 'Outfit', sans-serif; cursor: pointer;">
+                        <option value="">-- Select return reason --</option>
+                        <option value="Wrong product">Wrong product</option>
+                        <option value="Damaged product">Damaged product</option>
+                        <option value="Not as described">Not as described</option>
+                        <option value="Size issue">Size issue</option>
+                        <option value="Quality issue">Quality issue</option>
+                        <option value="Changed mind">Changed mind</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonColor: '#2563eb',
+        confirmButtonText: 'Submit Return',
+        cancelButtonColor: '#6c757d',
+        cancelButtonText: 'Cancel',
+        preConfirm: () => {
+            const reason = document.getElementById('returnReason').value;
+            
+            if (!reason) {
+                Swal.showValidationMessage('Please select a return reason');
+                return false;
+            }
+            
+            return { reason };
+        }
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
             Swal.fire({
-                title: 'Return Product Request',
-                html: `
-                    <div style="text-align: left;">
-                        <div style="margin-bottom: 15px;">
-                            <strong>Order ID:</strong> ${orderId}
-                        </div>
-                        <div style="margin-bottom: 15px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Return Reason:</label>
-                            <select id="returnReason" class="swal2-select" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                <option value="">Select a reason...</option>
-                                <option value="Wrong product">Wrong product</option>
-                                <option value="Damaged product">Damaged product</option>
-                                <option value="Not as described">Not as described</option>
-                                <option value="Size issue">Size issue</option>
-                                <option value="Quality issue">Quality issue</option>
-                                <option value="Changed mind">Changed mind</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        <div style="margin-bottom: 15px;">
-                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Upload Images:</label>
-                            <input type="file" id="returnImages" multiple accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                            <small style="color: #666;">Upload images to support your return request</small>
-                        </div>
-                    </div>
-                `,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Submit Return',
-                cancelButtonText: 'Cancel',
-                preConfirm: () => {
-                    const reason = document.getElementById('returnReason').value;
-                    const images = document.getElementById('returnImages').files;
-                    
-                    if (!reason) {
-                        Swal.showValidationMessage('Please select a return reason');
-                        return false;
-                    }
-                    
-                    return { reason, images };
-                }
-            }).then((result) => {
-                if (result.isConfirmed && result.value) {
+                title: 'Processing...',
+                text: 'Please wait while we process your return request.',
+                icon: 'info',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            // Use the same URL pattern as cancel order: /user/orders/:orderId/return
+            const url = `/user/orders/${orderIdText}/return`;
+            console.log('📤 Sending POST to:', url);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    reason: result.value.reason
+                })
+            })
+            .then(response => {
+                console.log('📥 Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('📋 Response data:', data);
+                
+                if (data.success) {
                     Swal.fire({
-                        title: 'Processing...',
-                        text: 'Please wait while we process your return request.',
-                        icon: 'info',
-                        allowOutsideClick: false,
-                        showConfirmButton: false,
-                        didOpen: () => Swal.showLoading()
+                        title: 'Return Request Submitted!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonColor: '#28a745'
+                    }).then(() => {
+                        window.location.reload();
                     });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Failed to submit return request',
+                        icon: 'error',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to submit return request. Please try again.',
+                    icon: 'error',
+                    confirmButtonColor: '#dc3545'
+                });
+            });
+        }
+    });
+}
+        // Add custom styles for return modal
+        const style = document.createElement('style');
+        style.textContent = `
+            .return-modal .swal2-html-container {
+                background: #f8f9fa !important;
+                padding: 0 !important;
+            }
+            
+            .return-modal .swal2-select {
+                width: 100% !important;
+                padding: 12px 16px !important;
+                border: 1px solid #e0e0e0 !important;
+                border-radius: 8px !important;
+                background-color: #ffffff !important;
+                color: #495057 !important;
+                font-size: 14px !important;
+                font-family: 'Outfit', sans-serif !important;
+                cursor: pointer !important;
+            }
+            
+            .return-modal input[readonly] {
+                background-color: #f8f9fa !important;
+                color: #495057 !important;
+                border: 1px solid #e0e0e0 !important;
+                font-size: 14px !important;
+                font-family: 'Outfit', sans-serif !important;
+            }
+            
+            .return-modal label {
+                color: #192430 !important;
+                font-weight: 600 !important;
+                font-size: 14px !important;
+                font-family: 'Outfit', sans-serif !important;
+                display: block !important;
+                margin-bottom: 8px !important;
+            }
+        `;
+        
+        document.head.appendChild(style);
 
-                    const formData = new FormData();
-                    formData.append('orderId', orderId);
-                    formData.append('reason', result.value.reason);
-                    
-                    for (let i = 0; i < result.value.images.length; i++) {
-                        formData.append('returnImages', result.value.images[i]);
-                    }
-
-                    fetch('/user/order/return', {
+        function cancelOrder(orderId) {
+            Swal.fire({
+                title: 'Cancel Order',
+                text: 'Are you sure you want to cancel this order? This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Cancel Order',
+                cancelButtonText: 'No, Keep Order'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/user/orders/${orderId}/cancel`, {
                         method: 'POST',
-                        body: formData
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
                             Swal.fire({
-                                title: 'Return Request Submitted!',
+                                title: 'Order Cancelled!',
                                 text: data.message,
                                 icon: 'success',
                                 confirmButtonColor: '#28a745'
-                            }).then(() => window.location.reload());
+                            }).then(() => {
+                                window.location.reload();
+                            });
                         } else {
                             Swal.fire({
                                 title: 'Error',
-                                text: data.error || 'Failed to submit return request',
+                                text: data.message || 'Failed to cancel order',
                                 icon: 'error',
                                 confirmButtonColor: '#dc3545'
                             });
                         }
                     })
                     .catch(error => {
+                        console.error('Error cancelling order:', error);
                         Swal.fire({
                             title: 'Error',
-                            text: 'Failed to submit return request. Please try again.',
+                            text: 'Failed to cancel order. Please try again.',
                             icon: 'error',
                             confirmButtonColor: '#dc3545'
                         });
@@ -570,7 +784,7 @@
                 }
             });
         }
-        
+
         function downloadInvoice(orderId) {
             Swal.fire({
                 title: 'Generating Invoice...',

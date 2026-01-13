@@ -24,12 +24,11 @@
         }
 
         body {
-       
-          background-size: contain; /* fits entire image, may leave empty space */
-background-repeat: no-repeat;
-background-position: center;
-            /* makes image cover full screen */
-  
+            background-image: url('/images/background.jpg');
+            background-size: 100% auto; /* reduced zoom - fits width, maintains aspect ratio */
+            background-repeat: no-repeat;
+            background-position: center;
+            background-attachment: fixed; /* keeps image fixed during scroll */
         }
 
 
@@ -201,6 +200,43 @@ background-position: center;
             margin-bottom: 0.5rem;
             color: #2c3e50;
             line-height: 1.3;
+        }
+
+        .cart-item-title h5 {
+            margin: 0;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .cart-item-meta {
+            font-size: 0.85rem;
+            color: #6c757d;
+            padding: 0.25rem 0;
+            border-top: 1px solid #f8f9fa;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .price-info {
+            background: #f8f9fa;
+            padding: 0.75rem;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .price-row small {
+            font-weight: 500;
+            min-width: 100px;
         }
 
         .cart-item-price {
@@ -646,65 +682,68 @@ background-position: center;
 
                                 <div class="cart-item" data-item-id="<%= item.productId._id %>">
                                     <div class="d-flex">
-                                        <img src="<%= item.images?.[0] %>"
-                                            alt="<%= item.name %>" class="cart-item-image">
+                                        <img src="<%= item.productId.productImage && item.productId.productImage.length > 0 ? item.productId.productImage[0] : '/images/default-product.jpg' %>"
+                                            alt="<%= item.productId.productName %>" class="cart-item-image">
 
                                         <div class="cart-item-details">
                                             <div class="cart-item-title">
-                                                <%= item.name %>
+                                                <h5><%= item.productId.productName %></h5>
                                             </div>
 
                                             <!-- SIZE DISPLAY -->
                                             <div class="cart-item-size mb-2">
-                                                <span class="badge bg-secondary">
-                                                    <i class="fas fa-ruler-combined me-1"></i>Size: <%= item.size || 'M'
-                                                        %>
+                                                <span class="badge bg-primary">
+                                                    <i class="fas fa-ruler-combined me-1"></i>Size: <%= item.size || 'M' %>
                                                 </span>
-                                                <% if (item.productId.stock && item.productId.stock[item.size || 'M' ])
-                                                    { %>
-                                                    <span class="text-muted ms-2" style="font-size: 0.85rem;">
-                                                        <i class="fas fa-box me-1"></i>Stock: <%=
-                                                            item.productId.stock[item.size || 'M' ] %> available
+                                                <% if (item.productId.stock && item.productId.stock[item.size || 'M']) { %>
+                                                    <span class="badge bg-success ms-2">
+                                                        <i class="fas fa-check-circle me-1"></i>In Stock: <%= item.productId.stock[item.size || 'M'] %> available
                                                     </span>
-                                                    <% } %>
+                                                <% } else { %>
+                                                    <span class="badge bg-danger ms-2">
+                                                        <i class="fas fa-times-circle me-1"></i>Out of Stock
+                                                    </span>
+                                                <% } %>
                                             </div>
 
-                                            <div class="cart-item-price">
-                                                <% const regularPrice=item.regularPrice || item.price || 0; %>
-                                                    <% const salePrice=item.sale || 0; %>
-                                                        <% const offerPercent=item.offerPercent || 0; %>
-                                                            <% let finalPrice=regularPrice; %>
+                                         
 
-                                                                <% if (salePrice> 0 && salePrice < regularPrice) { %>
-                                                                        <span class="cart-item-original-price">₹<%=
-                                                                                regularPrice.toLocaleString('en-IN') %>
-                                                                                </span>
-                                                                        <span class="text-success fw-semibold">₹<%=
-                                                                                salePrice.toLocaleString('en-IN') %>
-                                                                                </span>
-                                                                        <% finalPrice=salePrice; %>
-                                                                            <% } else if (offerPercent> 0) { %>
-                                                                                <% const
-                                                                                    discountedPrice=Math.round(regularPrice
-                                                                                    - (regularPrice * offerPercent /
-                                                                                    100)); %>
-                                                                                    <span
-                                                                                        class="cart-item-original-price">₹
-                                                                                        <%= regularPrice.toLocaleString('en-IN')
-                                                                                            %></span>
-                                                                                    <span
-                                                                                        class="text-success fw-semibold">₹
-                                                                                        <%= discountedPrice.toLocaleString('en-IN')
-                                                                                            %></span>
-                                                                                    <span class="badge bg-success ms-1">
-                                                                                        <%= offerPercent %>% OFF
-                                                                                    </span>
-                                                                                    <% finalPrice=discountedPrice; %>
-                                                                                        <% } else { %>
-                                                                                            <span class="fw-semibold">₹
-                                                                                                <%= regularPrice.toLocaleString('en-IN')
-                                                                                                    %></span>
-                                                                                            <% } %>
+                                            <div class="cart-item-price">
+                                                <div class="price-info mb-2">
+                                                    <% const regularPrice=item.productId.regularPrice || 0; %>
+                                                    <% const salePrice=item.productId.salePrice || 0; %>
+                                                    <% const offerPercent=item.productId.productOffer || 0; %>
+                                                    <% let finalPrice=regularPrice; %>
+
+                                                    <% if (salePrice> 0 && salePrice < regularPrice) { %>
+                                                        <div class="price-row">
+                                                            <small class="text-muted">Regular Price:</small>
+                                                            <span class="cart-item-original-price">₹<%= regularPrice.toLocaleString('en-IN') %></span>
+                                                        </div>
+                                                        <div class="price-row">
+                                                            <small class="text-muted">Sale Price:</small>
+                                                            <span class="text-success fw-semibold">₹<%= salePrice.toLocaleString('en-IN') %></span>
+                                                        </div>
+                                                        <% finalPrice=salePrice; %>
+                                                    <% } else if (offerPercent> 0) { %>
+                                                        <% const discountedPrice=Math.round(regularPrice - (regularPrice * offerPercent / 100)); %>
+                                                        <div class="price-row">
+                                                            <small class="text-muted">Regular Price:</small>
+                                                            <span class="cart-item-original-price">₹<%= regularPrice.toLocaleString('en-IN') %></span>
+                                                        </div>
+                                                        <div class="price-row">
+                                                            <small class="text-muted">Offer Price:</small>
+                                                            <span class="text-success fw-semibold">₹<%= discountedPrice.toLocaleString('en-IN') %></span>
+                                                            <span class="badge bg-success ms-1"><%= offerPercent %>% OFF</span>
+                                                        </div>
+                                                        <% finalPrice=discountedPrice; %>
+                                                    <% } else { %>
+                                                        <div class="price-row">
+                                                            <small class="text-muted">Price:</small>
+                                                            <span class="fw-semibold">₹<%= regularPrice.toLocaleString('en-IN') %></span>
+                                                        </div>
+                                                    <% } %>
+                                                </div>
                                             </div>
 
                                             <!-- ITEM TOTAL PRICE -->
@@ -747,9 +786,9 @@ background-position: center;
                                 <div class="summary-row">
                                     <span>Subtotal (<%= cartItems.length %> items)</span>
                                     <span>₹<%= cartItems.reduce((total, item)=> {
-                                            const regularPrice = item.regularPrice || item.price || 0;
-                                            const salePrice = item.sale || 0;
-                                            const offerPercent = item.offerPercent || 0;
+                                            const regularPrice = item.productId.regularPrice || 0;
+                                            const salePrice = item.productId.salePrice || 0;
+                                            const offerPercent = item.productId.productOffer || 0;
                                             const itemPrice = salePrice > 0 && salePrice < regularPrice ? salePrice :
                                                 offerPercent> 0 ? Math.round(regularPrice - (regularPrice * offerPercent
                                                 / 100)) :
@@ -766,9 +805,9 @@ background-position: center;
                                 <div class="summary-row summary-total">
                                     <span><strong>Total Amount</strong></span>
                                     <span><strong>₹<%= cartItems.reduce((total, item)=> {
-                                                const regularPrice = item.regularPrice || item.price || 0;
-                                                const salePrice = item.sale || 0;
-                                                const offerPercent = item.offerPercent || 0;
+                                                const regularPrice = item.productId.regularPrice || 0;
+                                                const salePrice = item.productId.salePrice || 0;
+                                                const offerPercent = item.productId.productOffer || 0;
                                                 const itemPrice = salePrice > 0 && salePrice < regularPrice ? salePrice
                                                     : offerPercent> 0 ? Math.round(regularPrice - (regularPrice *
                                                     offerPercent / 100)) :

@@ -275,7 +275,7 @@ async function getProductDetails(req, res) {
 
     const product = {
       ...p,
-      name: p.productNmae ?? p.name,
+      name: p.productName ?? p.name,
       images: Array.isArray(p.productImage) && p.productImage.length ? p.productImage : (Array.isArray(p.images) ? p.images : []),
       price: regular,
       sale,
@@ -757,18 +757,46 @@ const viewOrders = async (req, res) => {
     const userId = req.session.user._id;
     const Order = require('../../models/orderSchema');
     
+    console.log('🔍 Fetching orders for user:', userId);
+    
     const orders = await Order.find({ userId })
-      .sort({ createdAt: -1 })
-      .populate('orderedItems.product', 'productName productImage')
+      .sort({ createdOn: -1 })
+      .populate('orderedItems.product', 'productName name productImage regularPrice salePrice')
       .lean();
+    
+    console.log('📦 Found orders:', orders.length);
+    console.log('📦 Orders data:', JSON.stringify(orders, null, 2));
+    
+    // Debug: Log order details
+    orders.forEach((order, index) => {
+      console.log(`📋 Order ${index + 1}:`, {
+        orderId: order.orderId,
+        status: order.status,
+        itemsCount: order.orderedItems ? order.orderedItems.length : 0,
+        finalAmount: order.finalAmount
+      });
+      
+      if (order.orderedItems) {
+        order.orderedItems.forEach((item, itemIndex) => {
+          console.log(`  🛍️ Item ${itemIndex + 1}:`, {
+            productName: item.productName,
+            hasProduct: !!item.product,
+            productImage: item.productImage || (item.product ? item.product.productImage : null),
+            quantity: item.quantity,
+            price: item.price
+          });
+        });
+      }
+    });
     
     res.render('user/viewOrders', { 
       orders: orders,
+      user: req.session.user,
       title: 'My Orders'
     });
   } catch (error) {
-    console.error('Error loading orders:', error);
-    res.redirect('/pageNotFound');
+    console.error('❌ Error fetching orders:', error);
+    res.status(500).render('user/page-404');
   }
 };
 
@@ -783,7 +811,7 @@ const loadCart = async (req, res) => {
     const Cart = require('../../models/cartSchema');
     
     const cart = await Cart.findOne({ userId })
-      .populate('items.productId', 'productName productImage price')
+      .populate('items.productId', 'productName productImage regularPrice salePrice productOffer stock')
       .lean();
     
     // Extract cart items for the view
@@ -952,6 +980,370 @@ const removeFromCart = async (req, res) => {
   }
 };
 
+// GET order details
+const getOrderDetails = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      console.log('❌ No user session, redirecting to login');
+      return res.redirect('/login');
+    }
+    
+    const { id } = req.params;
+    const userId = req.session.user._id;
+    const Order = require('../../models/orderSchema');
+    const Address = require('../../models/addressSchema');
+    
+    console.log('🔍 Fetching order details for ID:', id, 'User:', userId);
+    
+    // Check if ID is valid
+    if (!id || id === 'undefined' || id === 'null') {
+      console.log('❌ Invalid order ID:', id);
+      return res.redirect('/pageNotFound');
+    }
+    
+    // Find the order
+    let order = null;
+    try {
+      order = await Order.findOne({ _id: id, userId: userId })
+        .populate('orderedItems.product', 'productName productImage regularPrice salePrice productOffer')
+        .lean();
+    } catch (dbError) {
+      console.error('❌ Database error finding order:', dbError);
+      return res.redirect('/pageNotFound');
+    }
+
+    if (!order) {
+      console.log('❌ Order not found for user:', userId, 'Order ID:', id);
+      return res.redirect('/pageNotFound');
+    }
+
+    console.log('✅ Order found:', order.orderId, 'Status:', order.status);
+
+    // Get shipping address
+    let shippingAddress = null;
+    if (order.address) {
+      console.log('📍 Address field:', order.address);
+      
+      if (order.address.includes('_')) {
+        const [docId, addressIndex] = order.address.split('_');
+        console.log('🔑 Looking up address - docId:', docId, 'index:', addressIndex);
+        
+        const addressDoc = await Address.findOne({ userId: userId });
+        
+        if (addressDoc && addressDoc.address && addressDoc.address.length > parseInt(addressIndex)) {
+          shippingAddress = addressDoc.address[parseInt(addressIndex)];
+          console.log('✅ Shipping address found:', shippingAddress);
+        } else {
+          console.log('⚠️ Address not found in address document');
+        }
+      } else {
+        console.log('🔑 Looking up address by ID:', order.address);
+        const addressDoc = await Address.findById(order.address);
+        if (addressDoc) {
+          shippingAddress = addressDoc;
+          console.log('✅ Shipping address found by ID:', shippingAddress);
+        }
+      }
+    } else {
+      console.log('⚠️ No address field in order');
+    }
+
+    // Also check if shippingAddress exists directly on the order
+    if (!shippingAddress && order.shippingAddress) {
+      console.log('✅ Using shippingAddress from order object');
+      shippingAddress = order.shippingAddress;
+    }
+
+    // ✅ Fetch return request if order has Return Request status
+    let returnRequest = null;
+    if (order.status === 'Return Request' || order.returnRequest) {
+      console.log('🔍 Fetching return request for order');
+      try {
+        const Refund = require('../../models/refundSchema');
+        
+        returnRequest = await Refund.findOne({ 
+          order: order._id
+        })
+        .populate('product', 'productName productImage')
+        .populate('userId', 'fullName email')
+        .sort({ createdAt: -1 })
+        .lean();
+        
+        if (returnRequest) {
+          console.log('✅ Return request found:', {
+            id: returnRequest._id,
+            reason: returnRequest.reason,
+            status: returnRequest.status,
+            productName: returnRequest.product?.productName,
+            customerName: returnRequest.userId?.fullName
+          });
+        } else {
+          console.log('⚠️ No return request found for order:', order._id);
+        }
+      } catch (returnError) {
+        console.error('❌ Error fetching return request:', returnError);
+      }
+    }
+
+    console.log('📤 Rendering order details page');
+    console.log('🔍 returnRequest value:', returnRequest);
+    console.log('🔍 returnRequest type:', typeof returnRequest);
+
+    // Ensure returnRequest is defined
+    const returnRequestData = returnRequest || null;
+
+    res.render('user/orderDetails', { 
+      title: 'Order Details',
+      user: req.session.user,
+      order: {
+        ...order,
+        orderedItems: order.orderedItems.map(item => ({
+          ...item,
+          product: item.productId || item.product
+        }))
+      },
+      address: shippingAddress,  // ✅ Pass as 'address' to match template
+      returnRequest: returnRequestData
+    });
+    
+  } catch (error) {
+    console.error('❌ Error getting order details:', error);
+    console.error('❌ Error stack:', error.stack);
+    res.status(500).render('user/page-404');
+  }
+};
+// Cancel Order
+const cancelOrder = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Please login to continue' 
+      });
+    }
+
+    const { orderId } = req.params;
+    const userId = req.session.user._id;
+    const Order = require('../../models/orderSchema');
+    const Wallet = require('../../models/walletSchema');
+
+    // Find the order and populate product data
+    const order = await Order.findOne({ orderId, userId })
+      .populate('orderedItems.product', 'productName');
+    
+    if (!order) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Order not found' 
+      });
+    }
+
+    // Check if order can be cancelled (not delivered)
+    if (order.status === 'Delivered') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Delivered orders cannot be cancelled. Please request a return instead.' 
+      });
+    }
+
+    if (order.status === 'Cancelled') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Order is already cancelled' 
+      });
+    }
+
+    // Update order status
+    order.status = 'Cancelled';
+    
+    // Ensure productName is set from populated product data
+    order.orderedItems.forEach(item => {
+      if (!item.productName && item.product && item.product.productName) {
+        item.productName = item.product.productName;
+      }
+    });
+    
+    await order.save();
+
+    // Restore stock for cancelled items
+    const Product = require('../../models/productSchema');
+    for (const item of order.orderedItems) {
+      const product = await Product.findById(item.product);
+      if (product) {
+        const sizeKey = item.size || 'M';
+        const currentStock = product.stock[sizeKey] || 0;
+        product.stock[sizeKey] = currentStock + item.quantity;
+        await product.save();
+        
+        console.log(`🔄 Stock restored for ${product.productName} size ${sizeKey}: ${currentStock} → ${product.stock[sizeKey]}`);
+      }
+    }
+
+    // Process refund for online payments
+    if (order.paymentMethod !== 'Cash on Delivery') {
+      // Create a new wallet transaction for the refund
+      const refundTransaction = await Wallet.create({
+        userId: userId,
+        transactionId: `refund_${order.orderId}_${Date.now()}`,
+        payment_type: 'refund',
+        amount: order.finalAmount,
+        status: 'completed',
+        entryType: 'CREDIT',
+        type: 'refund',
+        description: `Refund for cancelled order ${order.orderId}`
+      });
+      
+      console.log(`💰 Refund transaction created: ${refundTransaction.transactionId} for ₹${order.finalAmount}`);
+    }
+
+    console.log(`❌ Order ${order.orderId} cancelled successfully`);
+
+    res.json({ 
+      success: true, 
+      message: order.paymentMethod !== 'Cash on Delivery' 
+        ? 'Order cancelled successfully. Refund has been added to your wallet.' 
+        : 'Order cancelled successfully.',
+      refundAmount: order.paymentMethod !== 'Cash on Delivery' ? order.finalAmount : 0
+    });
+
+  } catch (error) {
+    console.error('❌ Cancel order error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to cancel order. Please try again.' 
+    });
+  }
+};
+// Return Order
+const returnOrder = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Please login to continue' 
+      });
+    }
+
+    // Get orderId from URL params (just like cancelOrder does)
+    const { orderId } = req.params;
+    const { reason } = req.body;
+    const userId = req.session.user._id;
+    
+    console.log('🔄 Processing return request for order:', orderId);
+    console.log('📝 Return reason:', reason);
+    console.log('👤 User ID:', userId);
+    
+    const Order = require('../../models/orderSchema');
+    const Refund = require('../../models/refundSchema');
+
+    // Find order by orderId (the UUID string like "ae8c73...")
+    const order = await Order.findOne({ orderId: orderId, userId: userId })
+      .populate('orderedItems.product');
+    
+    if (!order) {
+      console.log('❌ Order not found');
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Order not found' 
+      });
+    }
+
+    console.log('✅ Order found, MongoDB _id:', order._id, 'Status:', order.status);
+
+    // Check if order is delivered
+    if (order.status !== 'Delivered') {
+      console.log('❌ Order not delivered yet, status:', order.status);
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Only delivered orders can be returned' 
+      });
+    }
+
+    // Check for existing return request
+    const existingReturn = await Refund.findOne({ 
+      order: order._id,
+      userId: userId,
+      status: { $in: ['Requested', 'Approved', 'Rejected'] }
+    });
+
+    if (existingReturn) {
+      console.log('⚠️ Return request already exists');
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Return request already exists for this order' 
+      });
+    }
+
+    // Get the first product from the order
+    const firstProduct = order.orderedItems[0].product;
+    
+    if (!firstProduct) {
+      console.log('❌ No product found in order');
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No product found in order' 
+      });
+    }
+
+    console.log('📦 Creating return request for product:', firstProduct._id);
+
+    // Create return request matching your Refund schema
+    const returnRequest = await Refund.create({
+      order: order._id,           // ObjectId reference to Order
+      product: firstProduct._id,   // ObjectId reference to Product
+      userId: userId,              // ObjectId reference to User
+      reason: reason || 'No reason provided',
+      status: 'Requested'
+    });
+
+    // Update order status to Return Request
+    await Order.findByIdAndUpdate(order._id, { 
+      status: 'Return Request',
+      returnRequest: returnRequest._id
+    });
+
+    console.log('✅ Return request created:', returnRequest._id);
+    console.log('✅ Order status updated to Return Request');
+    
+    res.json({ 
+      success: true, 
+      message: 'Return request submitted successfully. Please wait for admin approval.' 
+    });
+    
+  } catch (error) {
+    console.error('❌ Error creating return request:', error);
+    console.error('❌ Error stack:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to submit return request. Please try again.',
+      error: error.message
+    });
+  }
+};
+// Get Order Invoice
+const getOrderInvoice = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ success: false, message: 'Please login to download invoice' });
+    }
+    
+    const { id } = req.params;
+    const userId = req.session.user._id;
+    
+    console.log('📄 Generating invoice for order:', id, 'User:', userId);
+    
+    // For now, just return a simple response
+    res.status(404).json({ success: false, message: 'Invoice generation not available yet' });
+  } catch (error) {
+    console.error('Error generating invoice:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to generate invoice. Please try again.' 
+    });
+    res.status(500).json({ success: false, message: 'Failed to generate invoice' });
+  }
+};
+
 module.exports = {
   pageNotFound,
   loadHomepage,
@@ -972,6 +1364,10 @@ module.exports = {
   apiProducts,
   handleForgotPage,
   viewOrders,
+  getOrderDetails,
+  cancelOrder,
+  returnOrder,
+  getOrderInvoice,
   loadCart,
   addToCart,
   updateCartQuantity,

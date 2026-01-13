@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bellefair&family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         * {
@@ -235,6 +236,13 @@
             color: #721c24;
         }
 
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+
         .status-payment-failed {
             background: #f8d7da;
             color: #721c24;
@@ -427,6 +435,12 @@
                     <div class="info-item">
                         <span class="info-label">Order Status:</span>
                         <span class="info-value" id="orderStatus">-</span>
+                        <!-- Debug: Show current status and condition -->
+                        <% console.log('🔍 Order Status:', order.status); %>
+                        <% console.log('🔍 Status Type:', typeof order.status); %>
+                        <% console.log('🔍 Status check result:', order.status === 'Return Request' || order.status === 'Return Requested'); %>
+                        
+                        
                     </div>
                 </div>
             </div>
@@ -494,7 +508,26 @@
                 <a href="/admin/orders" class="btn btn-secondary">
                     <i class="bi bi-arrow-left"></i> Back to Orders
                 </a>
-                <button onclick="changeOrderStatus()" class="btn btn-primary">
+                
+                <% if (order.status === 'Pending' || order.status === 'Processing') { %>
+                    <button onclick="cancelOrder()" class="btn btn-danger">
+                        <i class="bi bi-x-circle"></i> Cancel Order
+                    </button>
+                <% } %>
+                
+                <% if (order.status === 'Shipped') { %>
+                    <button onclick="markOutForDelivery()" class="btn btn-success">
+                        <i class="bi bi-truck"></i> Mark as Out for Delivery
+                    </button>
+                <% } %>
+                
+                <% if (order.status === 'Out for Delivery') { %>
+                    <button onclick="markAsDelivered()" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Mark as Delivered
+                    </button>
+                <% } %>
+                
+                <button onclick="changeOrderStatus()" class="btn btn-secondary">
                     <i class="bi bi-arrow-repeat"></i> Change Order Status
                 </button>
                 <button onclick="processRefund()" class="btn btn-success" id="refundBtn" style="display: none;">
@@ -512,12 +545,19 @@
         // Get order ID from URL path
         const pathParts = window.location.pathname.split('/');
         const orderMongoId = pathParts[pathParts.length - 1];
+        
+        console.log('🔍 URL Path:', window.location.pathname);
+        console.log('🔍 Path Parts:', pathParts);
+        console.log('🔍 Order ID:', orderMongoId);
 
         // Load order details on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 Checking orderMongoId:', orderMongoId);
             if (orderMongoId && orderMongoId !== 'order-detail') {
+                console.log('✅ Loading order details for:', orderMongoId);
                 loadOrderDetails(orderMongoId);
             } else {
+                console.log('❌ Showing empty state');
                 showEmptyState();
             }
         });
@@ -526,7 +566,7 @@
             document.getElementById('loading').style.display = 'block';
             document.getElementById('orderContent').style.display = 'none';
 
-            fetch(`/admin/api/orders/${orderMongoId}`)
+            fetch(`/admin/orders/${id}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -545,51 +585,83 @@
                 });
         }
 
-        function displayOrderDetails(order, shippingAddress) {
-            console.log('🔍 Order data received:', order);
-            console.log('📅 Order createdAt:', order.createdAt);
-            console.log('📅 Order createdOn:', order.createdOn);
-            
-            // Order Information
-            document.getElementById('orderId').textContent = order.orderId || '-';
-            document.getElementById('orderDate').textContent = formatDate(order.createdAt);
-            document.getElementById('paymentMethod').textContent = order.paymentMethod === 'COD' ? 'Cash on Delivery' : order.paymentMethod;
-            
-            const statusBadge = document.getElementById('orderStatus');
-            statusBadge.textContent = order.status;
-            statusBadge.className = `status-badge status-${order.status.toLowerCase().replace(' ', '-')}`;
+        // Global icon mapping for order statuses
+        const iconMap = {
+            pending: 'fa-solid fa-clock',
+            processing: 'fa-solid fa-cog',
+            shipped: 'fa-solid fa-truck',
+            delivered: 'fa-solid fa-check-circle',
+            cancelled: 'fa-solid fa-times-circle',
+            'out for delivery': 'fa-solid fa-truck',
+            'return request': 'fa-solid fa-rotate-left',
+            'return requested': 'fa-solid fa-rotate-left',
+            returned: 'fa-solid fa-rotate-left'
+        };
 
-            // Customer Information
-            if (order.userId) {
-                document.getElementById('customerName').textContent = order.userId.fullName || 'Unknown';
-                document.getElementById('customerEmail').textContent = order.userId.email || 'No email';
-                document.getElementById('customerPhone').textContent = order.userId.phone || 'No phone';
-            } else {
-                document.getElementById('customerName').textContent = 'N/A';
-                document.getElementById('customerEmail').textContent = 'N/A';
-                document.getElementById('customerPhone').textContent = 'N/A';
-            }
+        // Global order variable
+        let order = null;
 
-            // Shipping Address
-            displayShippingAddress(shippingAddress);
+       function displayOrderDetails(orderData, shippingAddress) {
+    // Set global order variable WITH return request
+    order = {
+        ...orderData,
+        returnRequest: orderData.returnRequest || null  // ✅ Include return request
+    };
+    
+    console.log('🔍 Order data received:', order);
+    console.log('🔍 Order status:', order.status);
+    console.log('🔍 Return request data:', order.returnRequest);
+    
+    // Order Information
+    document.getElementById('orderId').textContent = order.orderId || '-';
+    document.getElementById('orderDate').textContent = formatDate(order.createdOn);
+    document.getElementById('paymentMethod').textContent = order.paymentMethod === 'COD' ? 'Cash on Delivery' : order.paymentMethod;
+    
+    const statusBadge = document.getElementById('orderStatus');
+    const statusIcon = iconMap[order.status.toLowerCase()] || 'fa-solid fa-question-circle';
+    
+    // ✅ Add info icon if there's a return request
+    let statusHTML = `<i class="${statusIcon}"></i> ${order.status}`;
+    
+    if (order.status === 'Return Request' && order.returnRequest) {
+        statusHTML += ` <button onclick="handleReturnAction()" class="btn btn-info btn-sm" style="margin-left: 10px;" title="View Return Request">
+            <i class="bi bi-info-circle"></i>
+        </button>`;
+    }
+    
+    statusBadge.innerHTML = statusHTML;
+    statusBadge.className = `status-badge status-${order.status.toLowerCase().replace(' ', '-')}`;
 
-            // Order Items
-            if (order.orderedItems && order.orderedItems.length > 0) {
-                displayOrderItems(order.orderedItems);
-            } else {
-                document.getElementById('orderItems').innerHTML = '<p class="text-center text-muted">No order items found</p>';
-            }
+    // Customer Information
+    if (order.userId) {
+        document.getElementById('customerName').textContent = order.userId.fullName || 'Unknown';
+        document.getElementById('customerEmail').textContent = order.userId.email || 'No email';
+        document.getElementById('customerPhone').textContent = order.userId.phone || 'No phone';
+    } else {
+        document.getElementById('customerName').textContent = 'N/A';
+        document.getElementById('customerEmail').textContent = 'N/A';
+        document.getElementById('customerPhone').textContent = 'N/A';
+    }
 
-            // Amount Summary
-            document.getElementById('subtotal').textContent = `₹${(order.subtotal || 0).toLocaleString('en-IN')}`;
-            document.getElementById('deliveryCharge').textContent = `₹${(order.deliveryCharge || 0).toLocaleString('en-IN')}`;
-            document.getElementById('discount').textContent = `-₹${(order.discount || 0).toLocaleString('en-IN')}`;
-            document.getElementById('totalAmount').textContent = `₹${(order.finalAmount || 0).toLocaleString('en-IN')}`;
+    // Shipping Address
+    displayShippingAddress(shippingAddress);
 
-            // Show/hide action buttons based on order status and payment method
-            updateActionButtons(order);
-        }
+    // Order Items
+    if (order.orderedItems && order.orderedItems.length > 0) {
+        displayOrderItems(order.orderedItems);
+    } else {
+        document.getElementById('orderItems').innerHTML = '<p class="text-center text-muted">No order items found</p>';
+    }
 
+    // Amount Summary
+    document.getElementById('subtotal').textContent = `₹${(order.totalPrice || 0).toLocaleString('en-IN')}`;
+    document.getElementById('deliveryCharge').textContent = `₹${(order.deliveryCharge || 0).toLocaleString('en-IN')}`;
+    document.getElementById('discount').textContent = `-₹${(order.dicount || 0).toLocaleString('en-IN')}`;
+    document.getElementById('totalAmount').textContent = `₹${(order.finalAmount || 0).toLocaleString('en-IN')}`;
+
+    // Show/hide action buttons
+    updateActionButtons(order);
+}
         // Function to update action buttons based on order status
         function updateActionButtons(order) {
             const refundBtn = document.getElementById('refundBtn');
@@ -664,9 +736,10 @@
 
         function displayOrderItems(items) {
             const itemsHtml = items.map((item, index) => {
-                // Use productImage from order data (stored in order schema)
-                const imageUrl = (item.productImage && item.productImage.length > 0) 
-                    ? item.productImage[0] 
+                // Access product data from nested product object
+                const product = item.product || {};
+                const imageUrl = (product.productImage && product.productImage.length > 0) 
+                    ? product.productImage[0] 
                     : '/images/colinguest.png';
                 
                 const totalPrice = (item.price || 0) * (item.quantity || 0);
@@ -674,16 +747,18 @@
                 return `
                     <div class="product-item">
                         <img src="${imageUrl}" 
-                             alt="${item.productName || 'Product'}" 
+                             alt="${product.productName || 'Product'}" 
                              class="product-image"
                              loading="lazy"
                              onerror="this.src='/images/colinguest.png'">
                         <div class="product-details">
-                            <div class="product-name">${item.productName || 'Unknown Product'}</div>
+                            <div class="product-name">${product.productName || 'Unknown Product'}</div>
                             <div class="product-meta">
                                 <span class="quantity-badge">Qty: ${item.quantity || 0}</span>
-                                <span class="quantity-badge">Size: ${item.size || 'N/A'}</span>
                                 <span class="quantity-badge">Unit Price: ₹${(item.price || 0).toLocaleString('en-IN')}</span>
+                                ${product.regularPrice ? `<span class="quantity-badge">Regular: ₹${product.regularPrice.toLocaleString('en-IN')}</span>` : ''}
+                                ${product.salePrice ? `<span class="quantity-badge">Sale: ₹${product.salePrice.toLocaleString('en-IN')}</span>` : ''}
+                                ${product.productOffer ? `<span class="quantity-badge">Offer: ${product.productOffer}%</span>` : ''}
                             </div>
                         </div>
                         <div class="product-price">₹${totalPrice.toLocaleString('en-IN')}</div>
@@ -709,7 +784,7 @@
 
         function changeOrderStatus() {
             const currentStatus = document.getElementById('orderStatus').textContent.trim();
-            const statusOptions = ['Placed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Payment Failed'];
+            const statusOptions = ['Pending', 'Shipped', 'Cancelled'];
             
             // Create select options HTML
             const selectOptions = statusOptions.map(status => 
@@ -980,6 +1055,457 @@
             `;
             document.getElementById('orderContent').style.display = 'block';
         }
+
+        function markOutForDelivery() {
+            Swal.fire({
+                title: 'Mark as Out for Delivery',
+                text: 'Are you sure you want to mark this order as Out for Delivery?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Mark Out for Delivery',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/orders/${orderMongoId}/out-for-delivery`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Order marked as Out for Delivery',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.error || 'Failed to update order status',
+                                icon: 'error'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error marking order as Out for Delivery:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Failed to update order status',
+                            icon: 'error'
+                        });
+                    });
+                }
+            });
+        }
+
+        function markAsDelivered() {
+            Swal.fire({
+                title: 'Mark as Delivered',
+                text: 'Are you sure you want to mark this order as Delivered?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Mark as Delivered',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/orders/${orderMongoId}/delivered`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Order marked as Delivered',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.error || 'Failed to update order status',
+                                icon: 'error'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error marking order as Delivered:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Failed to update order status',
+                            icon: 'error'
+                        });
+                    });
+                }
+            });
+        }
+
+        function cancelOrder() {
+            Swal.fire({
+                title: 'Cancel Order',
+                text: 'Are you sure you want to cancel this order?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Cancel Order',
+                cancelButtonText: 'No, Keep Order'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/orders/${orderMongoId}/status`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ status: 'Cancelled' })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Order Cancelled!',
+                                text: 'Order has been cancelled successfully.',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.error || 'Failed to cancel order',
+                                icon: 'error'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error cancelling order:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Failed to cancel order',
+                            icon: 'error'
+                        });
+                    });
+                }
+            });
+        }
+
+       function handleReturnAction() {
+    console.log('🔍 handleReturnAction called');
+    console.log('🔍 Order:', order);
+    console.log('🔍 Return Request:', order.returnRequest);
+    
+    // Check if there's a return request
+    if (!order.returnRequest) {
+        console.log('❌ No return request found');
+        Swal.fire({
+            title: 'No Return Request',
+            text: 'No return request found for this order.',
+            icon: 'info',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    const returnReq = order.returnRequest;
+    
+    // Get all the data with fallbacks
+    const orderId = order.orderId || 'N/A';
+    const customerName = returnReq.userId?.fullName || order.userId?.fullName || 'N/A';
+    const productName = returnReq.product?.productName || 'Product information not available';
+    const reason = returnReq.reason || 'No reason provided';
+    const requestDate = returnReq.createdAt 
+        ? new Date(returnReq.createdAt).toLocaleString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) 
+        : 'N/A';
+    const status = returnReq.status || 'Unknown';
+    
+    console.log('📦 Product Name:', productName);
+    console.log('👤 Customer Name:', customerName);
+    console.log('📝 Reason:', reason);
+    console.log('📅 Date:', requestDate);
+    console.log('✅ Status:', status);
+    
+    Swal.fire({
+        title: 'Return Request Details',
+        html: `
+            <div style="text-align: left; font-family: 'Outfit', sans-serif; padding: 10px;">
+                <!-- Header -->
+                <div style="margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <h5 style="margin: 0; color: white; font-size: 18px; font-weight: 600; text-align: center;">
+                        <i class="fa-solid fa-rotate-left" style="margin-right: 8px;"></i>
+                        Return Request Information
+                    </h5>
+                </div>
+                
+                <!-- Order ID -->
+                <div style="margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #6c757d;">
+                    <strong style="color: #495057; font-size: 13px; display: block; margin-bottom: 6px;">
+                        <i class="fa-solid fa-hashtag" style="margin-right: 6px;"></i>Order ID:
+                    </strong>
+                    <div style="color: #212529; font-size: 14px; font-family: monospace;">${orderId}</div>
+                </div>
+                
+                <!-- Customer Name -->
+                <div style="margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #17a2b8;">
+                    <strong style="color: #495057; font-size: 13px; display: block; margin-bottom: 6px;">
+                        <i class="fa-solid fa-user" style="margin-right: 6px;"></i>Customer Name:
+                    </strong>
+                    <div style="color: #212529; font-size: 15px; font-weight: 500;">${customerName}</div>
+                </div>
+                
+                <!-- Product Name -->
+                <div style="margin-bottom: 12px; padding: 12px; background: #e7f3ff; border-radius: 6px; border-left: 3px solid #007bff;">
+                    <strong style="color: #0056b3; font-size: 13px; display: block; margin-bottom: 6px;">
+                        <i class="fa-solid fa-box" style="margin-right: 6px;"></i>Product Name:
+                    </strong>
+                    <div style="color: #212529; font-size: 15px; font-weight: 600;">${productName}</div>
+                </div>
+                
+                <!-- Return Reason -->
+                <div style="margin-bottom: 12px; padding: 15px; background: #fff8e1; border-radius: 6px; border-left: 3px solid #ffa726; box-shadow: 0 2px 4px rgba(255,167,38,0.1);">
+                    <strong style="color: #e65100; font-size: 14px; display: block; margin-bottom: 8px;">
+                        <i class="fa-solid fa-comment-dots" style="margin-right: 6px;"></i>Return Reason:
+                    </strong>
+                    <div style="color: #424242; font-size: 15px; line-height: 1.6; font-style: italic; padding: 8px; background: white; border-radius: 4px;">
+                        "${reason}"
+                    </div>
+                </div>
+                
+                <!-- Request Date -->
+                <div style="margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #28a745;">
+                    <strong style="color: #495057; font-size: 13px; display: block; margin-bottom: 6px;">
+                        <i class="fa-solid fa-calendar" style="margin-right: 6px;"></i>Request Date:
+                    </strong>
+                    <div style="color: #212529; font-size: 14px;">${requestDate}</div>
+                </div>
+                
+                <!-- Status -->
+                <div style="margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #6f42c1;">
+                    <strong style="color: #495057; font-size: 13px; display: block; margin-bottom: 8px;">
+                        <i class="fa-solid fa-circle-info" style="margin-right: 6px;"></i>Current Status:
+                    </strong>
+                    <span style="display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: ${
+                        status === 'Requested' ? '#fff3cd' : 
+                        status === 'Approved' ? '#d4edda' : '#f8d7da'
+                    }; color: ${
+                        status === 'Requested' ? '#856404' : 
+                        status === 'Approved' ? '#155724' : '#721c24'
+                    };">
+                        ${status}
+                    </span>
+                </div>
+            </div>
+        `,
+        icon: 'info',
+        width: '600px',
+        showDenyButton: status === 'Requested',
+        showCancelButton: true,
+        confirmButtonText: status === 'Requested' 
+            ? '<i class="fa-solid fa-check"></i> Approve Return' 
+            : '<i class="fa-solid fa-times-circle"></i> Close',
+        denyButtonText: '<i class="fa-solid fa-ban"></i> Reject Return',
+        cancelButtonText: 'Close',
+        confirmButtonColor: status === 'Requested' ? '#28a745' : '#6c757d',
+        denyButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d'
+    }).then((result) => {
+        console.log('🔍 SweetAlert result:', result);
+        if (result.isConfirmed && status === 'Requested') {
+            console.log('✅ Approve button clicked');
+            approveReturnRequest();
+        } else if (result.isDenied) {
+            console.log('❌ Reject button clicked');
+            rejectReturnRequest();
+        }
+    });
+}
+
+function approveReturnRequest() {
+    console.log('✅ approveReturnRequest function called');
+    
+    Swal.fire({
+        title: 'Approve Return Request',
+        html: `
+            <div style="text-align: center; padding: 20px;">
+                <i class="fa-solid fa-circle-check" style="font-size: 64px; color: #28a745; margin-bottom: 20px;"></i>
+                <p style="font-size: 16px; color: #666; margin-bottom: 10px;">
+                    Are you sure you want to approve this return request?
+                </p>
+                <p style="font-size: 14px; color: #999;">
+                    The customer will receive a refund to their wallet.
+                </p>
+            </div>
+        `,
+        icon: null,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-check"></i> Yes, Approve Return',
+        cancelButtonText: '<i class="fa-solid fa-times"></i> Cancel',
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading
+            Swal.fire({
+                title: 'Processing...',
+                html: '<div style="padding: 20px;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 48px; color: #3b6da1;"></i><p style="margin-top: 15px;">Please wait while we process the return request.</p></div>',
+                showConfirmButton: false,
+                allowOutsideClick: false
+            });
+            
+            fetch(`/admin/orders/${orderMongoId}/approve-return`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Return Approved!',
+                        html: `
+                            <div style="text-align: center; padding: 20px;">
+                                <i class="fa-solid fa-circle-check" style="font-size: 64px; color: #28a745; margin-bottom: 20px;"></i>
+                                <p style="font-size: 16px; color: #333;">${data.message || 'Return request has been approved and refund processed.'}</p>
+                            </div>
+                        `,
+                        icon: null,
+                        confirmButtonColor: '#28a745',
+                        confirmButtonText: 'OK',
+                        timer: 2000
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.error || 'Failed to approve return request',
+                        icon: 'error',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error approving return request:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to approve return request. Please try again.',
+                    icon: 'error',
+                    confirmButtonColor: '#dc3545'
+                });
+            });
+        }
+    });
+}
+
+function rejectReturnRequest() {
+    console.log('❌ rejectReturnRequest function called');
+    
+    Swal.fire({
+        title: 'Reject Return Request',
+        html: `
+            <div style="text-align: center; padding: 20px;">
+                <i class="fa-solid fa-circle-xmark" style="font-size: 64px; color: #dc3545; margin-bottom: 20px;"></i>
+                <p style="font-size: 16px; color: #666; margin-bottom: 20px;">
+                    Please provide a reason for rejecting this return request:
+                </p>
+            </div>
+        `,
+        icon: null,
+        input: 'textarea',
+        inputPlaceholder: 'Enter rejection reason (required)...',
+        inputAttributes: {
+            'aria-label': 'Rejection reason',
+            'style': 'min-height: 100px; font-size: 14px; font-family: "Outfit", sans-serif;'
+        },
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-ban"></i> Reject Return',
+        cancelButtonText: '<i class="fa-solid fa-times"></i> Cancel',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        reverseButtons: true,
+        inputValidator: (value) => {
+            if (!value || value.trim() === '') {
+                return 'You must provide a reason for rejection!';
+            }
+            if (value.trim().length < 10) {
+                return 'Please provide a more detailed reason (at least 10 characters)';
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
+            // Show loading
+            Swal.fire({
+                title: 'Processing...',
+                html: '<div style="padding: 20px;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 48px; color: #3b6da1;"></i><p style="margin-top: 15px;">Please wait while we process the rejection.</p></div>',
+                showConfirmButton: false,
+                allowOutsideClick: false
+            });
+            
+            fetch(`/admin/orders/${orderMongoId}/reject-return`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ rejectionReason: result.value.trim() })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Return Rejected!',
+                        html: `
+                            <div style="text-align: center; padding: 20px;">
+                                <i class="fa-solid fa-circle-xmark" style="font-size: 64px; color: #dc3545; margin-bottom: 20px;"></i>
+                                <p style="font-size: 16px; color: #333;">${data.message || 'Return request has been rejected.'}</p>
+                            </div>
+                        `,
+                        icon: null,
+                        confirmButtonColor: '#dc3545',
+                        confirmButtonText: 'OK',
+                        timer: 2000
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.error || 'Failed to reject return request',
+                        icon: 'error',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error rejecting return request:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to reject return request. Please try again.',
+                    icon: 'error',
+                    confirmButtonColor: '#dc3545'
+                });
+            });
+        }
+    });
+}
     </script>
 </body>
 </html>

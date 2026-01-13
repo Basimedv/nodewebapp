@@ -17,8 +17,8 @@ const loadCheckout = async (req, res) => {
         const user = req.user;
         const userId = user._id;
 
-        const address = await Address.find({ userId });
-        const cart = await Cart.findOne({ userId }).populate('items.productId');
+        const addressDoc = await Address.find({ userId });
+        const cart = await Cart.findOne({ userId }).populate('items.productId', 'productName productImage regularPrice salePrice productOffer stock');
 
         if (!cart || cart.items.length === 0) {
             return res.redirect('/user/cart');
@@ -29,7 +29,20 @@ const loadCheckout = async (req, res) => {
         let grandTotal = 0;
 
         if (cart && cart.items.length > 0) {
-            cartTotal = cart.items.reduce((acc, item) => acc + item.quantity * item.price, 0);
+            cartTotal = cart.items.reduce((acc, item) => {
+                const regularPrice = item.productId.regularPrice || 0;
+                const salePrice = item.productId.salePrice || 0;
+                const offerPercent = item.productId.productOffer || 0;
+                
+                let itemPrice = regularPrice;
+                if (salePrice > 0 && salePrice < regularPrice) {
+                    itemPrice = salePrice;
+                } else if (offerPercent > 0) {
+                    itemPrice = Math.round(regularPrice - (regularPrice * offerPercent / 100));
+                }
+                
+                return acc + (itemPrice * item.quantity);
+            }, 0);
             deliveryCharge = cartTotal < 499 ? 39 : 0;
             grandTotal = cartTotal + deliveryCharge;
         }
@@ -43,24 +56,44 @@ const loadCheckout = async (req, res) => {
             minPrice: { $lte: grandTotal }
         });
 
-        // Extract addresses from address documents using new schema structure
-        const addresses = address.reduce((acc, doc) => {
-            return acc.concat(doc.details);
+        // Extract addresses from address documents using correct schema structure
+        const addresses = addressDoc.reduce((acc, doc) => {
+            const addressesWithId = doc.address.map(addr => ({
+                ...addr.toObject(),
+                _id: doc._id.toString() + '_' + doc.address.indexOf(addr) // Create unique ID
+            }));
+            return acc.concat(addressesWithId);
         }, []);
 
         // Map cart items
-        const cartItems = cart.items.map(item => ({
-            ...item.toObject(),
-            finalPrice: item.price,
-            productId: item.productId
-        }));
+        const cartItems = cart.items.map(item => {
+            const regularPrice = item.productId.regularPrice || 0;
+            const salePrice = item.productId.salePrice || 0;
+            const offerPercent = item.productId.productOffer || 0;
+            
+            let finalPrice = regularPrice;
+            if (salePrice > 0 && salePrice < regularPrice) {
+                finalPrice = salePrice;
+            } else if (offerPercent > 0) {
+                finalPrice = Math.round(regularPrice - (regularPrice * offerPercent / 100));
+            }
+            
+            return {
+                ...item.toObject(),
+                regularPrice: regularPrice,
+                salePrice: salePrice,
+                offerPercent: offerPercent,
+                finalPrice: finalPrice,
+                productId: item.productId
+            };
+        });
 
         res.render('user/checkout', { 
             siteName: 'COLINGUEST',
             title: "Checkout", 
             coupons, 
             user, 
-            address,
+            address: addressDoc,
             addresses, 
             cart,
             cartItems,
@@ -72,7 +105,7 @@ const loadCheckout = async (req, res) => {
         });
     } catch (error) {
         console.error('Error loading checkout:', error);
-        res.redirect('/user/cart');
+        res.status(500).send('Server Error');
     }
 };
 
@@ -105,7 +138,7 @@ const addShoppingAddress = async (req, res) => {
             name,
             phone,
             altPhone,
-            landMark,
+            landmark,
             city,
             state,
             pinCode,
@@ -122,7 +155,7 @@ const addShoppingAddress = async (req, res) => {
         }
 
         // Validation
-        if (!name || !phone || !city || !state || !pinCode) {
+        if (!name || !phone || !city || !state || !pinCode || !landmark) {
             return res.status(BAD_REQUEST).json({ 
                 success: false,
                 message: "All required fields must be filled." 
@@ -156,20 +189,18 @@ const addShoppingAddress = async (req, res) => {
             let userAddress = await Address.findOne({ userId });
 
             if (!userAddress) {
-                userAddress = new Address({ userId, details: [] });
+                userAddress = new Address({ userId, address: [] });
             }
 
-            userAddress.details.push({
+            userAddress.address.push({
                 addressType: addressType || 'Home',
                 name: name,
                 city: city,
-                landmark: landMark,
+                landMark: landmark,
                 state: state,
-                pincode: parseInt(pinCode),
+                pinCode: parseInt(pinCode),
                 phone: phone,
-                altPhone: altPhone || phone,
-                addressLine1: addressLine1,
-                addressLine2: addressLine2 || ''
+                altPhone: altPhone || phone
             });
 
             await userAddress.save();
@@ -288,6 +319,260 @@ const checkoutDetails = async (req, res) => {
 
     res.redirect('/payment');
 };
+
+// Process Payment
+const processPayment = async (req, res) => {
+    try {
+        const user = req.user;
+        const userId = user._id;
+        const { paymentMethod } = req.body;
+
+        if (!userId) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Please login to continue' 
+            });
+        }
+
+        if (!paymentMethod) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Please select a payment method' 
+            });
+        }
+
+        // Get cart and calculate totals
+        const cart = await Cart.findOne({ userId }).populate('items.productId');
+        
+        if (!cart || cart.items.length === 0) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Your cart is empty' 
+            });
+        }
+
+        // Calculate totals
+        let cartTotal = 0;
+        if (cart && cart.items.length > 0) {
+            cartTotal = cart.items.reduce((acc, item) => {
+                const regularPrice = item.productId.regularPrice || 0;
+                const salePrice = item.productId.salePrice || 0;
+                const offerPercent = item.productId.productOffer || 0;
+                
+                let itemPrice = regularPrice;
+                if (salePrice > 0 && salePrice < regularPrice) {
+                    itemPrice = salePrice;
+                } else if (offerPercent > 0) {
+                    itemPrice = Math.round(regularPrice - (regularPrice * offerPercent / 100));
+                }
+                
+                return acc + (itemPrice * item.quantity);
+            }, 0);
+        }
+
+        const deliveryCharge = cartTotal < 499 ? 39 : 0;
+        let grandTotal = cartTotal + deliveryCharge;
+
+        // Apply coupon discount if available
+        let discount = 0;
+        if (req.session.couponDiscount) {
+            discount = parseFloat(req.session.couponDiscount);
+        }
+
+        const finalTotal = grandTotal - discount;
+
+        // Get selected address from session
+        let selectedAddress = null;
+        
+        if (req.session.selectedAddressId) {
+            const [docId, addressIndex] = req.session.selectedAddressId.split('_');
+            const addressDoc = await Address.findOne({ userId });
+            if (addressDoc && addressDoc.address && addressDoc.address.length > parseInt(addressIndex)) {
+                selectedAddress = addressDoc.address[parseInt(addressIndex)];
+            }
+        }
+
+        // Create order
+        const Order = require('../../models/orderSchema');
+        
+        // Map cart items to order items format and update stock
+        const orderItems = [];
+        const Product = require('../../models/productSchema');
+        
+        for (const item of cart.items) {
+            console.log('🔍 Cart Item Structure:', JSON.stringify(item, null, 2));
+            
+            // Get product details - item.productId is already populated
+            const product = item.productId; // Since it's populated, no need for separate query
+            
+            if (!product) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `Product not found: ${item.productId}` 
+                });
+            }
+            
+            // Check and update stock
+            const sizeKey = item.size || 'M';
+            const currentStock = product.stock[sizeKey] || 0;
+            
+            if (currentStock < item.quantity) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `Insufficient stock for ${product.productName}. Available: ${currentStock}, Requested: ${item.quantity}` 
+                });
+            }
+            
+            // Reduce stock
+            product.stock[sizeKey] = currentStock - item.quantity;
+            await product.save();
+            
+            console.log(`📦 Stock updated for ${product.productName} size ${sizeKey}: ${currentStock} → ${product.stock[sizeKey]}`);
+            
+            // Add to order items with complete product data
+            orderItems.push({
+                product: product._id, // Use product._id from populated product
+                productName: product.productName,
+                productImage: product.productImage || [],
+                quantity: item.quantity,
+                size: item.size,
+                price: item.price || 0
+            });
+        }
+
+        const order = new Order({
+            userId: userId,
+            orderedItems: orderItems,
+            address: req.session.selectedAddressId, // Save the actual address ID
+            totalPrice: grandTotal,
+            dicount: discount,
+            finalAmount: finalTotal,
+            paymentMethod: paymentMethod,
+            deliveryCharge: deliveryCharge,
+            status: 'Pending',
+            createdOn: new Date(),
+            couponApplied: discount > 0
+        });
+
+        await order.save();
+        
+        console.log('✅ Order created successfully:', {
+            orderId: order.orderId,
+            userId: userId,
+            itemsCount: orderItems.length,
+            finalAmount: finalTotal,
+            paymentMethod: paymentMethod
+        });
+        
+        console.log('🔍 Order Items Created:', JSON.stringify(orderItems, null, 2));
+
+        // Clear cart
+        await Cart.findOneAndDelete({ userId });
+
+        // Clear session data
+        delete req.session.selectedAddressId;
+        delete req.session.couponDiscount;
+        delete req.session.couponId;
+
+        res.json({ 
+            success: true, 
+            message: 'Order placed successfully!',
+            orderId: order.orderId
+        });
+
+    } catch (error) {
+        console.error('Payment processing error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to place order. Please try again.' 
+        });
+    }
+};
+
+// Load Payment Page
+const loadPayment = async (req, res) => {
+    try {
+        const user = req.user;
+        const userId = user._id;
+
+        const cart = await Cart.findOne({ userId }).populate('items.productId', 'productName productImage regularPrice salePrice productOffer stock');
+
+        if (!cart || cart.items.length === 0) {
+            return res.redirect('/user/cart');
+        }
+
+        let cartTotal = 0;
+        let deliveryCharge = 0;
+        let grandTotal = 0;
+
+        if (cart && cart.items.length > 0) {
+            cartTotal = cart.items.reduce((acc, item) => {
+                const regularPrice = item.productId.regularPrice || 0;
+                const salePrice = item.productId.salePrice || 0;
+                const offerPercent = item.productId.productOffer || 0;
+                
+                let itemPrice = regularPrice;
+                if (salePrice > 0 && salePrice < regularPrice) {
+                    itemPrice = salePrice;
+                } else if (offerPercent > 0) {
+                    itemPrice = Math.round(regularPrice - (regularPrice * offerPercent / 100));
+                }
+                
+                return acc + (itemPrice * item.quantity);
+            }, 0);
+            deliveryCharge = cartTotal < 499 ? 39 : 0;
+            grandTotal = cartTotal + deliveryCharge;
+        }
+
+        // Apply coupon discount if available
+        let discount = 0;
+        if (req.session.couponDiscount) {
+            discount = parseFloat(req.session.couponDiscount);
+        }
+
+        const finalTotal = grandTotal - discount;
+
+        // Map cart items with sale price calculation
+        const cartItemsWithPrices = cart.items.map(item => {
+            const regularPrice = item.productId.regularPrice || 0;
+            const salePrice = item.productId.salePrice || 0;
+            const offerPercent = item.productId.productOffer || 0;
+            
+            let finalPrice = regularPrice;
+            if (salePrice > 0 && salePrice < regularPrice) {
+                finalPrice = salePrice;
+            } else if (offerPercent > 0) {
+                finalPrice = Math.round(regularPrice - (regularPrice * offerPercent / 100));
+            }
+            
+            return {
+                ...item.toObject(),
+                productName: item.productId.productName,
+                regularPrice: regularPrice,
+                salePrice: salePrice,
+                offerPercent: offerPercent,
+                finalPrice: finalPrice,
+                price: finalPrice // For template compatibility
+            };
+        });
+
+        res.render('user/payment', {
+            siteName: 'COLINGUEST',
+            title: "Payment",
+            user: user,
+            cart: {
+                items: cartItemsWithPrices,
+                subtotal: cartTotal,
+                deliveryFee: deliveryCharge,
+                discount: discount,
+                total: finalTotal
+            }
+        });
+    } catch (error) {
+        console.error('Error loading payment page:', error);
+        res.status(500).send('Server Error');
+    }
+};
 const saveAddressToSession = async (req, res) => {
     try {
         console.log('🔍 saveAddressToSession called');
@@ -313,35 +598,6 @@ const saveAddressToSession = async (req, res) => {
             return res.status(400).json({ 
                 success: false, 
                 message: 'Please select a delivery address' 
-            });
-        }
-
-        // Verify address exists
-        console.log('🔍 Looking for address document...');
-        const userAddressDoc = await Address.findOne({ userId });
-        console.log('Address document found:', !!userAddressDoc);
-        
-        if (!userAddressDoc || !userAddressDoc.details) {
-            console.log('❌ No address document or details found');
-            return res.status(400).json({ 
-                success: false, 
-                message: 'No addresses found for this user' 
-            });
-        }
-
-        // Find specific address in details array
-        console.log('🔍 Searching for address in details array...');
-        const selectedAddress = userAddressDoc.details.find(addr => 
-            addr._id.toString() === selectedAddressId.toString()
-        );
-
-        console.log('Selected address found:', !!selectedAddress);
-        if (!selectedAddress) {
-            console.log('❌ Address not found for ID:', selectedAddressId);
-            console.log('Available addresses:', userAddressDoc.details.map(addr => ({ id: addr._id, name: addr.name })));
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Selected address not found' 
             });
         }
 
@@ -411,15 +667,25 @@ const confirmOrder = async (req, res) => {
     let shippingAddress = null;
     
     if (order.address) {
-      const addressDoc = await Address.findOne({
-        userId: userId,
-        'address._id': order.address
-      }, {
-        'address.$': 1
-      });
-      
-      if (addressDoc && addressDoc.address && addressDoc.address.length > 0) {
-        shippingAddress = addressDoc.address[0];
+      // Handle synthetic address ID format: "docId_index"
+      if (order.address.includes('_')) {
+        const [docId, addressIndex] = order.address.split('_');
+        const addressDoc = await Address.findOne({ userId });
+        if (addressDoc && addressDoc.address && addressDoc.address.length > parseInt(addressIndex)) {
+          shippingAddress = addressDoc.address[parseInt(addressIndex)];
+        }
+      } else {
+        // Handle direct ObjectId reference (fallback)
+        const addressDoc = await Address.findOne({
+          userId: userId,
+          'address._id': order.address
+        }, {
+          'address.$': 1
+        });
+        
+        if (addressDoc && addressDoc.address && addressDoc.address.length > 0) {
+          shippingAddress = addressDoc.address[0];
+        }
       }
     }
 
@@ -450,6 +716,8 @@ module.exports = {
     loadCheckout, 
     addShoppingAddress, 
     checkoutDetails, 
+    processPayment,
+    loadPayment,
     editShoppingAddress,
     confirmOrder,
     saveAddressToSession

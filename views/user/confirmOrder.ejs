@@ -486,7 +486,7 @@
                         <div class="detail-row">
                             <span>Order Date</span>
                             <span>
-                                <%= new Date(order.createdAt).toLocaleString('en-US', { 
+                                <%= new Date(order.createdOn).toLocaleString('en-US', { 
                                     weekday: 'short', 
                                     year: 'numeric', 
                                     month: 'short', 
@@ -512,18 +512,18 @@
                         <% order.orderedItems.forEach(function(item, itemIndex) { %>
                             <!-- Debug: Log item data -->
                             <script>console.log('🖼️ Order Item <%= itemIndex %>', {
-                                productName: '<%= item.productName %>',
-                                productImage: <%- JSON.stringify(item.productImage) %>,
-                                imageType: typeof '<%= item.productImage %>',
-                                imageLength: <%= item.productImage ? item.productImage.length : 0 %>
+                                productName: '<%= item.product ? item.product.productName : "No product" %>',
+                                productImage: <%- JSON.stringify(item.product ? item.product.productImage : null) %>,
+                                imageType: typeof '<%= item.product ? item.product.productImage : "undefined" %>',
+                                imageLength: <%= item.product && item.product.productImage ? item.product.productImage.length : 0 %>
                             });</script>
                             
                             <div class="order-product-card align-items-center mb-3 px-3" data-product-id="order-<%= order._id %>-item-<%= itemIndex %>">
                                 <div class="product-image-container">
-                                    <% if (item.productImage && item.productImage.length > 0) { %>
-                                        <% item.productImage.forEach((image, index) => { %>
+                                    <% if (item.product && item.product.productImage && item.product.productImage.length > 0) { %>
+                                        <% item.product.productImage.forEach((image, index) => { %>
                                             <img src="<%= image %>" 
-                                                 alt="<%= item.productName %> - Image <%= index + 1 %>" 
+                                                 alt="<%= item.product.productName %> - Image <%= index + 1 %>" 
                                                  class="product-img <%= index === 0 ? 'active' : 'hidden' %>" 
                                                  data-index="<%= index %>"
                                                  loading="lazy">
@@ -531,11 +531,11 @@
                                         
                                         <!-- Navigation buttons -->
                                         <div class="image-navigation">
-                                            <% if (item.productImage.length > 1) { %>
+                                            <% if (item.product.productImage.length > 1) { %>
                                                 <button type="button" class="btn btn-sm btn-outline-primary" onclick="previousImage('order-<%= order._id %>-item-<%= itemIndex %>')">
                                                     <i class="fas fa-chevron-left"></i>
                                                 </button>
-                                                <span class="image-counter">1 / <%= item.productImage.length %></span>
+                                                <span class="image-counter">1 / <%= item.product.productImage.length %></span>
                                                 <button type="button" class="btn btn-sm btn-outline-primary" onclick="nextImage('order-<%= order._id %>-item-<%= itemIndex %>')">
                                                     <i class="fas fa-chevron-right"></i>
                                                 </button>
@@ -549,14 +549,14 @@
                                     <% } %>
                                 </div>
                                 <div class="product-info">
-                                    <h6><%= item.productName %></h6>
-                                    <p>Size: <%= item.size %></p>
+                                    <h6><%= item.product ? item.product.productName : "Product" %></h6>
+                                    <p>Size: <%= item.size || "N/A" %></p>
 
                                     <!-- Qty & Price -->
                                     <div class="d-flex justify-content-between">
                                         <p class="mb-0">Qty: <%= item.quantity %></p>
                                         <span class="product-price fw-semibold">
-                                            ₹ <%= item.price * item.quantity %>
+                                            ₹ <%= (item.price * item.quantity).toFixed(2) %>
                                         </span>
                                     </div>
                                 </div>
@@ -567,16 +567,16 @@
                         <p class="text-center py-3">No items in this order</p>
                     <% } %>
 
-                    <% let grandTotal = subTotal - (order.discount || 0) + (order.deliveryCharge || 0); %>
+                    <% let grandTotal = subTotal - (order.dicount || 0) + (order.deliveryCharge || 0); %>
 
                     <hr>
                     <div class="text-end mt-5">
-                        <p>Subtotal: ₹ <%= subTotal %></p>
-                        <p>Delivery Charge: ₹ <%= order.deliveryCharge %></p>
-                        <p>Coupon Discount: -₹ <%= order.discount %></p>
+                        <p>Subtotal: ₹ <%= subTotal.toFixed(2) %></p>
+                        <p>Delivery Charge: ₹ <%= (order.deliveryCharge || 0).toFixed(2) %></p>
+                        <p>Coupon Discount: -₹ <%= (order.dicount || 0).toFixed(2) %></p>
                     </div>
                     <div class="grand-total">
-                        Grand Total: ₹ <%= grandTotal %>
+                        Grand Total: ₹ <%= grandTotal.toFixed(2) %>
                     </div>
                 <% }); %>
             <% } else { %>

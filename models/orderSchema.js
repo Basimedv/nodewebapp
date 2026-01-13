@@ -3,6 +3,11 @@ const { Schema } = mongoose;
 const { v4: uuidv4 } = require('uuid')
 
 const orderSchema = new Schema({
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     orderId: {
         type: String,
         default: () => uuidv4(),
@@ -14,9 +19,20 @@ const orderSchema = new Schema({
             ref: 'Product',
             required: true
         },
+        productName: {
+            type: String,
+            required: true
+        },
+        productImage: [{
+            type: String
+        }],
         quantity: {
             type: Number,
             required: true
+        },
+        size: {
+            type: String,
+            default: 'M'
         },
         price: {
             type: Number,
@@ -35,9 +51,16 @@ const orderSchema = new Schema({
         type: Number,
         required: true
     },
+    paymentMethod: {
+        type: String,
+        required: true
+    },
+    deliveryCharge: {
+        type: Number,
+        default: 0
+    },
     address: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
+        type: String,
         required: true
     },
     invoiceDate: {
@@ -47,7 +70,7 @@ const orderSchema = new Schema({
     status: {
         type: String,
         required: true,
-        enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Request', 'Returned']
+        enum: ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Return Request', 'Returned']
     },
     createdOn: {
         type: Date,

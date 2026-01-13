@@ -327,6 +327,67 @@
             font-size: 14px;
         }
         
+        .order-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .btn-cancel-order {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-cancel-order:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-cancel-order i {
+            font-size: 14px;
+        }
+        
+        .btn-return-order {
+            background-color: #fd7e14;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-return-order:hover {
+            background-color: #e8590c;
+            transform: translateY(-1px);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-return-order i {
+            font-size: 14px;
+        }
+        
         @media (max-width: 768px) {
             .profile-container {
                 flex-direction: column;
@@ -558,11 +619,11 @@
         <!-- Orders Grid -->
         <% if (orders && orders.length > 0) { %>
             <div class="orders-grid">
-                <% orders.forEach(function(order) { %>
+                <% orders.forEach(function(order, orderIndex) { %>
                     <div class="order-card">
                         <!-- Order Header -->
                         <div class="order-header">
-                            <div>
+                            <div class="order-info">
                                 <div class="order-id">Order #<%= order.orderId %></div>
                                 <div class="order-date"><%= new Date(order.createdOn).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
                             </div>
@@ -573,35 +634,62 @@
 
                         <!-- Order Items -->
                         <div class="order-items">
-                            <% order.orderedItems.forEach(function(item) { %>
-                                <div class="order-item">
-                                    <% if (item.productImage && item.productImage.length > 0) { %>
-                                        <img src="<%= item.productImage[0] %>" 
-                                             alt="<%= item.productName %>" 
+                            <% if (order.orderedItems && order.orderedItems.length > 0) { %>
+                                <% order.orderedItems.forEach(function(item, itemIndex) { %>
+                                    <div class="order-item">
+                                        <% 
+                                        // Get product image from multiple sources
+                                        let productImage = '/images/colinguest.png';
+                                        if (item.productImage && Array.isArray(item.productImage) && item.productImage.length > 0) {
+                                            productImage = item.productImage[0];
+                                        } else if (item.product && item.product.productImage && Array.isArray(item.product.productImage) && item.product.productImage.length > 0) {
+                                            productImage = item.product.productImage[0];
+                                        }
+                                        
+                                        // Get product name from multiple sources - comprehensive logic
+                                        let productName = 'Product';
+                                        if (item.productName && item.productName.trim()) {
+                                            productName = item.productName.trim();
+                                        } else if (item.product && item.product.productName && item.product.productName.trim()) {
+                                            productName = item.product.productName.trim();
+                                        } else if (item.product && item.product.name && item.product.name.trim()) {
+                                            productName = item.product.name.trim();
+                                        } else if (item.product && item.product.product && item.product.product.name && item.product.product.name.trim()) {
+                                            productName = item.product.product.name.trim();
+                                        }
+                                        %>
+                                        <img src="<%= productImage %>" 
+                                             alt="<%= productName %>" 
                                              class="product-image"
                                              onerror="this.src='/images/colinguest.png';">
-                                    <% } else { %>
-                                        <img src="/images/colinguest.png" 
-                                             alt="<%= item.productName %>" 
-                                             class="product-image">
-                                    <% } %>
-                                    <div class="product-details">
-                                        <div class="product-name"><%= item.productName %></div>
-                                        <div class="product-meta">
-                                            <span>Qty: <%= item.quantity %></span>
-                                            <span>Size: <%= item.size || 'M' %></span>
+                                        <div class="product-details">
+                                            <div class="product-name"><%= productName %></div>
+                                            <div class="product-meta">
+                                                <span>Qty: <%= item.quantity || 1 %></span>
+                                                <% if (item.size) { %>
+                                                    <span>Size: <%= item.size %></span>
+                                                <% } %>
+                                                <% if (item.color) { %>
+                                                    <span>Color: <%= item.color %></span>
+                                                <% } %>
+                                            </div>
                                         </div>
+                                        <div class="product-price">₹<%= ((item.price || 0) * (item.quantity || 1)).toLocaleString('en-IN') %></div>
                                     </div>
-                                    <div class="product-price">₹<%= (item.price * item.quantity).toLocaleString('en-IN') %></div>
+                                <% }); %>
+                            <% } else { %>
+                                <div style="text-align: center; padding: 20px; color: #999;">
+                                    <i class="fas fa-box-open" style="font-size: 24px; margin-bottom: 10px; opacity: 0.5;"></i>
+                                    <p>No items found in this order</p>
                                 </div>
-                            <% }); %>
+                            <% } %>
                         </div>
 
                         <!-- Order Total -->
                         <div class="order-total">
                             <span class="total-label">Total</span>
                             <span class="total-amount">₹<%= order.finalAmount.toLocaleString('en-IN') %></span>
-                            <div class="view-order-btn-container">
+                            <div class="order-actions">
                                 <button class="btn-view-order" onclick="viewOrderDetails('<%= order._id %>')" title="View Order Details">
                                     <i class="fas fa-eye"></i>
                                     View Order

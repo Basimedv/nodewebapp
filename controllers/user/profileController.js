@@ -249,13 +249,204 @@ const resendOtp = async (req, res) => {
     res.json({ success: true, message: "✅ New OTP sent!" });
 
   } catch (error) {
-    console.error(error);
+    console.error('Error resending OTP:', error);
     res.status(500).json({ success: false, message: "Something went wrong. Please try again." });
   }
 };
 
+// Update Profile
+const updateProfile = async (req, res) => {
+  try {
+    console.log('🔍 Profile update request received');
+    console.log('📦 Request body:', req.body);
+    console.log('📦 Request file:', req.file);
+    
+    if (!req.session.user) {
+      return res.status(401).json({ success: false, message: 'Please login to update profile' });
+    }
+    
+    // Handle both field name formats
+    const { fullName, firstName, lastName, email, phone, username, gender } = req.body;
+    const userId = req.session.user._id;
+    
+    // Construct fullName from firstName + lastName if fullName not provided
+    const constructedFullName = fullName || `${firstName || ''} ${lastName || ''}`.trim();
+    
+    console.log('🔍 Extracted data:', { 
+      fullName, 
+      firstName, 
+      lastName, 
+      constructedFullName, 
+      email, 
+      phone, 
+      username,
+      gender, 
+      userId 
+    });
+    
+    // Validate input
+    if (!constructedFullName) {
+      return res.status(400).json({ success: false, message: 'Name is required' });
+    }
+    
+    // Get current user data to preserve email if not provided
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    console.log('👤 Current user:', { fullName: currentUser.fullName, email: currentUser.email });
+    
+    // Use provided email or keep existing email
+    const emailToUpdate = email || currentUser.email;
+    
+    // Check if email is being changed and if it's already taken by another user
+    if (email && email !== currentUser.email) {
+      const existingUser = await User.findOne({ 
+        email: email, 
+        _id: { $ne: userId } 
+      });
+      
+      if (existingUser) {
+        return res.status(400).json({ success: false, message: 'Email is already taken by another user' });
+      }
+    }
+    
+    // Prepare update data
+    const updateData = { 
+      fullName: constructedFullName,
+      email: emailToUpdate,
+      phone: phone ? phone.trim() : ''
+    };
+    
+    // Add username if provided
+    if (username !== undefined && username !== '') {
+      updateData.username = username.trim();
+    }
+    
+    // Add gender if provided
+    if (gender !== undefined && gender !== '') {
+      updateData.gender = gender.trim();
+    }
+    
+    // Handle profile image upload if present
+    if (req.file) {
+      console.log('📸 Profile image uploaded:', req.file);
+      // Use the full Cloudinary URL instead of just filename
+      updateData.profileImage = req.file.path || req.file.filename;
+    }
+    
+    console.log('🔄 Update data:', updateData);
+    
+    // Update user profile
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+    
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    console.log('✅ User updated successfully:', { fullName: updatedUser.fullName, email: updatedUser.email });
+    
+    // Update session with new user data
+    req.session.user = {
+      _id: updatedUser._id,
+      fullName: updatedUser.fullName,
+      email: updatedUser.email
+    };
+    
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+      }
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Profile updated successfully',
+      user: {
+        fullName: updatedUser.fullName,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        username: updatedUser.username,
+        gender: updatedUser.gender,
+        profileImage: updatedUser.profileImage
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error updating profile:', error);
+    console.error('❌ Error stack:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Something went wrong. Please try again.',
+      error: error.message 
+    });
+  }
+};
 
-
+// Delete Profile Image
+const deleteProfileImage = async (req, res) => {
+  try {
+    console.log('🗑️ Profile image delete request received');
+    
+    if (!req.session.user) {
+      return res.status(401).json({ success: false, message: 'Please login to delete profile image' });
+    }
+    
+    const userId = req.session.user._id;
+    
+    // Get current user
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    console.log('👤 Current user profile image:', currentUser.profileImage);
+    
+    // Check if user has a profile image
+    if (!currentUser.profileImage) {
+      return res.status(400).json({ success: false, message: 'No profile image to delete' });
+    }
+    
+    // Remove profile image from database
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $unset: { profileImage: 1 } },
+      { new: true }
+    );
+    
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    console.log('✅ Profile image deleted successfully');
+    
+    res.json({ 
+      success: true, 
+      message: 'Profile image deleted successfully',
+      user: {
+        fullName: updatedUser.fullName,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        username: updatedUser.username,
+        profileImage: null  // Explicitly return null
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error deleting profile image:', error);
+    console.error('❌ Error stack:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Something went wrong. Please try again.',
+      error: error.message 
+    });
+  }
+};
 
 module.exports = {
   getProfilePage,
@@ -267,4 +458,6 @@ module.exports = {
   resetPassword,
   resendOtp,
   ensureOtpVerified,
+  updateProfile,
+  deleteProfileImage,
 };

@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 
 
 const pageerror = async (req, res) => {
-  res.render('admin-error')
+  res.render('admin/admin-error')
 }
 // GET admin login page
 const loadLogin = (req, res) => {
@@ -58,7 +58,8 @@ const loadDashboard = async (req, res) => {
     try {
       return res.render('admin/dashboard'); // make sure your dashboard view is in views/admin/
     } catch (error) {
-      return res.redirect('/pageerror');
+      console.error("Dashboard error:", error);
+      return res.redirect('/admin/pageerror');
     }
   } else {
     return res.redirect('/admin/adminLogin');
@@ -78,6 +79,34 @@ const logout = async (req, res) => {
   }
 };
 
+// Load order detail page
+const loadOrderDetailPage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const Order = require('../../models/orderSchema');
+    
+    // Find order and populate user and product details
+    const order = await Order.findById(id)
+      .populate('userId', 'fullName email phone')
+      .populate('orderedItems.product', 'productName productImage')
+      .lean();
+    
+    if (!order) {
+      console.log('❌ Order not found for detail page:', id);
+      return res.redirect('/admin/pageerror');
+    }
+    
+    console.log('✅ Loading order detail page:', order.orderId);
+    res.render('admin/order-detail', { 
+      order: order,
+      title: 'Order Details - Admin Panel'
+    });
+  } catch (error) {
+    console.error('Error loading order detail page:', error);
+    res.redirect('/admin/pageerror');
+  }
+};
+
 
 module.exports = {
   loadLogin,
@@ -85,6 +114,7 @@ module.exports = {
   loadDashboard,
   pageerror,
   logout,
+  loadOrderDetailPage,
 };
 
 

@@ -4,7 +4,9 @@ const usercontroller = require('../controllers/user/usercontroller');
 const passport = require('passport');
 const profileController = require('../controllers/user/profileController');
 const walletController = require('../controllers/user/walletController');
+const checkoutcontroller = require('../controllers/user/checkoutcontroller');
 const { ensureAuth, ensureGuest, preventBack } = require('../middlewares/auth');
+const upload = require('../middlewares/multer');
 
 // Prevent cached pages after logout
 router.use(preventBack);
@@ -30,10 +32,22 @@ router.post('/login', ensureGuest, usercontroller.login);
 router.get("/landingPage", ensureAuth, usercontroller.loadLandingPage);
 router.get('/logout', usercontroller.logout);
 router.get('/profile', ensureAuth, profileController.getProfilePage);
+router.get('/user/profile', ensureAuth, profileController.getProfilePage);
 router.get('/profile/edit', ensureAuth, profileController.getEditProfilePage);
+router.post('/profile/update', ensureAuth, upload.single('profileImage'), profileController.updateProfile);
+router.delete('/profile/image', ensureAuth, profileController.deleteProfileImage);
 router.get('/wallet', ensureAuth, walletController.loadWallet);
 router.get('/my-wallet', ensureAuth, walletController.loadWallet);
+
+// Your existing routes
 router.get('/orders', ensureAuth, usercontroller.viewOrders);
+router.get('/orders/:id', ensureAuth, usercontroller.getOrderDetails);
+router.get('/user/orders', ensureAuth, usercontroller.viewOrders);
+router.get('/user/orders/:id', ensureAuth, usercontroller.getOrderDetails);
+router.post('/user/orders/:orderId/cancel', ensureAuth, usercontroller.cancelOrder);
+router.post('/user/orders/:orderId/return', ensureAuth, usercontroller.returnOrder);
+router.get('/user/order/:id/invoice', ensureAuth, usercontroller.getOrderInvoice);
+
 router.get('/cart', ensureAuth, usercontroller.loadCart);
 router.post('/addToCart', ensureAuth, usercontroller.addToCart);
 router.post('/user/updateCartQuantity', ensureAuth, usercontroller.updateCartQuantity);
@@ -46,6 +60,21 @@ router.post('/verify-passForgot-otp', profileController.verifyForgotPassOtp);
 router.get('/resetpassword', profileController.ensureOtpVerified, profileController.getResetPassPage);
 router.post('/resetpassword', profileController.ensureOtpVerified, profileController.resetPassword);
 router.post('/resend-otp', profileController.resendOtp);
+
+// Checkout routes
+router.get('/checkout', ensureAuth, checkoutcontroller.loadCheckout);
+router.post('/shoppingAddress', ensureAuth, checkoutcontroller.addShoppingAddress);
+router.put('/shoppingAddress', ensureAuth, checkoutcontroller.editShoppingAddress);
+router.put('/checkout/edit-address', ensureAuth, checkoutcontroller.editShoppingAddress);
+router.post('/checkout', ensureAuth, checkoutcontroller.checkoutDetails);
+router.get('/order-confirmation', ensureAuth, checkoutcontroller.confirmOrder);
+router.get('/confirm-order', ensureAuth, checkoutcontroller.confirmOrder);
+router.post('/checkout/save-address', ensureAuth, checkoutcontroller.saveAddressToSession);
+router.get('/payment', ensureAuth, checkoutcontroller.loadPayment);
+router.get('/user/payment', ensureAuth, checkoutcontroller.loadPayment);
+router.get('/payments', ensureAuth, checkoutcontroller.loadPayment);
+router.get('/user/payments', ensureAuth, checkoutcontroller.loadPayment);
+router.post('/payment/process', ensureAuth, checkoutcontroller.processPayment);
 
 // ===== GOOGLE OAUTH ROUTES =====
 

@@ -32,6 +32,27 @@ const userSchema = new Schema({
 
     },
 
+    profileImage: {
+        type: String,
+        required: false,
+        default: null
+    },
+
+    gender: {
+        type: String,
+        required: false,
+        enum: ['Male', 'Female', 'Other', ''],
+        default: ''
+    },
+
+    username: {
+        type: String,
+        required: false,
+        unique: true,
+        sparse: true,
+        default: ''
+    },
+
     isBlocked: {
         type: Boolean,
         default: false
