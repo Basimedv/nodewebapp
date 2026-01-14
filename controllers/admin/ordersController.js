@@ -2,6 +2,9 @@
 const Order = require('../../models/orderSchema');
 const User = require('../../models/userSchema');
 const Address = require('../../models/addressSchema');
+const Refund=require('../../models/refundSchema')
+const Wallet=require('../../models/walletSchema');
+
 
 // GET admin orders page
 const loadOrders = async (req, res) => {
@@ -305,88 +308,64 @@ const markAsDelivered = async (req, res) => {
     });
   }
 };
-// Approve return request
 const approveReturnRequest = async (req, res) => {
   try {
     const { id } = req.params;
-    const Order = require('../../models/orderSchema');
-    const Refund = require('../../models/refundSchema');
-    const Wallet = require('../../models/walletSchema');
-    
-    console.log('🔄 Approving return request - Order ID:', id);
 
-    const order = await Order.findById(id).populate('userId').lean();
-    
-    if (!order) {
-      console.log('❌ Order not found for return approval');
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Order not found' 
-      });
-    }
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
 
-    // Find the return request for this order
-    const returnRequest = await Refund.findOne({ 
+    const refund = await Refund.findOne({
       order: order._id,
       status: 'Requested'
-    }).lean();
+    });
+    if (!refund) return res.status(400).json({ message: 'No return request found' });
 
-    if (!returnRequest) {
-      console.log('❌ No return request found for this order');
-      return res.status(400).json({ 
-        success: false, 
-        error: 'No return request found for this order' 
-      });
+    // Step 1: approve refund
+    refund.status = 'Approved';
+    await refund.save();
+
+    // Step 2: update order
+    order.status = 'Returned';
+    await order.save();
+
+    // Step 3: COD check
+    if (order.paymentMethod === 'COD' && order.status !== 'Delivered') {
+      return res.json({ message: 'Return approved (no wallet refund for COD)' });
     }
 
-    // Update return request status to Approved
-    await Refund.findByIdAndUpdate(
-      returnRequest._id,
-      { status: 'Approved' },
-      { new: true }
-    );
-
-    // Update order status to Returned
-    await Order.findByIdAndUpdate(
-      id,
-      { status: 'Returned' },
-      { new: true }
-    );
-
-    // Process wallet refund for approved returns
-    const refundAmount = order.finalAmount;
-    
-    await Wallet.findOneAndUpdate(
-      { userId: order.userId._id },
-      {
-        $inc: { balance: refundAmount },
-        $push: {
-          transactions: {
-            amount: refundAmount,
-            status: 'completed',
-            entryType: 'CREDIT',
-            type: 'refund',
-            description: `Refund for returned order ${order.orderId}`,
-            createdOn: new Date()
-          }
-        }
-      },
-      { new: true, upsert: true }
-    );
-
-    console.log('✅ Return request approved and refund processed');
-    res.json({ 
-      success: true, 
-      message: 'Return request approved and refund processed successfully' 
+    // Step 4: prevent duplicate refund
+    const exists = await Wallet.findOne({
+      orderId: order._id.toString(),
+      type: 'refund',
+      entryType: 'CREDIT'
     });
-    
-  } catch (error) {
-    console.error('❌ Error approving return request:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Server error',
-      message: error.message 
+    if (exists) return res.json({ message: 'Wallet already refunded' });
+
+    // Step 5: calculate amount
+    const refundAmount = order.orderedItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
+    // Step 6: CREATE wallet transaction
+    await Wallet.create({
+      userId: refund.userId,
+      orderId: order._id.toString(),
+      transactionId: `REF-${Date.now()}`,
+      payment_type: order.paymentMethod,
+      amount: refundAmount,
+      entryType: 'CREDIT',
+      type: 'refund',
+      status: 'success',
+      description: 'Refund for returned order'
     });
+
+    res.json({ success: true, message: 'Return approved & wallet refunded' });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -502,23 +481,7 @@ const updateRefundStatus = async (req, res) => {
       if (productItem) {
         const refundAmount = productItem.discountPrice * productItem.quantity;
         
-        await Wallet.findOneAndUpdate(
-          { userId: order.userId._id },
-          {
-            $inc: { balance: refundAmount },
-            $push: {
-              transactions: {
-                amount: refundAmount,
-                status: 'completed',
-                entryType: 'CREDIT',
-                type: 'refund',
-                description: `Refund for returned product ${productItem.product.productName}`,
-                createdOn: new Date()
-              }
-            }
-          },
-          { new: true, upsert: true }
-        );
+      
       }
     }
 

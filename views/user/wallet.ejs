@@ -301,7 +301,7 @@
                         <% if (transactions && transactions.length > 0) { %>
                             <% const lastTransaction = transactions[0]; %>
                             <p class="transaction-info">
-                                <%= new Date(lastTransaction.date).toLocaleDateString() %> - 
+                                <%= new Date(lastTransaction.createdOn || lastTransaction.date || lastTransaction.createdAt).toLocaleDateString() %> - 
                                 <%= lastTransaction.description %> - 
                                 ₹<%= lastTransaction.amount %>
                             </p>

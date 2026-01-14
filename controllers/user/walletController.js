@@ -260,31 +260,35 @@ const returnOrder = async (req, res) => {
 // Calculate wallet balance
 const calculateWalletBalance = async (userId) => {
     try {
-        // Get user's base wallet balance
-        const User = require('../../models/userSchema');
-        const user = await User.findById(userId);
-        const baseWallet = user?.wallet || 0;
-        
         // Get all wallet transactions
         const transactions = await Wallet.find({ userId });
         
+        console.log('🔍 Wallet transactions found:', transactions.length);
+        console.log('🔍 Transaction details:', JSON.stringify(transactions, null, 2));
+        
         // Calculate transaction balance
         const transactionBalance = transactions.reduce((total, transaction) => {
+            console.log('🔍 Processing transaction:', {
+                amount: transaction.amount,
+                type: transaction.amount?.constructor?.name,
+                entryType: transaction.entryType,
+                description: transaction.description
+            });
+            
+            const amount = parseFloat(transaction.amount) || 0;
+            console.log('🔍 Parsed amount:', amount, 'isNaN:', isNaN(amount));
+            
             if (transaction.entryType === 'CREDIT') {
-                return total + transaction.amount;
+                return total + amount;
             } else {
-                return total - transaction.amount;
+                return total - amount;
             }
         }, 0);
         
-        // Total balance = base wallet + transaction balance
-        const totalBalance = baseWallet + transactionBalance;
-        
-        console.log('Base wallet:', baseWallet);
         console.log('Transaction balance:', transactionBalance);
-        console.log('Total balance:', totalBalance);
+        console.log('Total balance:', transactionBalance);
         
-        return Math.max(0, totalBalance); // Ensure balance doesn't go negative
+        return Math.max(0, transactionBalance); // Ensure balance doesn't go negative
     } catch (error) {
         console.error('Error calculating balance:', error);
         return 0;
