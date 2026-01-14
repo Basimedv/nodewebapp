@@ -54,6 +54,11 @@ router.post('/user/updateCartQuantity', ensureAuth, usercontroller.updateCartQua
 router.post('/user/removeFromCart', ensureAuth, usercontroller.removeFromCart);
 router.post('/user/addToCart', ensureAuth, usercontroller.addToCart);
 
+// Wishlist routes
+router.get('/wishlist', ensureAuth, usercontroller.viewWishlist);
+router.post('/user/addToWishlist', ensureAuth, usercontroller.addToWishlist);
+router.post('/user/removeFromWishlist', ensureAuth, usercontroller.removeFromWishlist);
+
 router.get('/forgotPassword', profileController.getForgotPage);
 router.post('/forgot-Email-valid', profileController.forgotEmailValid);
 router.post('/verify-passForgot-otp', profileController.verifyForgotPassOtp);

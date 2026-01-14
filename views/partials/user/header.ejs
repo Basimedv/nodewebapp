@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>COLINQUEST</title>
     <link rel="stylesheet" href="/css/header.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
@@ -13,65 +13,172 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&display=swap"
         rel="stylesheet">
-    <!-- <-- 3d model  -->
+    <!-- 3d model -->
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-
-    <!-- Local version -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <style>
+   .user-dropdown {
+    position: relative;
+    display: inline-block;
+    background-color: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    top: 1px;
+       position: relative;
+    left: 110px;   /* increase/decrease as needed */
+}
 
+
+
+        .username-link {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 8px 12px;
+            display: inline-block;
+            transition: color 0.3s ease;
+        }
+
+        .username-link:hover {
+            color: #5B3F64;
+        }
+
+        .dropdown-menu-custom {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 200px;
+            margin-top: 8px;
+            z-index: 1000;
+            overflow: hidden;
+            left: -100px; 
+
+        }
+
+        .dropdown-menu-custom.show {
+            display: block;
+        }
+
+        .dropdown-menu-custom ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .dropdown-menu-custom ul li {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .dropdown-menu-custom ul li:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-menu-custom ul li a {
+            display: block;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: #333;
+            transition: background-color 0.2s;
+        }
+
+        .dropdown-menu-custom ul li a:hover {
+            background-color: #f5f5f5;
+        }
+
+        .dropdown-menu-custom ul li a i {
+            margin-right: 10px;
+            width: 16px;
+        }
+
+        .logout-link {
+            color: #e74c3c !important;
+        }
+    </style>
 </head>
 
 <body>
     <header>
         <div class="mainhead">
-            <img src="/images/colinguest.png" class="imageLogo" alt="">
+            <a href="/landingPage">
+                <img src="/images/colinguest.png" class="imageLogo" alt="COLINQUEST">
+            </a>
             <div class="buttons">
-                
+                <!-- Cart and Wishlist Icons -->
+                <% if (!user) { %>
+                    <a href="#" class="header-icon guest-wishlist" aria-label="Wishlist" title="Wishlist">
+                        <i class="fas fa-heart"></i>
+                    </a>
+                    <a href="#" class="header-icon guest-cart" aria-label="Cart" title="Cart">
+                        <i class="fas fa-cart-shopping"></i>
+                    </a>
+                <% } else { %>
+                    <a href="/wishlist" class="header-icon" aria-label="Wishlist" title="Wishlist">
+                        <i class="fas fa-heart"></i>
+                    </a>
+                    <a href="/cart" class="header-icon" aria-label="Cart" title="Cart">
+                        <i class="fas fa-cart-shopping"></i>
+                    </a>
+                <% } %>
 
-                <!-- <img src="/images/project_icons/profile.png" alt="profile" onmouseover="profileViewModal()"  class="profileImg"> -->
-               <a href="/cart" class="header-icon" aria-label="Cart" title="Cart">
-            <i class="fas fa-cart-shopping"></i>
-          </a>
-            <a href="/wishlist" class="header-icon" aria-label="Wishlist" title="Wishlist">
-            <i class="fas fa-heart"></i>
-          </a>
-
-                <form action="/login" method="GET" style="display:inline;">
-                    <button type="submit">Sign In</button>
-                </form>
-                
+                <!-- User Authentication -->
+                <% if (user) { %>
+                    <div class="user-dropdown">
+                        <a href="#" class="username-link" id="userDropdown" onclick="toggleDropdown(event)">
+                            <%= user.fullName ? user.fullName.split(" ")[0] : (user.name ? user.name.split(" ")[0] : user.username) %>
+                            <i  style="font-size: 12px; margin-left: 70px;"></i>
+                        </a>
+                        <div class="dropdown-menu-custom" id="dropdownMenu">
+                            <ul>
+                                <li>
+                                    <a href="/profile">
+                                        <i class="fa-solid fa-user"></i>My Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/orders">
+                                        <i class="fa-solid fa-box"></i>My Orders
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/wallet">
+                                        <i class="fa-solid fa-wallet"></i>My Wallet
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/wishlist">
+                                        <i class="fa-solid fa-heart"></i>My Wishlist
+                                    </a>
+                                </li>
+                                <li>
+                                   
+                        <a href="/logout" class="logout"><i class="fas fa-right-from-bracket"></i> <span>Logout</span></a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <form action="/login" method="GET" style="display:inline; margin: 0;">
+                        <button type="submit" class="sign-in-btn">Sign In</button>
+                    </form>
+                <% } %>
             </div>
-            <div id="profileViewModal" class="modal">
-                <div class="modal-content" onmouseleave="closeViewModal()">
-
-
-                    <ul>
-                        <a href="/profile">
-                            <li>Profile</li>
-                        </a>
-                        <a href="/wishlist">
-                            <li>Wish List</li>
-                        </a>
-                        <a href="/cart">
-                            <li>Cart</li>
-                        </a>
-                        <a href="/wallet">
-                            <li>Wallet</li>
-                        </a>
-                    </ul>
-                </div>
-
-            </div>
-
         </div>
+        
         <div class="subhead">
             <nav>
                 <ul>
                     <a href="/landingPage">
                         <li>Home</li>
                     </a>
-
                     <a href="/productListing">
                         <li>Shop</li>
                     </a>
@@ -88,3 +195,48 @@
             </nav>
         </div>
     </header>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Toggle dropdown menu
+        function toggleDropdown(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const dropdown = document.getElementById('dropdownMenu');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('dropdownMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (dropdown && !userDropdown?.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // Handle guest wishlist and cart clicks
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".guest-wishlist, .guest-cart").forEach(el => {
+                el.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'info',
+                        text: 'Please login to continue',
+                        showConfirmButton: true,
+                        confirmButtonText: 'Login',
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "/login";
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -343,7 +343,38 @@ const updateProduct = async (req, res) => {
 
     // Determine status
     const totalStock = Object.values(stock).reduce((sum, qty) => sum + qty, 0);
-    const finalStatus = totalStock === 0 ? 'Out of Stock' : (status || 'Available');
+    
+    // Get current product before status determination
+    const currentProduct = await Product.findById(req.params.id);
+    
+    // More robust status determination
+    let finalStatus;
+    if (totalStock === 0) {
+      finalStatus = 'Out of Stock';
+    } else if (status && status.trim()) {
+      // Use explicitly provided status, but with smart correction
+      const trimmedStatus = status.trim();
+      if (trimmedStatus === 'Out of Stock' && totalStock > 0) {
+        finalStatus = 'Available';  // Auto-correct to Available even if admin set Out of Stock
+      } else if (trimmedStatus === 'Available' && totalStock === 0) {
+        finalStatus = 'Out of Stock';  // Auto-correct to Out of Stock even if admin set Available
+      } else {
+        finalStatus = trimmedStatus;
+      }
+    } else {
+      // Auto-determine based on current status and stock
+      if (currentProduct) {
+        if (currentProduct.status === 'Out of Stock' && totalStock > 0) {
+          finalStatus = 'Available';  // Auto-correct to Available
+        } else if (currentProduct.status === 'Available' && totalStock === 0) {
+          finalStatus = 'Out of Stock';  // Auto-correction to Out of Stock
+        } else {
+          finalStatus = currentProduct.status;  // Keep current status
+        }
+      } else {
+        finalStatus = 'Available';  // Default fallback
+      }
+    }
 
     // Update data
     const updateData = {

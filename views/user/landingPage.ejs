@@ -20,62 +20,7 @@
 
 <body>
 
-    <!-- 🔹 Normal Header (not partial) -->
-    <header>
-        <div class="mainhead">
-            <img src="/images/colinguest.png" class="imageLogo" alt="Logo">
-            <div class="buttons">
-             
-                <a href="/wishlist" class="header-icon" aria-label="Wishlist" title="Wishlist">
-                    <i class="fas fa-heart"></i>
-                </a>
-                <a href="/cart" class="header-icon" aria-label="Cart" title="Cart">
-                    <i class="fas fa-cart-shopping"></i>
-                </a>
-                <% if (user) { %>
-                <div class="user-menu">
-                    <button id="userMenuToggle" class="user-toggle">
-                      
-                        <span><%= user.fullName %></span>
-                      
-                    </button>
-                
-                    <div id="userDropdown" class="user-dropdown" aria-hidden="true">
-                       
-                        <a href="/profile"><i class="fas fa-user"></i> <span>Profile</span></a>
-                        <a href="/orders"><i class="fas fa-bag-shopping"></i> <span>My Orders</span></a>
-                        <a href="/wallet"><i class="fas fa-wallet"></i> <span>My Wallet</span></a>
-                        <hr>
-                        <a href="/logout" class="logout"><i class="fas fa-right-from-bracket"></i> <span>Logout</span></a>
-                    </div>
-                </div>
-                <% } else { %>
-                    <a href="/login">Login</a>
-                <% } %>
-            </div>
-        </div>
-        <div class="subhead">
-            <nav>
-                <ul>
-                    <li>Home</li>
-                    <a href="/productListing">
-                        <li>Shop</li>
-                    </a>
-                    <a href="/customListing">
-                        <li>Custom</li>
-                    </a>
-                    <a href="/about">
-                        <li>About</li>
-                    </a>
-                    <a href="/contact">
-                        <li>Contact</li>
-                    </a>
-                </ul>
-            </nav>
-        </div>
-
-    </header>
-
+      <%- include("../partials/user/header") %>
     <!-- 🔹 Main Content -->
     <main>
         <div id="banner">
@@ -84,11 +29,10 @@
                 <img src="/images/banner1.png" alt="">
             </div>
             <div id="banner2">
-                <img src="/images/colinguest.png" alt="gbt" id="imgLogo">
-                <p>"Your Offer, Your Time!” Lock exclusive deals and claim them even after they're gone!<br>
-                    - Coming Soon... !
-                </p>
-            </div>
+                  <video autoplay muted loop playsinline id="heroVideo"
+          style="background: #000; width: 35%; height: 100%; object-fit: cover;">
+          <source src="/videos/copy_5EBCFB1D-B9B8-40C4-8950-636CF10444C8.mp4" type="video/mp4">
+        </video>
         </div>
 
         <div id="shop">
@@ -148,34 +92,52 @@
             </div>
 
           <div id="shopProductSection">
-    <% (products || []).forEach(function(p){ %>
-        <div class="product">
-            <div class="product-image">
-                <img src="<%= (p.productImage && p.productImage[0]) ? p.productImage[0] : '/images/banner7.png' %>" 
-                     alt="<%= p.productName || 'Product' %>">
+    <% categories.forEach(function(category) { %>
+        <% const categoryProducts = productsByCategory[category] || []; %>
+        
+        <% if (categoryProducts.length > 0) { %>
+            <!-- Category Section -->
+            <div class="category-section">
+                <div class="category-header">
+                    <h3 class="category-title"><%= category %></h3>
+                    <a href="/productListing?category=<%= encodeURIComponent(category) %>" class="view-all-btn">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                
+                <div class="category-products">
+                    <% categoryProducts.forEach(function(product) { %>
+                        <div class="product">
+                            <div class="product-image">
+                                <img src="<%= (product.productImage && product.productImage[0]) ? product.productImage[0] : '/images/banner7.png' %>" 
+                                     alt="<%= product.productName || 'Product' %>">
+                            </div>
+
+                            <div class="product-details">
+                                <p><%= product.productName || '-' %></p>
+
+                                <p class="price">
+                                    <!-- Original Price -->
+                                    <span class="original-price">
+                                        Rs. <%= Number(product.regularPrice || 0).toFixed(2) %>
+                                    </span>
+
+                                    <!-- Discount Price -->
+                                    <% if (product.salePrice && Number(product.salePrice) > 0 && Number(product.salePrice) < Number(product.regularPrice || 0)) { %>
+                                        <span class="discount-price">
+                                            Rs. <%= Number(product.salePrice).toFixed(2) %>
+                                        </span>
+                                    <% } %>
+                                </p>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
             </div>
-
-            <div class="product-details">
-                <p><%= p.productName || '-' %></p>
-
-                <p class="price">
-                    <!-- Original Price -->
-                    <span class="original-price">
-                        Rs. <%= Number(p.regularPrice || 0).toFixed(2) %>
-                    </span>
-
-                    <!-- Discount Price -->
-                    <% if (p.salePrice && Number(p.salePrice) > 0 && Number(p.salePrice) < Number(p.regularPrice || 0)) { %>
-                        <span class="discount-price">
-                            Rs. <%= Number(p.salePrice).toFixed(2) %>
-                        </span>
-                    <% } %>
-                </p>
-            </div>
-        </div>
+        <% } %>
     <% }) %>
 
-    <% if (!products || products.length === 0) { %>
+    <% if (!categories || categories.length === 0) { %>
         <p class="text-muted">No products to show yet.</p>
     <% } %>
 </div>

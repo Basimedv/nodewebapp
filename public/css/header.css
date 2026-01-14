@@ -391,6 +391,15 @@ body {
   height: 36px;
   border: 1px transparent;
   border-radius: 9999px;
+  position: relative;
+  left: 110px;
+}
+
+/* Guest user icons - move to left */
+.header-icon.guest-wishlist,
+.header-icon.guest-cart {
+  left: -40px !important;
+  margin-right: 10px;
 }
 
 .header-icon:hover {

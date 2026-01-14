@@ -53,14 +53,49 @@ const loadLandingPage = async (req, res) => {
       userData = await User.findOne({ email: req.session.user.email }).lean();
     }
 
-    // Fetch latest available products for homepage (e.g., 8 items)
-    const products = await Product.find({ status: { $ne: 'Discountinued' } })
-      .sort({ createdAt: -1 })
-      .limit(8)
-      .lean();
+    // Fetch products grouped by category for homepage
+    const Category = require('../../models/categorySchema');
+    const categoryNames = ['UNISEX', "WOMEN'S", "MEN'S", "FORMAL'S", "CASUAL'S"];
+    const productsByCategory = {};
+    
+    // Find category documents by name to get their ObjectIds
+    const categories = await Category.find({ 
+      name: { $in: categoryNames },
+      isListed: true 
+    }).lean();
+    
+    // Create a map of category name to ObjectId
+    const categoryMap = {};
+    categories.forEach(cat => {
+      categoryMap[cat.name] = cat._id;
+    });
+    
+    // Fetch products for each category using ObjectId
+    for (const categoryName of categoryNames) {
+      const categoryId = categoryMap[categoryName];
+      
+      if (categoryId) {
+        const products = await Product.find({ 
+          status: { $ne: 'Discountinued' },
+          category: categoryId  // Use ObjectId instead of string
+        })
+        .populate('category', 'name')  // Populate category name
+        .sort({ createdAt: -1 })
+        .limit(4) // 4 products per category
+        .lean();
+        
+        productsByCategory[categoryName] = products;
+      } else {
+        productsByCategory[categoryName] = []; // No products if category not found
+      }
+    }
 
-    // ✅ Render with user and products
-    return res.render("user/landingpage", { user: userData, products });
+    // ✅ Render with user and products by category
+    return res.render("user/landingpage", { 
+      user: userData, 
+      productsByCategory,
+      categories: categoryNames 
+    });
   } catch (err) {
     console.error("❌ Homepage error:", err);
     return res.status(500).send("Server error");
@@ -101,13 +136,13 @@ const loadShopping = async (req, res) => {
     const filter = {};
     // Exclude admin-blocked products always
     filter.isBlocked = { $ne: true };
-    // Availability: exclude discontinued always; include only Available unless availability checked
-    const allowedStatuses = includeOutOfStock ? ['Available', 'out of stock'] : ['Available'];
+    // Availability: exclude discontinued always; include all products by default
+    const allowedStatuses = includeOutOfStock ? ['Available', 'Out of Stock'] : ['Available', 'Out of Stock'];
     filter.status = { $in: allowedStatuses };
 
     // Text search by name only (removed brand search)
     if (result) {
-      filter.productNmae = { $regex: result, $options: 'i' };
+      filter.productName = { $regex: result, $options: 'i' };
       // ❌ REMOVED: filter.$or with brand search
     }
 
@@ -159,10 +194,10 @@ const loadShopping = async (req, res) => {
 : -1, price: -1, createdAt: -1 };
         break;
       case 'aToZ':
-        sortObj = { productNmae: 1 };
+        sortObj = { productName: 1 };
         break;
       case 'zToA':
-        sortObj = { productNmae: -1 };
+        sortObj = { productName: -1 };
         break;
       case 'ratingHighToLow':
         // Placeholder: if rating not stored, fallback to newest
@@ -196,6 +231,35 @@ const loadShopping = async (req, res) => {
         ? Math.round(regular - (regular * offerPercent / 100)) 
         : (sale > 0 && sale < regular ? sale : regular);
       
+      // Calculate total stock
+      const totalStock = p.stock ? 
+        (p.stock.S || 0) + (p.stock.M || 0) + (p.stock.L || 0) + 
+        (p.stock.XL || 0) + (p.stock.XXL || 0) : 0;
+      
+      // Debug logging for specific product
+      if (p.name && p.name.includes("Relaxed Fit Shirt")) {
+        console.log("🔍 Relaxed Fit Shirt Debug:", {
+          name: p.name,
+          originalStatus: p.status,
+          stock: p.stock,
+          calculatedTotalStock: totalStock
+        });
+      }
+      
+      // Auto-update status based on stock
+      let correctStatus = p.status;
+      if (totalStock > 0 && p.status === "Out of Stock") {
+        correctStatus = "Available";
+        if (p.name && p.name.includes("Relaxed Fit Shirt")) {
+          console.log("✅ Status corrected from 'Out of Stock' to 'Available'");
+        }
+      } else if (totalStock === 0 && p.status === "Available") {
+        correctStatus = "Out of Stock";
+        if (p.name && p.name.includes("Relaxed Fit Shirt")) {
+          console.log("✅ Status corrected from 'Available' to 'Out of Stock'");
+        }
+      }
+      
       return {
         ...p,
         name: p.productName ?? p.name,
@@ -206,6 +270,8 @@ const loadShopping = async (req, res) => {
     salePrice: sale,         // send to UI
         offerPercent,
         offerPrice,
+        totalStock,             // send calculated stock to UI
+        status: correctStatus      // send corrected status
        
       };
     });
@@ -681,71 +747,71 @@ async function apiProducts(req, res){
     return res.status(500).json({ message: 'Server error' });
   }
 }
-// // View wishlist
-// async function viewWishlist(req, res) {
-//   try {
-//     const user = req.session?.user || null;
-//     if (!user) return res.redirect('/login');
+// View wishlist
+async function viewWishlist(req, res) {
+  try {
+    const user = req.session?.user || null;
+    if (!user) return res.redirect('/login');
 
-//     const wishlist = await Wishlist.findOne({ userId: user._id }).populate('products.ProductId').lean();
-//     const items = (wishlist?.products || []).map(item => ({
-//       ...item,
-//       product: item.ProductId,
-//     }));
+    const wishlist = await Wishlist.findOne({ userId: user._id }).populate('products.ProductId').lean();
+    const items = (wishlist?.products || []).map(item => ({
+      ...item,
+      product: item.ProductId,
+    }));
 
-//     return res.render('user/wishlist', { user, items });
-//   } catch (err) {
-//     console.error('viewWishlist error:', err);
-//     return res.status(500).render('user/page-404');
-//   }
-// }
+    return res.render('user/wishlist', { user, items });
+  } catch (err) {
+    console.error('viewWishlist error:', err);
+    return res.status(500).render('user/page-404');
+  }
+}
 
-// // Add to wishlist
-// async function addToWishlist(req, res) {
-//   try {
-//     const { userId, productId } = req.body;
-//     if (!userId) return res.status(401).json({ error: 'Not authenticated' });
-//     if (!productId) return res.status(400).json({ error: 'Missing product' });
+// Add to wishlist
+async function addToWishlist(req, res) {
+  try {
+    const { userId, productId } = req.body;
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+    if (!productId) return res.status(400).json({ error: 'Missing product' });
 
-//     let wl = await Wishlist.findOne({ userId });
-//     if (!wl) wl = new Wishlist({ userId, products: [] });
+    let wl = await Wishlist.findOne({ userId });
+    if (!wl) wl = new Wishlist({ userId, products: [] });
 
-//     const exists = wl.products.some(p => String(p.ProductId) === String(productId));
-//     if (exists) {
-//       return res.status(200).json({ message: 'Already in wishlist' });
-//     }
-//     wl.products.push({ ProductId: productId });
-//     await wl.save();
-//     return res.status(200).json({ message: 'Added to wishlist' });
-//   } catch (err) {
-//     console.error('addToWishlist error:', err);
-//     return res.status(500).json({ error: 'Server error' });
-//   }
-// }
+    const exists = wl.products.some(p => String(p.ProductId) === String(productId));
+    if (exists) {
+      return res.status(200).json({ message: 'Already in wishlist' });
+    }
+    wl.products.push({ ProductId: productId });
+    await wl.save();
+    return res.status(200).json({ message: 'Added to wishlist' });
+  } catch (err) {
+    console.error('addToWishlist error:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+}
 
-// // Remove from wishlist
-// async function removeFromWishlist(req, res) {
-//   try {
-//     const user = req.session?.user || null;
-//     if (!user) return res.status(401).json({ error: 'Not authenticated' });
-//     const { productId } = req.body;
-//     if (!productId) return res.status(400).json({ error: 'Missing product' });
+// Remove from wishlist
+async function removeFromWishlist(req, res) {
+  try {
+    const user = req.session?.user || null;
+    if (!user) return res.status(401).json({ error: 'Not authenticated' });
+    const { productId } = req.body;
+    if (!productId) return res.status(400).json({ error: 'Missing product' });
 
-//     const wishlist = await Wishlist.findOne({ userId: user._id });
-//     if (!wishlist) return res.status(404).json({ error: 'Wishlist not found' });
+    const wishlist = await Wishlist.findOne({ userId: user._id });
+    if (!wishlist) return res.status(404).json({ error: 'Wishlist not found' });
 
-//     const before = wishlist.products.length;
-//     wishlist.products = wishlist.products.filter(p => String(p.ProductId) !== String(productId));
-//     if (wishlist.products.length === before) {
-//       return res.status(404).json({ error: 'Item not found in wishlist' });
-//     }
-//     await wishlist.save();
-//     return res.status(200).json({ message: 'Removed from wishlist' });
-//   } catch (err) {
-//     console.error('removeFromWishlist error:', err);
-//     return res.status(500).json({ error: 'Server error' });
-//   }
-// }
+    const before = wishlist.products.length;
+    wishlist.products = wishlist.products.filter(p => String(p.ProductId) !== String(productId));
+    if (wishlist.products.length === before) {
+      return res.status(404).json({ error: 'Item not found in wishlist' });
+    }
+    await wishlist.save();
+    return res.status(200).json({ message: 'Removed from wishlist' });
+  } catch (err) {
+    console.error('removeFromWishlist error:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+}
 
 // View Orders
 const viewOrders = async (req, res) => {
@@ -1358,9 +1424,9 @@ module.exports = {
   loadLandingPage,
   logout,
   getProductDetails,
-  // addToWishlist,
-  // viewWishlist,
-  // removeFromWishlist,
+  addToWishlist,
+  viewWishlist,
+  removeFromWishlist,
   apiProducts,
   handleForgotPage,
   viewOrders,
