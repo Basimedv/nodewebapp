@@ -350,7 +350,13 @@ async function getProductDetails(req, res) {
       regularPrice: regular,
     };
 
-    return res.render('user/productDetails', { user: req.session?.user || null, product });
+    return res.render('user/productDetails', { 
+      user: req.session?.user || null, 
+      product,
+      reviewCount: 0,
+      averageRating: 0,
+      reviews: []
+    });
   } catch (err) {
     console.error('getProductDetails error:', err);
     return res.status(500).render('user/page-404');
@@ -1015,29 +1021,53 @@ const updateCartQuantity = async (req, res) => {
 // Remove from Cart
 const removeFromCart = async (req, res) => {
   try {
+    console.log('=== BACKEND REMOVE DEBUG ===');
+    console.log('Request body:', req.body);
+    console.log('Session user:', req.session.user);
+    
     if (!req.session.user) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
     
-    const { userId, productId: itemId } = req.body;
+    const { userId, itemId } = req.body;
+    console.log('Received userId:', userId);
+    console.log('Received itemId:', itemId);
+    
     const Cart = require('../../models/cartSchema');
     
     const cart = await Cart.findOne({ userId });
     if (!cart) {
+      console.log('Cart not found for user:', userId);
       return res.status(404).json({ success: false, error: 'Cart not found' });
     }
     
-    // Remove item from cart
-    cart.items = cart.items.filter(item => 
-      !(item.productId.toString() === productId && item._id.toString() === itemId)
-    );
+    console.log('Cart before removal:', JSON.stringify(cart.items, null, 2));
+    console.log('Number of items before:', cart.items.length);
+    
+    // Find the item index by productId instead of _id
+    const itemIndex = cart.items.findIndex(item => item.productId.toString() === itemId);
+    
+    if (itemIndex === -1) {
+      console.log('Item not found in cart. ItemId:', itemId);
+      console.log('Available product IDs:', cart.items.map(i => i.productId.toString()));
+      return res.status(404).json({ success: false, error: 'Item not found in cart' });
+    }
+    
+    console.log('Found item at index:', itemIndex);
+    
+    // Remove the item using splice
+    cart.items.splice(itemIndex, 1);
+    
+    console.log('Number of items after removal:', cart.items.length);
     
     await cart.save();
+    console.log('Cart saved successfully');
     
     res.json({ 
       success: true, 
       message: 'Item removed from cart',
-      cartCount: cart.items.length
+      cartCount: cart.items.length,
+      itemId: itemId // Send back the itemId for frontend confirmation
     });
     
   } catch (error) {
@@ -1045,7 +1075,6 @@ const removeFromCart = async (req, res) => {
     res.status(500).json({ success: false, error: 'Failed to remove item from cart' });
   }
 };
-
 // GET order details
 const getOrderDetails = async (req, res) => {
   try {
@@ -1409,7 +1438,35 @@ const getOrderInvoice = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to generate invoice' });
   }
 };
+const addReview = async (req, res) => {
+    try {
+        const userId = req.session.user?._id;
+        const userName = req.session.user?.fullName;
+        const productId = req.params.id;
+        const { rating, comment } = req.body;
 
+        if (!userId || !userName) {
+            return res.status(400).json({ error: "User not logged in" });
+        }
+
+        const review = new Review({
+            userId,
+            productId,
+            userName,
+            rating: Number(rating),
+            comment
+        });
+
+        await review.save();
+        
+        // ✅ Correct redirect - matches your route
+        res.redirect(`/productDetails/${productId}`);
+
+    } catch (error) {
+        console.error("Review Error:", error);
+        res.status(500).send("Server Error Adding Review");
+    }
+};
 module.exports = {
   pageNotFound,
   loadHomepage,
@@ -1438,6 +1495,7 @@ module.exports = {
   addToCart,
   updateCartQuantity,
   removeFromCart,
+  addReview
 }
   
 

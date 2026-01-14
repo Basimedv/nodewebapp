@@ -1132,90 +1132,109 @@
                 }
 
                 async function removeFromCart(itemId) {
-                    console.log('=== FRONTEND REMOVE DEBUG ===');
-                    console.log('Remove function called with itemId:', itemId);
+    console.log('=== FRONTEND REMOVE DEBUG ===');
+    console.log('Remove function called with itemId:', itemId);
+    console.log('itemId type:', typeof itemId);
+    console.log('userId:', userId);
 
-                    if (!userId || userId === '') {
+    if (!userId || userId === '') {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Login Required',
+            text: 'Please login to remove items from your cart',
+            confirmButtonText: 'Go to Login',
+            confirmButtonColor: '#667eea'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '/login';
+            }
+        });
+        return;
+    }
+
+    const result = await Swal.fire({
+        title: 'Remove Item?',
+        text: 'Are you sure you want to remove this item from your cart?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Remove It',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            console.log('Sending request to backend...');
+            console.log('Request body:', { userId, itemId });
+            
+            const response = await fetch('/user/removeFromCart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, itemId })
+            });
+
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Response error:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Backend response:', data);
+
+            if (data.success) {
+                // Find and remove the cart item from DOM
+                const cartItem = document.querySelector(`[data-item-id="${itemId}"]`);
+                console.log('Looking for cart item with data-item-id:', itemId);
+                console.log('Found cart item:', cartItem);
+
+                if (cartItem) {
+                    // Animate removal
+                    cartItem.style.transition = 'all 0.3s ease';
+                    cartItem.style.transform = 'translateX(-100%)';
+                    cartItem.style.opacity = '0';
+
+                    setTimeout(() => {
+                        cartItem.remove();
+                        updateCartTotals();
+                        
                         Swal.fire({
-                            icon: 'warning',
-                            title: 'Login Required',
-                            text: 'Please login to remove items from your cart',
-                            confirmButtonText: 'Go to Login',
-                            confirmButtonColor: '#667eea'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = '/login';
-                            }
+                            icon: 'success',
+                            title: 'Removed!',
+                            text: 'Item has been removed from your cart.',
+                            timer: 1500,
+                            showConfirmButton: false
                         });
-                        return;
-                    }
-
-                    const result = await Swal.fire({
-                        title: 'Remove Item?',
-                        text: 'Are you sure you want to remove this item from your cart?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes, Remove It',
-                        cancelButtonText: 'Cancel',
-                        confirmButtonColor: '#dc3545',
-                        cancelButtonColor: '#6c757d',
-                        allowOutsideClick: false
-                    });
-
-                    if (result.isConfirmed) {
-                        try {
-                            const response = await fetch('/user/removeFromCart', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ userId, productId: itemId })
-                            });
-
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-
-                            const data = await response.json();
-
-                            if (data.success) {
-                                // Find and remove the cart item from DOM
-                                const cartItem = document.querySelector(`[data-item-id="${itemId}"]`);
-
-                                if (cartItem) {
-                                    cartItem.style.transition = 'all 0.3s ease';
-                                    cartItem.style.transform = 'translateX(-100%)';
-                                    cartItem.style.opacity = '0';
-
-                                    setTimeout(() => {
-                                        cartItem.remove();
-                                        updateCartTotals();
-
-                                        Swal.fire({
-                                            icon: 'success',
-                                            title: 'Removed!',
-                                            text: 'Item has been removed from your cart.',
-                                            timer: 2000,
-                                            showConfirmButton: false
-                                        });
-                                    }, 300);
-                                } else {
-                                    // Fallback if element not found
-                                    window.location.reload();
-                                }
-                            } else {
-                                throw new Error(data.error || 'Failed to remove item');
-                            }
-                        } catch (error) {
-                            console.error('Remove error:', error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: error.message || 'Unable to remove item. Please try again.',
-                                confirmButtonText: 'OK',
-                                confirmButtonColor: '#667eea'
-                            });
+                        
+                        // Check if cart is now empty
+                        const remainingItems = document.querySelectorAll('.cart-item').length;
+                        if (remainingItems === 0) {
+                            setTimeout(() => window.location.reload(), 1000);
                         }
-                    }
+                    }, 300);
+                } else {
+                    console.error('Cart item element not found!');
+                    // Fallback: reload the page
+                    window.location.reload();
                 }
+            } else {
+                throw new Error(data.error || 'Failed to remove item');
+            }
+        } catch (error) {
+            console.error('Remove error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Unable to remove item. Please try again.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#667eea'
+            });
+        }
+    }
+}
 
                 function updateCartTotals() {
                     const cartItems = document.querySelectorAll('.cart-item');
