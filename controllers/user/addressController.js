@@ -1,419 +1,247 @@
-const User = require('../../models/userSchema');
-const Cart = require('../../models/cartSchema');
+const mongoose = require('mongoose');
 const Address = require('../../models/addressSchema');
-const Order = require('../../models/orderSchema');
-const Coupon = require('../../models/couponSchema');
+const User=require('../../models/userSchema');
 
 // HTTP Status Codes
-const OK = 200;
-const CREATED = 201;
 const BAD_REQUEST = 400;
-const UNAUTHORIZED = 401;
 const NOT_FOUND = 404;
 const INTERNAL_SERVER_ERROR = 500;
 
-// Load Checkout Page
-const loadCheckout = async (req, res) => {
+const getAddresses = async (req, res) => {
     try {
-        const user = req.user;
-        const userId = user._id;
-
-        // Fetch addresses - note the structure returns array of address documents
+        const userId = req.user._id || req.user.id;
         const addressDocs = await Address.find({ userId });
         
-        // Extract all addresses from all documents (though usually there's only one doc per user)
+        // Flatten the nested address array with proper field mapping
         const addresses = addressDocs.reduce((acc, doc) => {
-            return acc.concat(doc.address);
+            const flatAddresses = doc.address.map((addr, index) => ({
+                _id: addr._id || `${doc._id}-${index}`, // Generate unique ID if not present
+                addressType: addr.addressType || 'Home',
+                name: addr.name || '',
+                phone: addr.phone || '',
+                addressLine1: addr.landMark || '',
+                addressLine2: '',
+                city: addr.city || '',
+                state: addr.state || '',
+                pincode: addr.pinCode || '',
+                altPhone: addr.altPhone || ''
+            }));
+            return acc.concat(flatAddresses);
         }, []);
-
-        const cart = await Cart.findOne({ userId }).populate('items.productId');
-
-        if (!cart || cart.items.length === 0) {
-            return res.redirect('/user/cart');
+        
+        console.log('🔍 Flattened addresses:', addresses);
+        
+        // If it's a page request (not an AJAX call), render the page with addresses
+        if (req.headers.accept && req.headers.accept.includes('text/html')) {
+            return res.render('user/manageAddresses', { 
+                title: 'Manage Addresses',
+                user: req.user,
+                addresses: addresses
+            });
         }
 
-        let cartTotal = 0;
-        let deliveryCharge = 0;
-        let grandTotal = 0;
-
-        if (cart && cart.items.length > 0) {
-            cartTotal = cart.items.reduce((acc, item) => acc + item.quantity * item.price, 0);
-            deliveryCharge = cartTotal < 499 ? 39 : 0;
-            grandTotal = cartTotal + deliveryCharge;
-        }
-
-        const currentDate = new Date();
-
-        const coupons = await Coupon.find({
-            status: 'Active',
-            startDate: { $lte: currentDate },
-            expiryDate: { $gte: currentDate },
-            minPrice: { $lte: grandTotal }
-        });
-
-        // Map cart items to include finalPrice
-        const cartItems = cart.items.map(item => ({
-            ...item.toObject(),
-            finalPrice: item.price,
-            productId: item.productId
-        }));
-
-        res.render('user/checkout', { 
-            siteName: 'COLINGUEST',
-            title: "Checkout", 
-            coupons, 
-            user, 
-            address: addressDocs, // Keep original name for compatibility
-            addresses, // Also provide as addresses for new template
-            cart, // Keep original cart object
-            cartItems, // Also provide processed items
-            subtotal: cartTotal,
-            deliveryCharge,
-            total: grandTotal,
-            couponDiscount: 0,
-            calculatedValues: { cartTotal, deliveryCharge, grandTotal }
-        });
+        // Otherwise, return JSON for API calls
+        res.status(200).json(addresses);
     } catch (error) {
-        console.error('Error loading checkout:', error);
-        res.redirect('/user/cart');
+        console.error('Error:', error);
+        
+        if (req.headers.accept && req.headers.accept.includes('text/html')) {
+            return res.status(INTERNAL_SERVER_ERROR).render('error', {
+                message: 'Failed to load page'
+            });
+        }
+        
+        res.status(INTERNAL_SERVER_ERROR).json({
+            success: false,
+            error: 'Failed to fetch addresses'
+        });
     }
 };
-
-// Add Address from Checkout Page
-const addShoppingAddress = async (req, res) => {
+// Add a new address
+const addAddress = async (req, res) => {
     try {
-        // Map field names from your form to schema
+        const userId = req.user._id || req.user.id;
         const { 
-            name,           // from your EJS form
-            phone, 
-            altPhone,       // from your EJS form
-            landMark,       // from your EJS form
-            city, 
-            state, 
-            pinCode,        // from your EJS form
-            addressType 
+            name,
+            addressLine1,
+            city,
+            state,
+            postalCode,
+            phone,
+            addressType = 'Home',
+            altPhone = ''
         } = req.body;
 
-        const userId = req.session.user?.id ?? req.session.user?._id ?? null;
+        console.log('🔍 Adding address with data:', req.body);
 
-        if (!userId) {
-            return res.status(UNAUTHORIZED).json({ 
-                success: false,
-                message: "Please login to continue" 
-            });
-        }
-
-        // Validation
-        if (!name || !phone || !landMark || !city || !state || !pinCode || !addressType) {
-            return res.status(BAD_REQUEST).json({ 
-                success: false,
-                message: "All required fields must be filled." 
-            });
-        }
-
-        // Validate phone numbers
-        if (!/^\d{10}$/.test(phone.toString().trim())) {
-            return res.status(BAD_REQUEST).json({ 
-                success: false,
-                message: "Phone number must be 10 digits" 
-            });
-        }
-
-        if (altPhone && !/^\d{10}$/.test(altPhone.toString().trim())) {
-            return res.status(BAD_REQUEST).json({ 
-                success: false,
-                message: "Alternate phone number must be 10 digits" 
-            });
-        }
-
-        // Validate pincode
-        if (!/^\d{6}$/.test(pinCode.toString().trim())) {
-            return res.status(BAD_REQUEST).json({ 
-                success: false,
-                message: "Pin code must be 6 digits" 
-            });
-        }
-
+        // Find or create user's address document
         let userAddress = await Address.findOne({ userId });
+        
+        const newAddressData = {
+            _id: new mongoose.Types.ObjectId(), // Generate unique ID for the address
+            addressType,
+            name,
+            city,
+            landMark: addressLine1,
+            state,
+            pinCode: parseInt(postalCode),
+            phone,
+            altPhone
+        };
 
         if (!userAddress) {
-            userAddress = new Address({ userId, address: [] });
+            // Create new address document with nested address array
+            userAddress = new Address({
+                userId,
+                address: [newAddressData]
+            });
+        } else {
+            // Add new address to existing document's address array
+            userAddress.address.push(newAddressData);
         }
-
-        userAddress.address.push({
-            addressType,
-            name: name.trim(),
-            city: city.trim(), 
-            landMark: landMark.trim(), 
-            state: state.trim(),
-            pinCode: parseInt(pinCode),
-            phone: phone.toString().trim(), 
-            altPhone: altPhone ? altPhone.toString().trim() : phone.toString().trim()
-        });
 
         await userAddress.save();
 
-        return res.status(CREATED).json({ 
-            success: true,
-            message: "Address added successfully"
-        });
+        console.log('🔍 Saved address document:', userAddress);
 
+        // Get the newly added address (last one in the array)
+        const newAddress = userAddress.address[userAddress.address.length - 1];
+
+        res.status(201).json({
+            success: true,
+            message: 'Address added successfully',
+            data: {
+                _id: newAddress._id,
+                addressType: newAddress.addressType,
+                name: newAddress.name,
+                phone: newAddress.phone,
+                addressLine1: newAddress.landMark,
+                addressLine2: '',
+                city: newAddress.city,
+                state: newAddress.state,
+                pincode: newAddress.pinCode,
+                altPhone: newAddress.altPhone
+            }
+        });
     } catch (error) {
-        console.error("Error adding address:", error);
-        return res.status(INTERNAL_SERVER_ERROR).json({ 
+        console.error('Error adding address:', error);
+        res.status(INTERNAL_SERVER_ERROR).json({
             success: false,
-            message: error.message || "Address creation error" 
+            error: 'Failed to add address'
         });
     }
 };
 
-// Edit Address from Checkout Page
-const editShoppingAddress = async (req, res) => {
+// Update an address
+const updateAddress = async (req, res) => {
     try {
-        const { 
-            name, 
-            phone, 
-            altPhone, 
-            landMark, 
-            city, 
-            state, 
-            pinCode, 
-            addressType, 
-            addressIndex  // Changed from index to addressIndex
-        } = req.body;
+        const { id } = req.params;
+        const userId = req.user._id || req.user.id;
+        const updates = req.body;
 
-        const userId = req.session.user?.id ?? req.session.user?._id ?? null;
-
-        if (!userId) {
-            return res.status(UNAUTHORIZED).json({ 
+        // Find the user's address document
+        const userAddress = await Address.findOne({ userId });
+        if (!userAddress) {
+            return res.status(NOT_FOUND).json({
                 success: false,
-                message: "Please login to continue" 
+                error: 'Address not found'
             });
         }
 
-        // Validation
-        if (!name || !phone || !landMark || !city || !state || !pinCode || !addressType || addressIndex === undefined) {
-            return res.status(BAD_REQUEST).json({ 
+        // Find the specific address in the array
+        const addressIndex = userAddress.address.findIndex(addr => 
+            addr._id && addr._id.toString() === id
+        );
+
+        if (addressIndex === -1) {
+            return res.status(NOT_FOUND).json({
                 success: false,
-                message: "All required fields must be filled." 
+                error: 'Address not found'
             });
         }
 
-        // Validate phone numbers
-        if (!/^\d{10}$/.test(phone.toString().trim())) {
-            return res.status(BAD_REQUEST).json({ 
-                success: false,
-                message: "Phone number must be 10 digits" 
-            });
-        }
-
-        if (altPhone && !/^\d{10}$/.test(altPhone.toString().trim())) {
-            return res.status(BAD_REQUEST).json({ 
-                success: false,
-                message: "Alternate phone number must be 10 digits" 
-            });
-        }
-
-        // Validate pincode
-        if (!/^\d{6}$/.test(pinCode.toString().trim())) {
-            return res.status(BAD_REQUEST).json({ 
-                success: false,
-                message: "Pin code must be 6 digits" 
-            });
-        }
-
-        let userAddress = await Address.findOne({ userId });
-
-        if (!userAddress || !userAddress.address[addressIndex]) {
-            return res.status(NOT_FOUND).json({ 
-                success: false,
-                message: "Address not found" 
-            });
-        }
-
-        userAddress.address[addressIndex] = {
-            addressType, 
-            name: name.trim(),
-            city: city.trim(), 
-            landMark: landMark.trim(),
-            state: state.trim(), 
-            pinCode: parseInt(pinCode),
-            phone: phone.toString().trim(), 
-            altPhone: altPhone ? altPhone.toString().trim() : phone.toString().trim()
+        // Update the address fields
+        const updateData = {
+            ...updates,
+            landMark: updates.addressLine1 || updates.landMark,
+            pinCode: updates.postalCode || updates.pinCode
         };
 
+        Object.assign(userAddress.address[addressIndex], updateData);
         await userAddress.save();
 
-        return res.status(OK).json({ 
+        const updatedAddress = userAddress.address[addressIndex];
+
+        res.status(200).json({
             success: true,
-            message: "Address updated successfully"
+            message: 'Address updated successfully',
+            data: {
+                ...updatedAddress.toObject(),
+                addressLine1: updatedAddress.landMark,
+                addressLine2: '',
+                pincode: updatedAddress.pinCode
+            }
         });
-
     } catch (error) {
-        console.error("Error updating address:", error);
-        return res.status(INTERNAL_SERVER_ERROR).json({ 
+        console.error('Error updating address:', error);
+        res.status(INTERNAL_SERVER_ERROR).json({
             success: false,
-            message: error.message || "Address editing error" 
+            error: 'Failed to update address'
         });
     }
 };
 
-// Apply Coupon
-const applyCoupon = async (req, res) => {
+// Delete an address
+const deleteAddress = async (req, res) => {
     try {
-        const { couponCode } = req.body;
-        const userId = req.session.user?.id ?? req.session.user?._id ?? null;
+        const { id } = req.params;
+        const userId = req.user._id || req.user.id;
 
-        if (!userId) {
-            return res.status(UNAUTHORIZED).json({ 
-                success: false, 
-                message: "Please login to continue" 
+        // Find the user's address document
+        const userAddress = await Address.findOne({ userId });
+        if (!userAddress) {
+            return res.status(NOT_FOUND).json({
+                success: false,
+                error: 'Address not found'
             });
         }
 
-        const cart = await Cart.findOne({ userId }).populate('items.productId');
-
-        if (!cart || cart.items.length === 0) {
-            return res.status(BAD_REQUEST).json({ 
-                success: false, 
-                message: "Your cart is empty" 
-            });
-        }
-
-        // Calculate cart total
-        const subtotal = cart.items.reduce((acc, item) => {
-            return acc + (item.price * item.quantity);
-        }, 0);
-
-        const deliveryCharge = subtotal < 499 ? 39 : 0;
-        const total = subtotal + deliveryCharge;
-
-        const coupon = await Coupon.findOne({ 
-            code: couponCode.toUpperCase(),
-            status: 'Active',
-            expiryDate: { $gte: new Date() },
-            startDate: { $lte: new Date() }
-        });
-
-        if (!coupon) {
-            return res.status(NOT_FOUND).json({ 
-                success: false, 
-                message: "Invalid or expired coupon code" 
-            });
-        }
-
-        if (total < coupon.minPrice) {
-            return res.status(BAD_REQUEST).json({ 
-                success: false, 
-                message: `Minimum purchase of ₹${coupon.minPrice} required to use this coupon` 
-            });
-        }
-
-        // Check if user already used this coupon
-        if (coupon.userId && coupon.userId.includes(userId)) {
-            return res.status(BAD_REQUEST).json({ 
-                success: false, 
-                message: "You have already used this coupon" 
-            });
-        }
-
-        const discount = Math.min(coupon.offerPrice, subtotal);
-
-        // Store in session
-        req.session.appliedCoupon = {
-            code: coupon.code,
-            discount: discount,
-            couponId: coupon._id
-        };
-
-        return res.status(OK).json({ 
-            success: true, 
-            message: "Coupon applied successfully",
-            discount: discount,
-            couponId: coupon._id
-        });
-
-    } catch (error) {
-        console.error("Error applying coupon:", error);
-        return res.status(INTERNAL_SERVER_ERROR).json({ 
-            success: false, 
-            message: "Failed to apply coupon" 
-        });
-    }
-};
-
-// Checkout Details (Save to session and redirect to payment)
-const checkoutDetails = async (req, res) => {
-    const { selectedAddress, couponDiscount, couponId } = req.body;
-
-    req.session.deliveryAddress = selectedAddress;
-    req.session.couponDiscount = couponDiscount;
-    req.session.couponId = couponId;
-
-    res.redirect('/user/payments');
-};
-
-// Confirm Order
-const confirmOrder = async (req, res) => {
-    try {
-        const user = req.user;
-        const userId = user._id;
-
-        const orders = await Order.find({ userId })
-            .populate('orderItems.product')
-            .sort({ createdAt: -1 })
-            .limit(1);
-
-        if (!orders.length) {
-            console.error('No matching orders found.');
-            return res.status(NOT_FOUND).render('error', { 
-                siteName: 'COLINGUEST',
-                title: "error", 
-                message: 'No matching orders found.' 
-            });
-        }
-
-        const addressId = orders[0].address;
-
-        const address = await Address.findOne(
-            { 'address._id': addressId }
+        // Find and remove the specific address from the array
+        const addressIndex = userAddress.address.findIndex(addr => 
+            addr._id && addr._id.toString() === id
         );
 
-        if (!address) {
-            console.error('Address not found.');
-            return res.status(NOT_FOUND).render('error', {
-                siteName: 'COLINGUEST',
-                title: "error", 
-                message: 'Shipping address not found.' 
+        if (addressIndex === -1) {
+            return res.status(NOT_FOUND).json({
+                success: false,
+                error: 'Address not found'
             });
         }
 
-        const shippingAddress = address.address.find(
-            addr => addr._id.toString() === addressId.toString()
-        );
+        userAddress.address.splice(addressIndex, 1);
+        await userAddress.save();
 
-        return res.render('user/confirmOrder', { 
-            siteName: 'COLINGUEST',
-            title: "Order Confirmation", 
-            user, 
-            shippingAddress, 
-            orders 
+        // If no addresses left, delete the document
+        if (userAddress.address.length === 0) {
+            await Address.deleteOne({ userId });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Address deleted successfully'
         });
     } catch (error) {
-        console.error(`Error confirming order: ${error}`);
-        return res.status(INTERNAL_SERVER_ERROR).render('error', { 
-            siteName: 'COLINGUEST',
-            title: "error", 
-            message: 'Something went wrong. Please try again later.' 
+        console.error('Error deleting address:', error);
+        res.status(INTERNAL_SERVER_ERROR).json({
+            success: false,
+            error: 'Failed to delete address'
         });
     }
 };
 
-module.exports = { 
-    loadCheckout, 
-    addShoppingAddress, 
-    checkoutDetails, 
-    editShoppingAddress,
-    applyCoupon,
-    confirmOrder
+module.exports = {
+    getAddresses,
+    addAddress,
+    updateAddress,
+    deleteAddress
 };

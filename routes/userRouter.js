@@ -5,6 +5,7 @@ const passport = require('passport');
 const profileController = require('../controllers/user/profileController');
 const walletController = require('../controllers/user/walletController');
 const checkoutcontroller = require('../controllers/user/checkoutcontroller');
+const addresscontroller = require('../controllers/user/addresscontroller');
 const { ensureAuth, ensureGuest, preventBack } = require('../middlewares/auth');
 const upload = require('../middlewares/multer');
 
@@ -38,6 +39,12 @@ router.post('/profile/update', ensureAuth, upload.single('profileImage'), profil
 router.delete('/profile/image', ensureAuth, profileController.deleteProfileImage);
 router.get('/wallet', ensureAuth, walletController.loadWallet);
 router.get('/my-wallet', ensureAuth, walletController.loadWallet);
+
+// Address management routes
+router.get('/user/address', ensureAuth, addresscontroller.getAddresses);
+router.post('/user/address', ensureAuth, addresscontroller.addAddress);
+router.put('/user/address/:id', ensureAuth, addresscontroller.updateAddress);
+router.delete('/user/address/:id', ensureAuth, addresscontroller.deleteAddress);
 
 // Your existing routes
 router.get('/orders', ensureAuth, usercontroller.viewOrders);
