@@ -5,6 +5,25 @@ const User = require('../../models/userSchema');
 const Order = require('../../models/orderSchema'); // Import your Order model
 const Refund = require('../../models/refundSchema'); // Import your Refund model
 
+// Get wallet balance for API calls
+const getWalletBalance = async (req, res) => {
+    try {
+        const userId = req.user._id || req.user.id;
+        const balance = await calculateWalletBalance(userId);
+        
+        res.json({
+            success: true,
+            balance: balance
+        });
+    } catch (error) {
+        console.error('Error fetching wallet balance:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch wallet balance'
+        });
+    }
+};
+
 
 // Process order cancellation and refund to wallet
 const processOrderCancellation = async (orderId, userId, cancelledAmount, reason = 'Order cancelled') => {
@@ -489,27 +508,45 @@ const processWalletRefund = async (req, res) => {
     }
 };
 
-// Deduct money from wallet (for purchases)
+// Deduct money from wallet (for purchases) - HTTP endpoint
 const deductFromWallet = async (req, res) => {
     try {
         const userId = req.session.user?._id || req.session.user?.id;
         const { orderId, amount } = req.body;
 
-        if (!userId) {
-            return res.status(401).json({ 
-                success: false, 
-                error: 'User not authenticated' 
-            });
-        }
+        const result = await deductMoney(userId, amount, 'Payment for order', orderId);
 
-        // Check current balance
-        const currentBalance = await calculateWalletBalance(userId);
-        
-        if (currentBalance < parseFloat(amount)) {
+        if (!result.success) {
             return res.status(400).json({ 
                 success: false, 
                 error: 'Insufficient wallet balance' 
             });
+        }
+
+        res.json({
+            success: true,
+            message: 'Payment successful',
+            transactionId: result.transactionId,
+            newBalance: result.newBalance
+        });
+
+    } catch (error) {
+        console.error('Error deducting from wallet:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to process payment' 
+        });
+    }
+};
+
+// Internal function to deduct money from wallet (for internal calls)
+const deductMoney = async (userId, amount, description, reference) => {
+    try {
+        // Check current balance
+        const currentBalance = await calculateWalletBalance(userId);
+        
+        if (currentBalance < parseFloat(amount)) {
+            throw new Error('Insufficient wallet balance');
         }
 
         // Generate transaction ID
@@ -518,7 +555,7 @@ const deductFromWallet = async (req, res) => {
         // Create debit transaction
         const transaction = new Wallet({
             userId,
-            orderId,
+            orderId: reference.includes('Order #') ? reference.replace('Order #', '') : null,
             transactionId,
             payment_type: 'wallet',
             amount: parseFloat(amount),
@@ -535,20 +572,23 @@ const deductFromWallet = async (req, res) => {
         });
 
         const newBalance = await calculateWalletBalance(userId);
-
-        res.json({
-            success: true,
-            message: 'Payment processed successfully',
-            balance: newBalance,
+        
+        console.log('Wallet deduction successful:', {
+            userId,
+            amount,
+            newBalance,
             transactionId
         });
 
+        return {
+            success: true,
+            newBalance,
+            transactionId
+        };
+
     } catch (error) {
         console.error('Error deducting from wallet:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to process payment' 
-        });
+        throw error;
     }
 };
 
@@ -558,7 +598,9 @@ module.exports = {
     addMoneyToWallet,
     getWalletTransactions,
     processWalletRefund,
+    getWalletBalance,
     deductFromWallet,
+    deductMoney,
     processOrderCancellation,
     processProductReturn,
     returnOrder

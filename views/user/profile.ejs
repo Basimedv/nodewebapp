@@ -204,49 +204,13 @@
     
            
     <div class="profile-container">
-       
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <% if (user.profileImage) { %>
-                    <img src="<%= user.profileImage %>" alt="Profile" class="profile-avatar">
-                <% } else { %>
-                    <div class="profile-avatar-placeholder">
-                        <i class="fas fa-user" style="font-size: 35px; color: white;"></i>
-                    </div>
-                <% } %>
-                <h6 style="margin: 0; font-size: 15px;">Hello, <%= user.fullName.split(' ')[0] %></h6>
+        <div class="row">
+            <div class="col-md-3">
+                <%- include('../partials/user/profileSidebar', { activePage: 'profile', user: user }) %>
             </div>
-            
-            <nav class="sidebar-menu">
-                <a href="/user/orders" class="sidebar-menu-item">
-                    <i class="fas fa-shopping-bag"></i>
-                    <span>My Orders</span>
-                </a>
-                <a href="/profile" class="sidebar-menu-item active">
-                    <i class="fas fa-user"></i>
-                    <span>Profile Information</span>
-                </a>
-                <a href="/manage-addresses" class="sidebar-menu-item">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>Manage Addresses</span>
-                </a>
-                <a href="/privacy-settings" class="sidebar-menu-item">
-                    <i class="fas fa-key"></i>
-                    <span>Privacy Settings</span>
-                </a>
-                <a href="/my-coupons" class="sidebar-menu-item">
-                    <i class="fas fa-ticket-alt"></i>
-                    <span>My Coupons</span>
-                </a>
-                <a href="/my-wallet" class="sidebar-menu-item">
-                    <i class="fas fa-wallet"></i>
-                    <span>My Wallet</span>
-                </a>
-            </nav>
-        </aside>
-        <!-- Main Content -->
-        <main class="main-content">
+            <div class="row">
+            <div class="col-md-9"  style="margin-left: 400px;  margin-top: -700px;">
+                <!-- Main Content -->
             <!-- Profile Header -->
             <div class="profile-header-section">
                 <div class="profile-info-header">
@@ -293,6 +257,8 @@
           
         </main>
     </div>
+    </div>
+   
 
     <script>
         function copyReferralCode() {

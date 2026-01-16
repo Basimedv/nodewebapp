@@ -79,6 +79,7 @@
             gap: 20px;
             margin-bottom: 30px;
         }
+ 
 
         .payment-method {
             background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
@@ -127,6 +128,13 @@
             cursor: not-allowed;
             position: relative;
             overflow: hidden;
+        }
+
+        /* Ensure wallet payment method is clickable */
+        #walletPaymentMethod {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            z-index: 10 !important;
         }
 
         .payment-method.disabled:hover {
@@ -535,11 +543,14 @@
                                 <p>Visa, Mastercard, RuPay</p>
                             </div>
 
-                            <!-- Wallets (Disabled) -->
-                            <div class="payment-method disabled" data-method="wallets">
+                            <!-- Wallet Payment -->
+                            <div class="payment-method" id="walletPaymentMethod" data-method="wallet" onclick="selectPaymentMethod('wallet')">
                                 <i class="fas fa-wallet"></i>
-                                <h5>Wallets</h5>
+                                <h5>Wallet</h5>
                                 <p>Use your colingust wallet</p>
+                                <div class="wallet-balance" id="walletBalanceDisplay">
+                                    <small>Current Balance: ₹<span id="currentWalletBalance">0.00</span></small>
+                                </div>
                             </div>
 
                             <!-- Net Banking (Disabled) -->
@@ -558,7 +569,7 @@
                                 <p>Pay when you receive</p>
                                 <div class="disabled-overlay" id="codDisabledOverlay" style="display: none;">
                                     <i class="fas fa-lock"></i>
-                                    <span>Available only for orders below ₹3000</span>
+                                    <span>Available only for orders below ₹1000</span>
                                 </div>
                             </div>
                         </div>
@@ -723,7 +734,7 @@
                             </div>
                         </div>
 
-                        <button class="pay-button" id="payButton" onclick="processPayment()" disabled>
+                        <button class="pay-button" id="payButton" onclick="processPayment()">
                             <div class="loading-spinner" id="loadingSpinner"></div>
                             <span id="payButtonText">Select Payment Method</span>
                         </button>
@@ -755,12 +766,12 @@
             const codMethod = document.getElementById('codPaymentMethod');
             const codDisabledOverlay = document.getElementById('codDisabledOverlay');
             
-            if (orderTotal >= 3000) {
-                // Disable COD for orders 3000 and above
+            if (orderTotal >= 1000) {
+                // Disable COD for orders 1000 and above
                 codMethod.classList.add('disabled');
                 codDisabledOverlay.style.display = 'flex';
             } else {
-                // Enable COD for orders below 3000
+                // Enable COD for orders below 1000
                 codMethod.classList.remove('disabled');
                 codDisabledOverlay.style.display = 'none';
             }
@@ -768,39 +779,52 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 Page loaded, initializing...');
             initializeCODAvailability();
+            // Load wallet balance on page load
+            loadWalletBalance();
+            
+            // Test wallet payment method element
+            const walletElement = document.getElementById('walletPaymentMethod');
+            if (walletElement) {
+                console.log('🔍 Wallet element found:', walletElement);
+                console.log('🔍 Wallet element classes:', walletElement.className);
+                console.log('🔍 Wallet element onclick:', walletElement.getAttribute('onclick'));
+                
+                // Test click functionality
+                walletElement.addEventListener('click', function(e) {
+                    console.log('🔍 Wallet clicked directly!');
+                    e.preventDefault();
+                    selectPaymentMethod('wallet');
+                });
+            } else {
+                console.error('❌ Wallet element not found!');
+            }
         });
 
+        // Load wallet balance
+        async function loadWalletBalance() {
+            try {
+                const response = await fetch('/user/wallet/balance');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('currentWalletBalance').textContent = data.balance.toFixed(2);
+                }
+            } catch (error) {
+                console.error('Error loading wallet balance:', error);
+            }
+        }
+
         function selectPaymentMethod(method) {
-            // Only allow COD selection if order meets minimum
-            if (method !== 'cod') {
-                return;
-            }
-
-            // Check if order meets requirement
-            if (orderTotal >= 3000) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'COD Not Available',
-                    html: `
-                        <div class="text-start">
-                            <p class="mb-2">Cash on Delivery is available only for orders <strong>below ₹3000</strong>.</p>
-                            <p class="mb-0">Your current order total is <strong>₹${orderTotal.toFixed(2)}</strong>.</p>
-                            <p class="mb-0 mt-2">Please use online payment methods for orders of ₹3000 or more.</p>
-                        </div>
-                    `,
-                    confirmButtonText: 'OK',
-                    confirmButtonColor: '#3085d6'
-                });
-                return;
-            }
-
+            console.log('🔍 selectPaymentMethod called with:', method);
+            
             // Remove selected class from all methods
             document.querySelectorAll('.payment-method').forEach(el => {
                 el.classList.remove('selected');
             });
 
-            // Add selected class to COD method
+            // Add selected class to chosen method
             document.querySelector(`[data-method="${method}"]`).classList.add('selected');
 
             // Hide all forms
@@ -808,13 +832,103 @@
                 form.classList.remove('active');
             });
 
-            // Show COD form
+            // Handle different payment methods
             if (method === 'cod') {
+                // Check if order meets COD requirement
+                if (orderTotal >= 1000) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'COD Not Available',
+                        html: `
+                            <div class="text-start">
+                                <p class="mb-2">Cash on Delivery is available only for orders <strong>below ₹1000</strong>.</p>
+                                <p class="mb-0">Your current order total is <strong>₹${orderTotal.toFixed(2)}</strong>.</p>
+                                <p class="mb-0 mt-2">Please use online payment methods for orders of ₹1000 or more.</p>
+                            </div>
+                        `,
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6'
+                    });
+                    return;
+                }
+                // Show COD form
                 document.getElementById('codForm').classList.add('active');
+            } else if (method === 'wallet') {
+                console.log('🔍 Wallet payment selected');
+                // Check wallet balance before allowing wallet payment
+                checkWalletBalanceAndProceed();
             }
 
             selectedPaymentMethod = method;
-            updatePayButton();
+            console.log('🔍 selectedPaymentMethod set to:', selectedPaymentMethod);
+        }
+
+        // Check wallet balance and proceed with payment
+        async function checkWalletBalanceAndProceed() {
+            try {
+                // Fetch current wallet balance
+                const response = await fetch('/user/wallet/balance');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const currentBalance = data.balance;
+                    
+                    // Update wallet balance display
+                    document.getElementById('currentWalletBalance').textContent = currentBalance.toFixed(2);
+                    
+                    // Check if sufficient balance
+                    if (currentBalance < orderTotal) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Insufficient Balance',
+                            html: `
+                                <div class="text-start">
+                                    <p class="mb-2">Your wallet balance is <strong>₹${currentBalance.toFixed(2)}</strong></p>
+                                    <p class="mb-0">Order total: <strong>₹${orderTotal.toFixed(2)}</strong></p>
+                                    <p class="mb-0 mt-2">You need <strong>₹${(orderTotal - currentBalance).toFixed(2)}</strong> more to complete this order.</p>
+                                    <p class="mb-0">Please choose another payment method or add funds to your wallet.</p>
+                                </div>
+                            `,
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#d33'
+                        });
+                        
+                        // Deselect wallet method
+                        document.getElementById('walletPaymentMethod').classList.remove('selected');
+                        selectedPaymentMethod = null;
+                    } else {
+                        // Sufficient balance - allow wallet payment
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Wallet Payment Available',
+                            html: `
+                                <div class="text-start">
+                                    <p class="mb-2">Wallet balance: <strong>₹${currentBalance.toFixed(2)}</strong></p>
+                                    <p class="mb-0">Order total: <strong>₹${orderTotal.toFixed(2)}</strong></p>
+                                    <p class="mb-0 mt-2">Remaining balance after payment: <strong>₹${(currentBalance - orderTotal).toFixed(2)}</strong></p>
+                                </div>
+                            `,
+                            confirmButtonText: 'Proceed with Wallet',
+                            confirmButtonColor: '#28a745'
+                        });
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Unable to fetch wallet balance. Please try again.',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            } catch (error) {
+                console.error('Error checking wallet balance:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Unable to check wallet balance. Please try again.',
+                    confirmButtonText: 'OK'
+                });
+            }
         }
 
         
@@ -826,8 +940,10 @@
                 payButton.disabled = false;
                 if (selectedPaymentMethod === 'cod') {
                     payButtonText.textContent = 'Place Order';
+                } else if (selectedPaymentMethod === 'wallet') {
+                    payButtonText.textContent = 'Pay ₹' + (cart?.total || 0).toFixed(2);
                 } else {
-                    payButtonText.textContent = `Pay ₹<%= (cart?.total || 0).toFixed(2) %>`;
+                    payButtonText.textContent = 'Pay ₹' + (cart?.total || 0).toFixed(2);
                 }
             } else {
                 payButton.disabled = true;
@@ -840,6 +956,17 @@
             const successMessage = document.getElementById('successMessage');
             const payButton = document.getElementById('payButton');
             const payButtonText = document.getElementById('payButtonText');
+
+            // Validate payment method selection
+            if (!selectedPaymentMethod) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Payment Method Required',
+                    text: 'Please select a payment method to proceed.',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
 
             // Hide previous messages
             errorMessage.style.display = 'none';

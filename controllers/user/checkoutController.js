@@ -392,6 +392,30 @@ const processPayment = async (req, res) => {
             }
         }
 
+        // Wallet balance validation for wallet payment
+        if (paymentMethod === 'wallet') {
+            const Wallet = require('../../models/walletSchema');
+            const walletController = require('./walletController');
+            
+            // Calculate current wallet balance
+            const currentBalance = await walletController.calculateWalletBalance(userId);
+            console.log('🔍 Wallet Balance Check:', {
+                currentBalance: currentBalance,
+                orderTotal: finalTotal,
+                paymentMethod: paymentMethod
+            });
+            
+            if (currentBalance < finalTotal) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Insufficient wallet balance. Please choose another payment method.',
+                    currentBalance: currentBalance,
+                    requiredAmount: finalTotal,
+                    shortfall: finalTotal - currentBalance
+                });
+            }
+        }
+
         // Create order
         const Order = require('../../models/orderSchema');
         
@@ -463,6 +487,27 @@ const processPayment = async (req, res) => {
             finalAmount: finalTotal,
             paymentMethod: paymentMethod
         });
+        
+        // Deduct from wallet if payment method is wallet
+        if (paymentMethod === 'wallet') {
+            const Wallet = require('../../models/walletSchema');
+            const walletController = require('./walletController');
+            
+            try {
+                // Create wallet transaction for the deduction
+                const result = await walletController.deductMoney(userId, finalTotal, 'Order Payment', `Order #${order.orderId}`);
+                console.log('💰 Wallet deducted:', {
+                    userId: userId,
+                    amount: finalTotal,
+                    orderId: order.orderId,
+                    result: result
+                });
+            } catch (walletError) {
+                console.error('❌ Wallet deduction error:', walletError);
+                // Don't fail the order, but log the error
+                // The order is already created, so we should continue
+            }
+        }
         
         console.log('🔍 Order Items Created:', JSON.stringify(orderItems, null, 2));
 

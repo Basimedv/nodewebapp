@@ -39,6 +39,7 @@ router.post('/profile/update', ensureAuth, upload.single('profileImage'), profil
 router.delete('/profile/image', ensureAuth, profileController.deleteProfileImage);
 router.get('/wallet', ensureAuth, walletController.loadWallet);
 router.get('/my-wallet', ensureAuth, walletController.loadWallet);
+router.get('/user/wallet/balance', ensureAuth, walletController.getWalletBalance);
 
 // Address management routes
 router.get('/user/address', ensureAuth, addresscontroller.getAddresses);
