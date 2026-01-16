@@ -1349,13 +1349,19 @@
             }
 
             if (data.success) {
-              await Swal.fire({
+              const result = await Swal.fire({
                 icon: 'success',
                 title: 'Added to Cart!',
                 text: `Size ${selectedSize} added to your cart`,
-                showConfirmButton: false,
+                showConfirmButton: true,
+                confirmButtonText: 'Go to Cart',
                 timer: 1500
               });
+              
+              // Handle "Go to Cart" button click
+              if (result.isConfirmed) {
+                window.location.href = '/cart';
+              }
               
               if (submitBtn) {
                 submitBtn.disabled = false;

@@ -9,6 +9,7 @@ const db = require('./config/db');
 const mongoose = require('mongoose');
 const userRouter = require('./routes/userRouter');
 const adminRouter = require('./routes/adminRouter');
+const paymentRouter = require('./routes/payment');
 const cloudinary = require('./config/cloudinary');
 
 dotenv.config();
@@ -59,6 +60,7 @@ app.use(morgan('dev'));
 // Routes
 app.use('/', userRouter);
 app.use('/admin', adminRouter);
+app.use('/api/payment', paymentRouter); // Add this line
 
 // Server start
 app.listen(process.env.PORT || 3000, () => {

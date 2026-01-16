@@ -88,6 +88,12 @@ router.get('/user/payment', ensureAuth, checkoutcontroller.loadPayment);
 router.get('/payments', ensureAuth, checkoutcontroller.loadPayment);
 router.get('/user/payments', ensureAuth, checkoutcontroller.loadPayment);
 router.post('/payment/process', ensureAuth, checkoutcontroller.processPayment);
+router.get('/payment-failure', ensureAuth, (req, res) => {
+    res.render('user/paymentFailure', {
+        title: 'Payment Failed',
+        user: req.user
+    });
+});
 
 // ===== GOOGLE OAUTH ROUTES =====
 

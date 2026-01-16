@@ -536,9 +536,13 @@
                         <div class="success-message" id="successMessage"></div>
 
                         <div class="payment-methods">
-                            <!-- Credit/Debit Card (Disabled) -->
-                            <div class="payment-method disabled" data-method="card">
-                                <i class="fas fa-credit-card"></i>
+                            <!-- Credit/Debit Card -->
+                            <div class="payment-method" data-method="card" onclick="selectPaymentMethod('card')">
+                                <div class="card-logos">
+                                    <i class="fab fa-cc-visa" style="font-size: 2rem; color: #1a1f71; margin-right: 5px;"></i>
+                                    <i class="fab fa-cc-mastercard" style="font-size: 2rem; color: #eb001b; margin-right: 5px;"></i>
+                                    <i class="fab fa-cc-amex" style="font-size: 2rem; color: #006fcf;"></i>
+                                </div>
                                 <h5>Credit/Debit Card</h5>
                                 <p>Visa, Mastercard, RuPay</p>
                             </div>
@@ -553,8 +557,8 @@
                                 </div>
                             </div>
 
-                            <!-- Net Banking (Disabled) -->
-                            <div class="payment-method disabled" data-method="netbanking">
+                            <!-- Net Banking -->
+                            <div class="payment-method" data-method="netbanking" onclick="selectPaymentMethod('netbanking')">
                                 <div class="razorpay-logo">
                                     <img src="https://razorpay.com/assets/razorpay-logo.svg" alt="Razorpay" />
                                 </div>
@@ -757,6 +761,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
         let selectedPaymentMethod = '';
         const orderTotal = parseFloat('<%= (cart?.total || 0) %>');
@@ -855,8 +860,10 @@
                 document.getElementById('codForm').classList.add('active');
             } else if (method === 'wallet') {
                 console.log('🔍 Wallet payment selected');
-                // Check wallet balance before allowing wallet payment
-                checkWalletBalanceAndProceed();
+                // Just select wallet method, don't process immediately
+            } else if (method === 'card' || method === 'netbanking') {
+                console.log('🔍 Razorpay payment selected:', method);
+                // Just select the method, don't process immediately
             }
 
             selectedPaymentMethod = method;
@@ -951,6 +958,233 @@
             }
         }
 
+        // Create Razorpay order and redirect to Razorpay
+        async function createRazorpayOrder(paymentMethod) {
+            try {
+                console.log('🔍 Creating Razorpay order for:', paymentMethod);
+                
+                // Show loading
+                Swal.fire({
+                    title: 'Initializing Payment...',
+                    html: 'Please wait while we set up your payment',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Create order on backend
+                const response = await fetch('/api/payment/create-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        amount: orderTotal,
+                        currency: 'INR',
+                        paymentMethod: paymentMethod
+                    })
+                });
+
+                const data = await response.json();
+                console.log('🔍 Razorpay order response:', data);
+
+                if (data.success) {
+                    Swal.close();
+                    
+                    // Initialize Razorpay with different configurations based on payment method
+                    let config = {};
+                    
+                    if (paymentMethod === 'card') {
+                        // Show only card payment options
+                        config = {
+                            display: {
+                                blocks: {
+                                    card: {
+                                        name: 'Pay via Credit/Debit Card',
+                                        instruments: [
+                                            {
+                                                method: 'card'
+                                            }
+                                        ]
+                                    }
+                                },
+                                hide: [
+                                    {
+                                        method: 'netbanking'   // Hide Net Banking
+                                    },
+                                    {
+                                        method: 'wallet'       // Hide Wallets
+                                    },
+                                    {
+                                        method: 'upi'          // Hide UPI
+                                    },
+                                    {
+                                        method: 'emi'          // Hide EMI
+                                    }
+                                ],
+                                sequence: ['block.card'],
+                                preferences: {
+                                    show_default_blocks: false
+                                }
+                            }
+                        };
+                    } else if (paymentMethod === 'netbanking') {
+                        // Show only net banking options
+                        config = {
+                            display: {
+                                blocks: {
+                                    banks: {
+                                        name: 'Pay via Net Banking',
+                                        instruments: [
+                                            {
+                                                method: 'netbanking'
+                                            }
+                                        ]
+                                    }
+                                },
+                                hide: [
+                                    {
+                                        method: 'card'         // Hide Credit/Debit Cards
+                                    },
+                                    {
+                                        method: 'wallet'       // Hide Wallets
+                                    },
+                                    {
+                                        method: 'upi'          // Hide UPI
+                                    },
+                                    {
+                                        method: 'emi'          // Hide EMI
+                                    }
+                                ],
+                                sequence: ['block.banks'],
+                                preferences: {
+                                    show_default_blocks: false
+                                }
+                            }
+                        };
+                    }
+                    
+                    // Initialize Razorpay
+                    const options = {
+                        key: data.key, // Razorpay key from backend
+                        amount: data.order.amount,
+                        currency: data.order.currency,
+                        name: 'COLINQUEST',
+                        description: `Payment for order - ${paymentMethod}`,
+                        order_id: data.order.id, // Use data.order.id instead of data.orderId
+                        handler: function (response) {
+                            // Handle successful payment
+                            console.log('🔍 Razorpay payment response:', response);
+                            verifyRazorpayPayment(response, paymentMethod);
+                        },
+                        prefill: {
+                            name: '<%= user ? user.fullName : "" %>',
+                            email: '<%= user ? user.email : "" %>',
+                            contact: '<%= user ? user.phone : "" %>'
+                        },
+                        config: config,
+                        theme: {
+                            color: '#5B3F64'
+                        },
+                        modal: {
+                            ondismiss: function() {
+                                // Handle when user closes Razorpay modal
+                                console.log('🔍 Razorpay modal closed');
+                                // Reset payment method selection
+                                document.querySelectorAll('.payment-method').forEach(el => {
+                                    el.classList.remove('selected');
+                                });
+                                selectedPaymentMethod = '';
+                            }
+                        }
+                    };
+
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                    
+                } else {
+                    throw new Error(data.message || 'Failed to create payment order');
+                }
+
+            } catch (error) {
+                console.error('🔍 Razorpay order creation error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Payment Error',
+                    text: error.message || 'Failed to initialize payment. Please try again.',
+                    confirmButtonColor: '#3085d6'
+                });
+                
+                // Reset payment method selection
+                document.querySelectorAll('.payment-method').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                selectedPaymentMethod = '';
+            }
+        }
+
+        // Verify Razorpay payment
+        async function verifyRazorpayPayment(response, paymentMethod) {
+            try {
+                console.log('🔍 Verifying Razorpay payment:', response);
+                console.log('🔍 Payment method:', paymentMethod);
+                
+                const verifyResponse = await fetch('/api/payment/verify-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                        paymentMethod: paymentMethod
+                    })
+                });
+
+                console.log('🔍 Verification response status:', verifyResponse.status);
+                const data = await verifyResponse.json();
+                console.log('🔍 Verification response data:', data);
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Payment Successful!',
+                        text: 'Your payment has been processed successfully.',
+                        confirmButtonColor: '#3085d6'
+                    }).then(() => {
+                        // Redirect to confirm order page
+                        window.location.href = '/confirm-order';
+                    });
+                } else {
+                    throw new Error(data.message || 'Payment verification failed');
+                }
+
+            } catch (error) {
+                console.error('🔍 Payment verification error:', error);
+                
+                // Check if it's a "Missing payment details" error
+                if (error.message && error.message.includes('Missing payment details')) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Payment Processing',
+                        text: 'Your payment is being processed. Redirecting to order confirmation...',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // Redirect to confirm order page
+                        window.location.href = '/confirm-order';
+                    });
+                } else {
+                    // For other payment errors, redirect to payment failure page
+                    window.location.href = '/payment-failure';
+                }
+            }
+        }
+
         async function processPayment() {
             const errorMessage = document.getElementById('errorMessage');
             const successMessage = document.getElementById('successMessage');
@@ -976,45 +1210,53 @@
                 payButton.disabled = true;
                 payButtonText.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
 
-                const response = await fetch('/payment/process', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({
-                        paymentMethod: selectedPaymentMethod
-                    })
-                });
+                // Show 4-second processing animation
+                await new Promise(resolve => setTimeout(resolve, 4000));
 
-                const data = await response.json();
+                if (selectedPaymentMethod === 'cod') {
+                    // Handle COD payment after 4-second delay
+                    const response = await fetch('/payment/process', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            paymentMethod: selectedPaymentMethod
+                        })
+                    });
 
-                if (data.success) {
-                    // Show success message
-                    successMessage.textContent = data.message;
-                    successMessage.style.display = 'block';
-                    
-                    // Redirect to confirm order page
-                    setTimeout(() => {
-                        window.location.href = '/confirm-order';
-                    }, 1500);
-                } else {
-                    // Show error message
-                    errorMessage.textContent = data.message;
-                    errorMessage.style.display = 'block';
-                    
-                    // Reset button
+                    const data = await response.json();
+
+                    if (data.success) {
+                        successMessage.textContent = data.message;
+                        successMessage.style.display = 'block';
+                        
+                        setTimeout(() => {
+                            window.location.href = '/confirm-order';
+                        }, 1500);
+                    } else {
+                        errorMessage.textContent = data.message;
+                        errorMessage.style.display = 'block';
+                    }
+                } else if (selectedPaymentMethod === 'wallet') {
+                    // Handle wallet payment after 4-second delay
+                    await checkWalletBalanceAndProceed();
+                } else if (selectedPaymentMethod === 'card' || selectedPaymentMethod === 'netbanking') {
+                    // Handle Razorpay payments after 4-second delay
+                    await createRazorpayOrder(selectedPaymentMethod);
+                }
+
+            } catch (error) {
+                console.error('Payment processing error:', error);
+                errorMessage.textContent = 'Payment processing failed. Please try again.';
+                errorMessage.style.display = 'block';
+            } finally {
+                // Reset button for non-Razorpay payments
+                if (selectedPaymentMethod !== 'card' && selectedPaymentMethod !== 'netbanking') {
                     payButton.disabled = false;
                     payButtonText.textContent = selectedPaymentMethod === 'cod' ? 'Place Order' : 'Pay';
                 }
-            } catch (error) {
-                console.error('Payment error:', error);
-                errorMessage.textContent = 'Payment processing failed. Please try again.';
-                errorMessage.style.display = 'block';
-                
-                // Reset button
-                payButton.disabled = false;
-                payButtonText.textContent = selectedPaymentMethod === 'cod' ? 'Place Order' : 'Pay';
             }
         }
 
