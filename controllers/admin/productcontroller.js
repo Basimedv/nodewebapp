@@ -137,7 +137,7 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
-    const { productName, description, category, regularPrice, salePrice, status } = req.body;
+    const { productName, description, category, regularPrice, status } = req.body;
 
     // Parse stock data
     const stock = {
@@ -176,7 +176,6 @@ const createProduct = async (req, res) => {
       description: description?.trim() || '',
       category,
       regularPrice: parseFloat(regularPrice),
-      salePrice: parseFloat(salePrice),
       stock,
       size: sizeArray,
       productImage: req.files.map(file => file.path),
@@ -220,7 +219,6 @@ const updateProduct = async (req, res) => {
       description, 
       category, 
       regularPrice, 
-      salePrice, 
       status,
       existingImages,
       removedImages
@@ -236,22 +234,15 @@ const updateProduct = async (req, res) => {
 
     // Validate prices
     const regPrice = parseFloat(regularPrice);
-    const salPrice = parseFloat(salePrice);
 
-    if (isNaN(regPrice) || isNaN(salPrice) || regPrice <= 0 || salPrice <= 0) {
+    if (isNaN(regPrice) || regPrice <= 0) {
       return res.status(400).json({
         success: false,
         message: 'Invalid price values'
       });
     }
 
-    if (salPrice > regPrice) {
-      return res.status(400).json({
-        success: false,
-        message: 'Sale price cannot be greater than regular price'
-      });
-    }
-
+    
     // Parse stock
     const stock = {
       S: Math.max(0, parseInt(req.body.stock_S) || 0),
@@ -382,7 +373,6 @@ const updateProduct = async (req, res) => {
       description: description.trim(),
       category,
       regularPrice: regPrice,
-      salePrice: salPrice,
       stock,
       size: availableSizes,
       status: finalStatus,

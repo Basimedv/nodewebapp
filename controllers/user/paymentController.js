@@ -8,18 +8,81 @@ const createOrder = async (req, res) => {
     console.log('🔍 Request body:', req.body);
     console.log('🔍 Authenticated user:', req.user);
     
-    const { amount, currency = 'INR' } = req.body;
+    const { currency = 'INR' } = req.body;
+    const userId = req.user._id || req.user.id;
 
-    if (!amount) {
-      console.log('❌ Amount is required');
-      return res.status(400).json({ 
+    if (!userId) {
+      console.log('❌ User not authenticated');
+      return res.status(401).json({ 
         success: false, 
-        message: 'Amount is required' 
+        message: 'User not authenticated' 
       });
     }
 
+    // Import required models
+    const Cart = require('../../models/cartSchema');
+
+    // Get cart and calculate total amount
+    const cart = await Cart.findOne({ userId }).populate({
+      path: 'items.productId',
+      populate: {
+        path: 'category',
+        model: 'Category'
+      }
+    });
+    
+    if (!cart || cart.items.length === 0) {
+      console.log('❌ Cart is empty');
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Your cart is empty' 
+      });
+    }
+
+    // Calculate totals with offers and coupon discount
+    let cartTotal = 0;
+    if (cart && cart.items.length > 0) {
+      cartTotal = cart.items.reduce((acc, item) => {
+        const regularPrice = item.productId.regularPrice || 0;
+        const productOffer = item.productId.productOffer || 0;
+        const categoryOffer = item.productId.category?.categoryOffer || 0;
+        
+        let itemPrice = regularPrice;
+        
+        // Apply product offer if exists
+        if (productOffer > 0) {
+          itemPrice = Math.round(regularPrice - (regularPrice * productOffer / 100));
+        }
+        // Apply category offer if no product offer
+        else if (categoryOffer > 0) {
+          itemPrice = Math.round(regularPrice - (regularPrice * categoryOffer / 100));
+        }
+        
+        return acc + (itemPrice * item.quantity);
+      }, 0);
+    }
+
+    const deliveryCharge = cartTotal < 499 ? 39 : 0;
+    let grandTotal = cartTotal + deliveryCharge;
+
+    // Apply coupon discount if available in cart
+    let discount = 0;
+    
+    if (cart.discount && cart.discount > 0 && cart.appliedCoupon) {
+      discount = cart.discount;
+    }
+
+    const finalAmount = grandTotal - discount;
+
+    console.log('🔍 Calculated Order Amount:', {
+      cartTotal: cartTotal,
+      deliveryCharge: deliveryCharge,
+      discount: discount,
+      finalAmount: finalAmount
+    });
+
     const options = {
-      amount: amount * 100, // amount in paise
+      amount: finalAmount * 100, // amount in paise
       currency: currency,
       receipt: `receipt_${Date.now()}`,
       payment_capture: 1 // auto capture
@@ -32,7 +95,8 @@ const createOrder = async (req, res) => {
     res.json({
       success: true,
       order: order,
-      key: process.env.RZP_TEST_KEY
+      key: process.env.RZP_TEST_KEY,
+      calculatedAmount: finalAmount
     });
 
   } catch (error) {
@@ -106,7 +170,13 @@ const verifyPayment = async (req, res) => {
 
       // Get cart and calculate totals
       console.log('🔍 Looking for cart for userId:', userId);
-      const cart = await Cart.findOne({ userId }).populate('items.productId');
+      const cart = await Cart.findOne({ userId }).populate({
+        path: 'items.productId',
+        populate: {
+          path: 'category',
+          model: 'Category'
+        }
+      });
       
       console.log('🔍 Cart found:', cart);
       console.log('🔍 Cart items count:', cart ? cart.items.length : 0);
@@ -119,19 +189,23 @@ const verifyPayment = async (req, res) => {
         });
       }
 
-      // Calculate totals
+      // Calculate totals with offers and coupon discount
       let cartTotal = 0;
       if (cart && cart.items.length > 0) {
         cartTotal = cart.items.reduce((acc, item) => {
           const regularPrice = item.productId.regularPrice || 0;
-          const salePrice = item.productId.salePrice || 0;
-          const offerPercent = item.productId.productOffer || 0;
+          const productOffer = item.productId.productOffer || 0;
+          const categoryOffer = item.productId.category?.categoryOffer || 0;
           
           let itemPrice = regularPrice;
-          if (salePrice > 0 && salePrice < regularPrice) {
-            itemPrice = salePrice;
-          } else if (offerPercent > 0) {
-            itemPrice = Math.round(regularPrice - (regularPrice * offerPercent / 100));
+          
+          // Apply product offer if exists
+          if (productOffer > 0) {
+            itemPrice = Math.round(regularPrice - (regularPrice * productOffer / 100));
+          }
+          // Apply category offer if no product offer
+          else if (categoryOffer > 0) {
+            itemPrice = Math.round(regularPrice - (regularPrice * categoryOffer / 100));
           }
           
           return acc + (itemPrice * item.quantity);
@@ -141,10 +215,13 @@ const verifyPayment = async (req, res) => {
       const deliveryCharge = cartTotal < 499 ? 39 : 0;
       let grandTotal = cartTotal + deliveryCharge;
 
-      // Apply coupon discount if available
+      // Apply coupon discount if available in cart
       let discount = 0;
-      if (req.session.couponDiscount) {
-        discount = parseFloat(req.session.couponDiscount);
+      let appliedCoupon = null;
+      
+      if (cart.discount && cart.discount > 0 && cart.appliedCoupon) {
+        discount = cart.discount;
+        appliedCoupon = cart.appliedCoupon;
       }
 
       const finalTotal = grandTotal - discount;

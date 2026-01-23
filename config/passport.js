@@ -3,11 +3,17 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/userSchema');
 const env = require('dotenv').config();
 
+// Force IPv4 DNS resolution
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback", // Changed to relative path
-    passReqToCallback: true // Enable request object in callback
+    callbackURL: "http://localhost:3000/auth/google/callback", // Changed to absolute URL
+    userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
+    passReqToCallback: true,
+    proxy: true // Important for some network configurations
 },
 async (req, accessToken, refreshToken, profile, done) => {
     try {
@@ -64,7 +70,7 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (id, done) => {
     try {
         const user = await User.findById(id);
-        console.log( user?._id);
+        console.log("🔓 Deserializing user:", user?._id);
         done(null, user);
     } catch (err) {
         console.error("❌ Deserialize error:", err);

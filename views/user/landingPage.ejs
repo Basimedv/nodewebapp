@@ -98,12 +98,7 @@
         <% if (categoryProducts.length > 0) { %>
             <!-- Category Section -->
             <div class="category-section">
-                <div class="category-header">
-                    <h3 class="category-title"><%= category %></h3>
-                    <a href="/productListing?category=<%= encodeURIComponent(category) %>" class="view-all-btn">
-                        View All <i class="fas fa-arrow-right"></i>
-                    </a>
-                </div>
+               
                 
                 <div class="category-products">
                     <% categoryProducts.forEach(function(product) { %>
@@ -122,13 +117,7 @@
                                         Rs. <%= Number(product.regularPrice || 0).toFixed(2) %>
                                     </span>
 
-                                    <!-- Discount Price -->
-                                    <% if (product.salePrice && Number(product.salePrice) > 0 && Number(product.salePrice) < Number(product.regularPrice || 0)) { %>
-                                        <span class="discount-price">
-                                            Rs. <%= Number(product.salePrice).toFixed(2) %>
-                                        </span>
-                                    <% } %>
-                                </p>
+                                                                    </p>
                             </div>
                         </div>
                     <% }) %>

@@ -6,10 +6,13 @@ const router = express.Router();
 const admincontroller = require('../controllers/admin/admincontroller');
 const customercontroller = require('../controllers/admin/customercontroller');
 const categorycontroller = require('../controllers/admin/categorycontroller');
-const categoryOfferController = require('../controllers/admin/categoryOfferController');
+const offerController = require('../controllers/admin/offerController');
 const productcontroller = require('../controllers/admin/productcontroller');
 const ordersController = require('../controllers/admin/ordersController');
 const refundController = require('../controllers/admin/refundController');
+const couponcontroller = require('../controllers/admin/couponcontroller');
+const salesController = require('../controllers/admin/salesController');
+const transactionsController = require('../controllers/admin/transactionsController');
 
 // ======================= Middleware =======================
 const { userAuth, adminAuth, ensureAdminGuest, preventBack } = require('../middlewares/auth');
@@ -25,10 +28,72 @@ router.post('/adminLogin', ensureAdminGuest, admincontroller.login);
 router.get('/dashboard', adminAuth, admincontroller.loadDashboard);
 router.get('/logout', admincontroller.logout);
 
+// ======================= Dashboard Data API =======================
+// API endpoint for dashboard statistics
+router.get('/dashboard/data', adminAuth, async (req, res) => {
+    try {
+        const { type, period } = req.query;
+        
+        if (type === 'stats') {
+            // Return dashboard statistics
+            const dashboardController = require('../controllers/admin/dashboardController');
+            await dashboardController.getDashboardStats(req, res);
+        } else if (type === 'chart') {
+            // Return chart data
+            const dashboardController = require('../controllers/admin/dashboardController');
+            await dashboardController.getChartData(req, res);
+        } else if (type === 'products') {
+            // Return best selling products
+            const dashboardController = require('../controllers/admin/dashboardController');
+            await dashboardController.getBestSellingProducts(req, res);
+        } else if (type === 'categories') {
+            // Return best selling categories
+            const dashboardController = require('../controllers/admin/dashboardController');
+            await dashboardController.getBestSellingCategories(req, res);
+        } else if (type === 'locations') {
+            // Return sales by location
+            const dashboardController = require('../controllers/admin/dashboardController');
+            await dashboardController.getSalesByLocation(req, res);
+        } else if (type === 'transactions') {
+            // Return transaction analytics
+            const dashboardController = require('../controllers/admin/dashboardController');
+            await dashboardController.getTransactionAnalytics(req, res);
+        } else {
+            res.status(400).json({ success: false, error: 'Invalid data type' });
+        }
+    } catch (error) {
+        console.error('Dashboard data API error:', error);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
+
 // ======================= Customer Management =======================
 router.get('/customers', adminAuth, customercontroller.customerinfo);
 router.put('/customers/:id', adminAuth, customercontroller.userBlock);
 router.get('/customers/filter', adminAuth, customercontroller.filterCustomers);
+
+
+// ======================= Coupon Management =======================
+router.get('/coupons', adminAuth, couponcontroller.couponinfo);
+router.post('/coupons/add', adminAuth, couponcontroller.addCoupon);
+router.post('/coupons/update/:id', adminAuth, couponcontroller.updateCoupon);
+router.get('/coupons/:id', adminAuth, couponcontroller.getCouponById);
+router.delete('/coupons/:id', adminAuth, couponcontroller.deleteCoupon);
+
+
+// ======================= Sales Report =======================
+// Render the sales report page
+router.get('/sales-report', adminAuth, salesController.renderSalesReport);
+
+// API endpoint for fetching sales data
+router.get('/sales-data', adminAuth, salesController.getSalesData);
+
+// ======================= Transactions =======================
+// Render the transactions page
+router.get('/transactions', adminAuth, transactionsController.renderTransactions);
+
+// API endpoint for fetching transactions data
+router.get('/transactions-data', adminAuth, transactionsController.getTransactionsData);
 
 // ======================= Order Management =======================
 router.get('/orders', adminAuth, ordersController.loadOrders);
@@ -54,8 +119,10 @@ router.put('/categories', adminAuth, categorycontroller.editCategory);
 router.get('/Category', adminAuth, categorycontroller.getCategories); // ✅ Added adminAuth
 
 // ======================= Category Offers =======================
-router.get('/offers', adminAuth, categoryOfferController.loadOffersPage); // ✅ Added adminAuth
-router.put('/category/offer/:id', adminAuth, categoryOfferController.updateCategoryOffer); // ✅ Added adminAuth
+router.get('/offers',adminAuth, offerController.loadOffersPage);
+router.get('/offers/category/test/:id', adminAuth, offerController.testCategory);
+router.put('/offers/category/:id',adminAuth, offerController.updateCategoryOffer);
+router.put('/offers/product/:id', adminAuth, offerController.updateProductOffer);
 
 // ======================= Product Management =======================
 

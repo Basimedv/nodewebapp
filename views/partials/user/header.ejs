@@ -162,8 +162,8 @@
                         </div>
                     </div>
                 <% } else { %>
-                    <form action="/login" method="GET" style="display:inline; margin: 0;">
-                        <button type="submit" class="sign-in-btn">Sign In</button>
+                    <form id="loginForm" name="loginForm" action="/login" method="GET" style="display:inline; margin: 0;">
+                        <button type="submit" id="loginSubmitBtn" name="loginSubmitBtn" class="sign-in-btn">Sign In</button>
                     </form>
                 <% } %>
             </div>

@@ -3,9 +3,12 @@ const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const Cart = require("../../models/cartSchema");
 const Wishlist = require("../../models/wishlistSchema");
+const Coupon = require("../../models/couponSchema");
 const nodemailer = require('nodemailer')
 const env = require('dotenv').config();
 const bcrypt = require('bcrypt')
+const Order = require('../../models/orderSchema');
+const Refund = require('../../models/refundSchema')
 const pageNotFound = async (req, res) => {
   try {
     res.render('user/page-404')
@@ -211,7 +214,7 @@ const loadShopping = async (req, res) => {
     // ❌ REMOVED: Brand.find() from Promise.all
     const [itemsRaw, total] = await Promise.all([
       Product.find(filter)
-        .populate('category', 'offer')
+        .populate('category', 'categoryOffer')
         .sort(sortObj)
         .skip(skip)
         .limit(limit)
@@ -222,14 +225,20 @@ const loadShopping = async (req, res) => {
     // Normalize fields for the view
     const items = (itemsRaw || []).map(p => {
        const regular = Number(p.regularPrice || p.price || 0);
-    const sale = Number(p.salePrice || 0);
-      const offerPercent = Math.max(
-        p.productOffer || 0, 
-        (p.category && p.category.offer) || 0
-      );
-      const offerPrice = offerPercent > 0 
-        ? Math.round(regular - (regular * offerPercent / 100)) 
-        : (sale > 0 && sale < regular ? sale : regular);
+       const productOffer = Number(p.productOffer || 0);
+       const categoryOffer = Number(p.category?.categoryOffer || 0);
+       
+       // Display the greater offer
+       let appliedOffer = 0;
+       if (productOffer > categoryOffer) {
+           appliedOffer = productOffer;
+       } else if (categoryOffer > productOffer) {
+           appliedOffer = categoryOffer;
+       }
+       
+       const offerPrice = appliedOffer > 0 
+         ? Math.round(regular - (regular * appliedOffer / 100)) 
+         : regular;
       
       // Calculate total stock
       const totalStock = p.stock ? 
@@ -267,8 +276,7 @@ const loadShopping = async (req, res) => {
           ? p.productImage 
           : (Array.isArray(p.images) ? p.images : []),
             regularPrice: regular,   // send to UI
-    salePrice: sale,         // send to UI
-        offerPercent,
+        offerPercent: appliedOffer,
         offerPrice,
         totalStock,             // send calculated stock to UI
         status: correctStatus      // send corrected status
@@ -325,7 +333,7 @@ const loadShopping = async (req, res) => {
 async function getProductDetails(req, res) {
   try {
     const id = req.params.id;
-    const p = await Product.findById(id).populate('category', 'offer').lean();
+    const p = await Product.findById(id).populate('category', 'categoryOffer').lean();
     if (!p) return res.status(404).render('user/page-404');
     // Hide blocked or discontinued products from public
     if (p.isBlocked === true || p.status === 'Discountinued') {
@@ -335,17 +343,23 @@ async function getProductDetails(req, res) {
     const regular = typeof p.regularPrice
  === 'number' ? p.regularPrice
  : (typeof p.price === 'number' ? p.price : 0);
-    const sale = typeof p.salePrice === 'number' ? p.salePrice : 0;
-    const offerPercent = Math.max(p.productOffer || 0, (p.category && p.category.offer) || 0);
-    const offerPrice = offerPercent > 0 ? Math.round(regular - (regular * offerPercent / 100)) : (sale > 0 && sale < regular ? sale : regular);
+ 
+ // Display the greater offer
+ let appliedOffer = 0;
+ if (p.productOffer > p.category.categoryOffer) {
+     appliedOffer = p.productOffer;
+ } else if (p.category.categoryOffer > p.productOffer) {
+     appliedOffer = p.category.categoryOffer;
+ }
+ 
+ const offerPrice = appliedOffer > 0 ? Math.round(regular - (regular * appliedOffer / 100)) : regular;
 
     const product = {
       ...p,
       name: p.productName ?? p.name,
       images: Array.isArray(p.productImage) && p.productImage.length ? p.productImage : (Array.isArray(p.images) ? p.images : []),
       price: regular,
-      sale,
-      offerPercent,
+      offerPercent: appliedOffer,
       offerPrice,
       regularPrice: regular,
     };
@@ -725,23 +739,29 @@ async function apiProducts(req, res){
     }
 
     const [itemsRaw, total] = await Promise.all([
-      Product.find(filter).populate('category', 'offer').sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Product.find(filter).populate('category', 'categoryOffer').sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
       Product.countDocuments(filter),
     ]);
     const items = (itemsRaw || []).map(p => {
       const regular = typeof p.regularPrice
  === 'number' ? p.regularPrice
  : (typeof p.price === 'number' ? p.price : 0);
-      const sale = typeof p.salePrice === 'number' ? p.salePrice : 0;
-      const offerPercent = Math.max(p.productOffer || 0, (p.category && p.category.offer) || 0);
-      const offerPrice = offerPercent > 0 ? Math.round(regular - (regular * offerPercent / 100)) : (sale > 0 && sale < regular ? sale : regular);
+      
+      // Display the greater offer
+      let appliedOffer = 0;
+      if (p.productOffer > p.category.categoryOffer) {
+          appliedOffer = p.productOffer;
+      } else if (p.category.categoryOffer > p.productOffer) {
+          appliedOffer = p.category.categoryOffer;
+      }
+      
+      const offerPrice = appliedOffer > 0 ? Math.round(regular - (regular * appliedOffer / 100)) : regular;
       return {
         ...p,
         name: p.productNmae ?? p.name,
         images: Array.isArray(p.productImage) && p.productImage.length ? p.productImage : (Array.isArray(p.images) ? p.images : []),
         price: regular,
-        sale,
-        offerPercent,
+        offerPercent: appliedOffer,
         offerPrice,
         regularPrice: regular,
       };
@@ -833,7 +853,7 @@ const viewOrders = async (req, res) => {
     
     const orders = await Order.find({ userId })
       .sort({ createdOn: -1 })
-      .populate('orderedItems.product', 'productName name productImage regularPrice salePrice')
+      .populate('orderedItems.product', 'productName name productImage regularPrice')
       .lean();
     
     console.log('📦 Found orders:', orders.length);
@@ -883,7 +903,7 @@ const loadCart = async (req, res) => {
     const Cart = require('../../models/cartSchema');
     
     const cart = await Cart.findOne({ userId })
-      .populate('items.productId', 'productName productImage regularPrice salePrice productOffer stock')
+      .populate('items.productId', 'productName productImage regularPrice productOffer stock')
       .lean();
     
     // Extract cart items for the view
@@ -919,21 +939,35 @@ const addToCart = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Product ID and quantity are required' });
     }
     
-
     
     const Cart = require('../../models/cartSchema');
     const Product = require('../../models/productSchema');
     
     // Check if product exists
-    const product = await Product.findById(productId);
+    const product = await Product.findById(productId).populate('category');
     if (!product) {
       return res.status(404).json({ success: false, error: 'Product not found' });
     }
     
     // Validate product price
-    const productPrice = product.price || product.regularPrice || 0;
-    if (!productPrice || productPrice <= 0) {
+    const regularPrice = product.regularPrice || 0;
+    if (!regularPrice || regularPrice <= 0) {
       return res.status(400).json({ success: false, error: 'Invalid product price' });
+    }
+    
+    // Calculate final price after offers
+    let finalPrice = regularPrice;
+    let offerPercent = 0;
+    
+    // Apply product offer if exists
+    if (product.productOffer && product.productOffer > 0) {
+      finalPrice = Math.round(regularPrice - (regularPrice * product.productOffer / 100));
+      offerPercent = product.productOffer;
+    }
+    // Apply category offer if no product offer
+    else if (product.category && product.category.categoryOffer && product.category.categoryOffer > 0) {
+      finalPrice = Math.round(regularPrice - (regularPrice * product.category.categoryOffer / 100));
+      offerPercent = product.category.categoryOffer;
     }
     
     // Find or create user cart
@@ -951,15 +985,16 @@ const addToCart = async (req, res) => {
       // Update existing item
       const newQuantity = cart.items[existingItemIndex].quantity + parseInt(quantity);
       cart.items[existingItemIndex].quantity = newQuantity;
-      cart.items[existingItemIndex].totalPrice = productPrice * newQuantity;
+      cart.items[existingItemIndex].price = finalPrice;  // Update price with offers
+      cart.items[existingItemIndex].totalPrice = finalPrice * newQuantity;
     } else {
       // Add new item
       cart.items.push({
         productId: productId,
         quantity: parseInt(quantity),
         size: size,
-        price: productPrice,
-        totalPrice: productPrice * parseInt(quantity)
+        price: finalPrice,  // Store final price after offers
+        totalPrice: finalPrice * parseInt(quantity)
       });
     }
     
@@ -1100,7 +1135,7 @@ const getOrderDetails = async (req, res) => {
     let order = null;
     try {
       order = await Order.findOne({ _id: id, userId: userId })
-        .populate('orderedItems.product', 'productName productImage regularPrice salePrice productOffer')
+        .populate('orderedItems.product', 'productName productImage regularPrice productOffer')
         .lean();
     } catch (dbError) {
       console.error('❌ Database error finding order:', dbError);
@@ -1328,8 +1363,7 @@ const returnOrder = async (req, res) => {
     console.log('📝 Return reason:', reason);
     console.log('👤 User ID:', userId);
     
-    const Order = require('../../models/orderSchema');
-    const Refund = require('../../models/refundSchema');
+
 
     // Find order by orderId (the UUID string like "ae8c73...")
     const order = await Order.findOne({ orderId: orderId, userId: userId })
@@ -1467,6 +1501,65 @@ const addReview = async (req, res) => {
         res.status(500).send("Server Error Adding Review");
     }
 };
+/* ===============================
+   RENDER PAGE (NO DATA)
+================================ */
+const renderCouponsPage = async (req, res) => {
+    try {
+        const userId = req.session.user._id;
+        
+        if (!userId) {
+            return res.redirect('/user/login');
+        }
+        
+        const user = await User.findById(userId);
+        
+        if (!user) {
+            return res.redirect('/');
+        }
+        
+        res.render('user/coupons', { user });
+    } catch (err) {
+        console.error('❌ Error in renderCouponsPage:', err);
+        res.status(500).render('error', { message: 'Page load failed' });
+    }
+};
+
+/* ===============================
+   API (JSON ONLY)
+================================ */
+const getCouponsAPI = async (req, res) => {
+    try {
+        const userId = req.session.user._id;
+        
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'User not authenticated' });
+        }
+        
+        const currentDate = new Date();
+
+        const coupons = await Coupon.find({ isActive: true })
+            .select('-usedBy')
+            .sort({ createdAt: -1 });
+
+        const result = coupons.map(coupon => {
+            const expired = new Date(coupon.expiryDate) < currentDate;
+
+            return {
+                ...coupon.toObject(),
+                isExpired: expired,
+                isUsedByUser: coupon.usedBy?.includes(userId) || false,
+                usedCount: coupon.usedCount || 0
+            };
+        });
+
+        res.json({ success: true, coupons: result });
+    } catch (err) {
+        console.error('❌ Error in getCouponsAPI:', err);
+        res.status(500).json({ success: false, message: 'Failed to fetch coupons' });
+    }
+};
+
 module.exports = {
   pageNotFound,
   loadHomepage,
@@ -1495,7 +1588,7 @@ module.exports = {
   addToCart,
   updateCartQuantity,
   removeFromCart,
-  addReview
-}
-  
-
+  addReview,
+ renderCouponsPage,
+    getCouponsAPI
+};

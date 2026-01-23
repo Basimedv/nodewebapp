@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Offers</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .profile-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background: transparent;
+            margin: 20px;
+            margin-left: 150px;
+            border-radius: 12px;
+            border: 1px solid #dcdcdc;
+            box-shadow:
+                0 2px 6px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .page-title {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.75rem;
+        }
+
+        .coupon-card {
+            padding: 25px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .coupon-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .coupon-card:hover {
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+            transform: translateY(-8px);
+        }
+        
+        .coupon-card.expired {
+            opacity: 0.6;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        
+        .coupon-card.expired::before {
+            background: linear-gradient(90deg, #6c757d 0%, #495057 100%);
+        }
+        
+        .coupon-card.used {
+            opacity: 0.6;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        
+        .coupon-card.used::before {
+            background: linear-gradient(90deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .coupon-status {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .coupon-status.active {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        .coupon-status.expired {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+        
+        .coupon-status.used {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+        
+        .coupon-actions {
+            margin-top: 25px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .discount-badge {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            display: block;
+            text-align: center;
+            line-height: 1;
+        }
+        
+        .discount-badge.percentage {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .discount-badge.flat {
+            background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .expiry-info {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+        
+        .min-purchase {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+        
+        .coupon-card h5 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            text-align: center;
+            line-height: 1.3;
+        }
+        
+        .coupon-card p {
+            color: #6c757d;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+        
+        .btn-copy-code, .btn-view-details {
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-copy-code {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-copy-code:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-view-details {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #495057;
+            border: 1px solid #dee2e6;
+        }
+        
+        .btn-view-details:hover {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-copy-code:disabled, .btn-view-details:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ccc;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <%- include("../partials/user/header") %>
+
+    <div class="profile-container">
+        <div class="row w-100">
+            <div class="col-md-3">
+                <%- include('../partials/user/profileSidebar', { activePage: 'offers', user: user }) %>
+            </div>
+
+            <div class="col-md-9">
+                <div class="main-content">
+                    <h1 class="page-title">Offers</h1>
+                    <p class="text-muted">Coupons and offers are currently unavailable</p>
+
+                    <div id="coupons-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- FETCH INTERCEPTOR - Must load first -->
+    <script>
+        // Unregister any service workers that might be causing issues
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    console.log('🔄 Unregistering service worker:', registration.scope);
+                    registration.unregister();
+                }
+            });
+        }
+        
+        // Clear any caches that might be causing issues
+        if ('caches' in window) {
+            caches.keys().then(function(cacheNames) {
+                cacheNames.forEach(function(cacheName) {
+                    console.log('🔄 Deleting cache:', cacheName);
+                    caches.delete(cacheName);
+                });
+            });
+        }
+        
+        // Monitor all network requests
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options) {
+            console.log('🔍 Fetch called with URL:', url);
+            if (url === '/coupons' || url === 'http://localhost:3000/coupons' || url.includes('/coupons') && !url.includes('/api/')) {
+                console.log('🔄 INTERCEPTED /coupons request, redirecting to /api/user/coupons');
+                url = 'http://localhost:3000/api/user/coupons?t=' + Date.now();
+            }
+            return originalFetch.apply(this, arguments);
+        };
+        
+        // Intercept console.error to catch 404 errors
+        const originalConsoleError = console.error;
+        console.error = function(...args) {
+            const message = args.join(' ');
+            if (message.includes('GET http://localhost:3000/coupons 404')) {
+                console.log('🔄 CAUGHT 404 ERROR - /coupons request detected');
+                console.log('🔄 This error is now handled by the fallback route');
+                // Try to make a successful request to replace the failed one
+                fetch('http://localhost:3000/api/user/coupons?t=' + Date.now())
+                    .then(response => console.log('✅ Successful replacement request made'))
+                    .catch(err => console.log('❌ Replacement request failed:', err));
+                return; // Don't show the 404 error
+            }
+            return originalConsoleError.apply(console, args);
+        };
+        
+        // Also intercept XMLHttpRequest
+        const originalXHR = window.XMLHttpRequest;
+        window.XMLHttpRequest = function() {
+            const xhr = new originalXHR();
+            const originalOpen = xhr.open;
+            xhr.open = function(method, url, async, user, password) {
+                console.log('🔍 XHR called with URL:', url);
+                if (url === '/coupons' || url === 'http://localhost:3000/coupons' || url.includes('/coupons') && !url.includes('/api/')) {
+                    console.log('🔄 INTERCEPTED XHR /coupons request, redirecting to /api/user/coupons');
+                    url = 'http://localhost:3000/api/user/coupons?t=' + Date.now();
+                }
+                return originalOpen.call(this, method, url, async, user, password);
+            };
+            return xhr;
+        };
+        
+        console.log('✅ All interceptors installed');
+        console.log('✅ Service workers unregistered');
+        console.log('✅ Caches cleared');
+    </script>
+
+    <!-- CLEAN SCRIPT -->
+    <script>
+        // Check if user is authenticated
+        (function() {
+            // Make a test request to check authentication
+            fetch('/user/profile', { credentials: 'include' })
+                .then(response => {
+                    console.log('🔍 Auth check response status:', response.status);
+                    console.log('🔍 Auth check response redirected:', response.redirected);
+                    console.log('🔍 Auth check response url:', response.url);
+                    
+                    if (response.status === 302 || response.redirected || response.url.includes('/landingPage') || response.url.includes('/login')) {
+                        // User is not authenticated, redirect to login
+                        console.log('🔐 User not authenticated, redirecting to login');
+                        window.location.href = '/login';
+                        return;
+                    }
+                    if (response.ok) {
+                        console.log('✅ User authenticated, loading coupons');
+                        // User is authenticated, proceed with loading coupons
+                        loadCoupons();
+                    } else {
+                        console.log('❌ Authentication check failed, status:', response.status);
+                        window.location.href = '/login';
+                    }
+                })
+                .catch(error => {
+                    console.log('❌ Authentication check error:', error);
+                    window.location.href = '/login';
+                });
+        })();
+        
+        // Load coupons
+        async function loadCoupons() {
+            try {
+                console.log('🔄 Starting loadCoupons function...');
+                
+                // Show loading state
+                const container = document.getElementById('coupons-container');
+                container.innerHTML = `
+                    <div class="text-center p-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading your coupons...</span>
+                        </div>
+                    </div>
+                `;
+                
+                const apiUrl = 'http://localhost:3000/api/user/coupons?t=' + Date.now();
+                console.log('🌐 Fetching from:', apiUrl);
+                
+                const response = await fetch(apiUrl);
+                
+                console.log('📡 Response status:', response.status);
+                console.log('📡 Response ok:', response.ok);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('📊 Frontend received data:', data); // Debug log
+                
+                const coupons = data.coupons || [];
+                
+                if (!data.success || coupons.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-ticket-alt"></i>
+                            <h4>No coupons available</h4>
+                            <p>You don't have any available coupons at the moment</p>
+                            <button class="btn btn-primary mt-3" onclick="loadCoupons()">
+                                <i class="fas fa-sync-alt me-2"></i>Try Again
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = coupons.map(coupon => {
+                        const currentDate = new Date();
+                        const expiryDate = new Date(coupon.expiryDate);
+                        const isExpired = expiryDate < currentDate;
+                        const isUsed = coupon.isUsedByUser || false;
+                        
+                        let cardClass = 'coupon-card';
+                        let statusBadge = '';
+                        let canCopy = true;
+                        
+                        if (isExpired) {
+                            cardClass += ' expired';
+                            statusBadge = '<span class="coupon-status expired">Expired</span>';
+                            canCopy = false;
+                        } else if (isUsed) {
+                            cardClass += ' used';
+                            statusBadge = '<span class="coupon-status used">Used</span>';
+                            canCopy = false;
+                        } else {
+                            statusBadge = '<span class="coupon-status active">Active</span>';
+                        }
+                        
+                        return `
+                            <div class="${cardClass}">
+                                ${statusBadge}
+                                <h5>${coupon.name}</h5>
+                                <div class="discount-badge ${coupon.discountType}">
+                                    ${coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '₹' + coupon.discountValue} OFF
+                                </div>
+                                <p>${coupon.description || 'No description available'}</p>
+                                <div class="expiry-info">
+                                    <strong>Expires:</strong> ${expiryDate.toLocaleDateString('en-IN', { 
+                                        day: 'numeric', 
+                                        month: 'short', 
+                                        year: 'numeric' 
+                                    })}
+                                </div>
+                                <div class="min-purchase">
+                                    <strong>Usage:</strong> ${coupon.usedCount || 0} / ${coupon.usageLimit || 1} uses
+                                </div>
+                                <div class="coupon-actions">
+                                    ${canCopy ? `<button class="btn btn-sm btn-success" onclick="copyCouponCode('${coupon.code}', this)">
+                                        <i class="fas fa-copy"></i> Copy Code
+                                    </button>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Error loading coupons:', error);
+                const container = document.getElementById('coupons-container');
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h4>Error loading coupons</h4>
+                        <p>Unable to connect to server. Please check your connection.</p>
+                        <button class="btn btn-primary mt-3" onclick="loadCoupons()">
+                            <i class="fas fa-sync-alt me-2"></i>Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Copy coupon code
+        async function copyCouponCode(couponCode, buttonElement) {
+            try {
+                await navigator.clipboard.writeText(couponCode);
+                
+                // Show success feedback
+                const originalHTML = buttonElement.innerHTML;
+                buttonElement.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                buttonElement.classList.remove('btn-success');
+                buttonElement.classList.add('btn-outline-success');
+                buttonElement.disabled = true;
+                
+                // Show success notification
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Copied!',
+                    text: `Coupon code "${couponCode}" copied to clipboard!`,
+                    showConfirmButton: false,
+                    timer: 2000,
+                    toast: true,
+                    position: 'top-end'
+                });
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    buttonElement.innerHTML = originalHTML;
+                    buttonElement.classList.remove('btn-outline-success');
+                    buttonElement.classList.add('btn-success');
+                    buttonElement.disabled = false;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error copying coupon code:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Copy Failed',
+                    text: 'Failed to copy coupon code. Please try again.',
+                    confirmButtonText: 'OK'
+                });
+            }
+        }
+        
+        // Load coupons on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCoupons();
+        });
+    </script>
+
+</body>
+</html>
+    

@@ -88,7 +88,7 @@ const getOrderDetails = async (req, res) => {
     
     const order = await Order.findById(id)
       .populate('userId', 'fullName email phone')
-      .populate('orderedItems.product', 'productName productImage regularPrice salePrice productOffer')
+      .populate('orderedItems.product', 'productName productImage regularPrice productOffer')
       .lean();
 
     if (!order) {

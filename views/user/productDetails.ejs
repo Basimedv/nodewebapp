@@ -928,16 +928,24 @@
               
               <% 
                 const baseRegular = Number(product?.regularPrice || 0);
-                const salePrice = Number(product?.salePrice || 0);
                 const productOffer = Number(product?.productOffer || 0);
-                const categoryOffer = product?.category && product.category.offer ? Number(product.category.offer) : 0;
-                const displayOffer = Math.max(productOffer, categoryOffer);
+                const categoryOffer = product?.category && product.category.categoryOffer ? Number(product.category.categoryOffer) : 0;
+                
+                // Display the greater offer
+                let appliedOffer = 0;
+                let appliedOfferType = '';
+                
+                if (productOffer > categoryOffer) {
+                    appliedOffer = productOffer;
+                    appliedOfferType = 'product';
+                } else if (categoryOffer > productOffer) {
+                    appliedOffer = categoryOffer;
+                    appliedOfferType = 'category';
+                }
                 
                 let finalPrice = baseRegular;
-                if (displayOffer > 0) {
-                  finalPrice = Math.round(baseRegular - (baseRegular * displayOffer / 100));
-                } else if (salePrice > 0 && salePrice < baseRegular) {
-                  finalPrice = salePrice;
+                if (appliedOffer > 0) {
+                    finalPrice = Math.round(baseRegular - (baseRegular * appliedOffer / 100));
                 }
               %>
 
@@ -949,11 +957,11 @@
                       <div>Rs. <del><%= baseRegular.toLocaleString('en-IN') %></del></div>
                     </div>
                     <div>
-                      <div class="small fw-semibold">Sale price</div>
+                      <div class="small fw-semibold">Price</div>
                       <div class="fw-bold fs-4">
                         Rs. <%= finalPrice.toLocaleString('en-IN') %>
-                        <% if (displayOffer > 0) { %>
-                          <span class="badge bg-success ms-1"><%= displayOffer %>% OFF</span>
+                        <% if (appliedOffer > 0) { %>
+                          <span class="badge bg-success ms-1"><%= appliedOffer %>% OFF</span>
                         <% } %>
                       </div>
                     </div>
@@ -966,7 +974,7 @@
                 <% } %>
               </div>
               
-  <div class="thumbnails" style="display: flex; gap: 10px; justify-content: left; margin-top: 15px; margin-bottom: 30px;">
+              <div class="thumbnails" style="display: flex; gap: 10px; justify-content: left; margin-top: 15px; margin-bottom: 30px;">
         <% if (product && product.productImage) { %>
             <% product.productImage.forEach((img, index) => { %>
                 <img src="<%= img %>" 
@@ -1467,12 +1475,8 @@ if (mainImg.complete) {
           const imageSrc = (product.productImage && product.productImage[0]) || '/images/placeholder.png';
           const productName = product.productName || 'Product';
           const regularPrice = Number(product.regularPrice || 0);
-          const salePrice = Number(product.salePrice || 0);
 
-          const priceHtml = salePrice > 0
-            ? `<span class="text-danger fw-bold">₹${salePrice.toLocaleString('en-IN')}</span>
-               <span class="text-muted ms-2" style="text-decoration: line-through;">₹${regularPrice.toLocaleString('en-IN')}</span>`
-            : `<span class="fw-bold">₹${regularPrice.toLocaleString('en-IN')}</span>`;
+          const priceHtml = `<span class="fw-bold">₹${regularPrice.toLocaleString('en-IN')}</span>`;
 
           return `
             <div class="col-6 col-md-4 col-lg-3">

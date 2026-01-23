@@ -35,7 +35,24 @@ const cartSchema = new Schema({
       required: true,
       min: 0
     }
-  }]
+  }],
+  discount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  appliedCoupon: {
+    code: String,
+    discountType: String,
+    discountValue: Number,
+    maxDiscount: Number,
+    description: String
+  },
+  total: {
+    type: Number,
+    default: 0,
+    min: 0
+  }
 }, {
   timestamps: true
 });

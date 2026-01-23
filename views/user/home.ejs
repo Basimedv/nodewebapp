@@ -132,7 +132,6 @@
             <%
               // Calculate proper prices with fallbacks
               const baseRegular = Number(p.regularPrice || p.price || 0);
-              const saleCandidate = Number(p.salePrice || p.sale || 0);
               const offerPercent = Number(p.offerPercent || p.productOffer || 0);
               
               // Calculate offer price if discount exists
@@ -141,10 +140,9 @@
                 : 0;
               
               // Determine final price
-              const hasSale = saleCandidate > 0 && saleCandidate < baseRegular;
               const finalPrice = offerPrice > 0 
                 ? offerPrice 
-                : (hasSale ? saleCandidate : baseRegular);
+                : baseRegular;
             %>
             
             <% if (finalPrice < baseRegular) { %>

@@ -258,8 +258,9 @@
               <tr>
                 <th>Product</th>
                 <th>Category</th>
-                <th>Regular Price</th>
-                <th>Sale Price</th>
+                <th>Price</th>
+                <th>Product Offer</th>
+                <th>Category Offer</th>
                 <th>Stock</th>
                 <th>Size</th>
                 <th>Status</th>
@@ -298,25 +299,28 @@
                     </span>
                   </td>
 
-                  <!-- Regular Price -->
+                  <!-- Price -->
                   <td class="price-column">
                     ₹ <%= (typeof p.regularPrice === 'number') 
                           ? p.regularPrice.toFixed(2) 
                           : (parseFloat(p.regularPrice) ? parseFloat(p.regularPrice).toFixed(2) : '0.00') %>
                   </td>
 
-                  <!-- Sale Price -->
+                  <!-- Product Offer -->
                   <td>
-                    <% 
-                      const regularPrice = parseFloat(p.regularPrice) || 0;
-                      const salePrice = parseFloat(p.salePrice) || 0;
-                      const hasDiscount = salePrice < regularPrice && salePrice > 0;
-                    %>
-                    <% if (hasDiscount) { %>
-                      <span class="price-sale">₹ <%= salePrice.toFixed(2) %></span>
-                      <div class="price-original">₹ <%= regularPrice.toFixed(2) %></div>
+                    <% if (p.productOffer && p.productOffer > 0) { %>
+                      <span class="badge bg-success"><%= p.productOffer %>%</span>
                     <% } else { %>
-                      <span class="price-column">₹ <%= salePrice.toFixed(2) %></span>
+                      <span class="text-muted">-</span>
+                    <% } %>
+                  </td>
+
+                  <!-- Category Offer -->
+                  <td>
+                    <% if (p.category && p.category.categoryOffer && p.category.categoryOffer > 0) { %>
+                      <span class="badge bg-info"><%= p.category.categoryOffer %>%</span>
+                    <% } else { %>
+                      <span class="text-muted">-</span>
                     <% } %>
                   </td>
 

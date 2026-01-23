@@ -757,8 +757,7 @@
                                 <span class="quantity-badge">Qty: ${item.quantity || 0}</span>
                                 <span class="quantity-badge">Unit Price: ₹${(item.price || 0).toLocaleString('en-IN')}</span>
                                 ${product.regularPrice ? `<span class="quantity-badge">Regular: ₹${product.regularPrice.toLocaleString('en-IN')}</span>` : ''}
-                                ${product.salePrice ? `<span class="quantity-badge">Sale: ₹${product.salePrice.toLocaleString('en-IN')}</span>` : ''}
-                                ${product.productOffer ? `<span class="quantity-badge">Offer: ${product.productOffer}%</span>` : ''}
+                                                                ${product.productOffer ? `<span class="quantity-badge">Offer: ${product.productOffer}%</span>` : ''}
                             </div>
                         </div>
                         <div class="product-price">₹${totalPrice.toLocaleString('en-IN')}</div>

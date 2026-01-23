@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transactions - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bellefair&family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/css/admindashboard.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="d-flex align-items-center">
+            <button class="btn btn-link d-lg-none sidebar-toggle" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+                <i class="bi bi-list"></i>
+            </button>
+            <a href="/admin/dashboard" class="brand-name">COLINGUEST</a>
+        </div>
+        <div class="nav-right">
+            <div class="d-flex align-items-center gap-2">
+                <div id="customDateContainer" style="display: none;">
+                    <input type="date" id="startDate" class="form-control form-control-sm" onchange="updateTransactions()">
+                    <span class="text-muted">to</span>
+                    <input type="date" id="endDate" class="form-control form-control-sm" onchange="updateTransactions()">
+                </div>
+                <select class="filter-select" id="periodFilter" onchange="handlePeriodChange()">
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+            </div>
+            <button class="export-btn" onclick="exportData()">Export</button>
+            <a href="/admin/logout" id="logoutBtn" class="btn">Logout</a>
+        </div>
+    </nav>
+
+    <!-- Sidebar Offcanvas for Mobile -->
+    <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="sidebarOffcanvas"
+        aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="sidebar">
+                <a href="/admin/dashboard"><i class="bi bi-grid"></i> Dashboard</a>
+                <a href="/admin/categories"><i class="bi bi-tag"></i> Categories</a>
+                <a href="/admin/brands"><i class="bi bi-badge-tm"></i> Brands</a>
+                <a href="/admin/offers"><i class="bi bi-gift"></i> Offers</a>
+                <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
+                <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
+                <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
+                <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
+                <a href="/admin/sales-report"><i class="bi bi-bar-chart"></i> Sales Report</a>
+                <a href="/admin/transactions" class="active"><i class="bi bi-cash-stack"></i> Transactions</a>
+                <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i> Wallet</a>
+                <a href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Sidebar -->
+    <div class="sidebar d-none d-lg-block">
+        <a href="/admin/dashboard"><i class="bi bi-grid"></i> Dashboard</a>
+        <a href="/admin/categories"><i class="bi bi-tag"></i> Categories</a>
+        <a href="/admin/brands"><i class="bi bi-badge-tm"></i> Brands</a>
+        <a href="/admin/offers"><i class="bi bi-gift"></i> Offers</a>
+        <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
+        <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
+        <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
+        <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
+        <a href="/admin/sales-report"><i class="bi bi-bar-chart"></i> Sales Report</a>
+        <a href="/admin/transactions" class="active"><i class="bi bi-cash-stack"></i> Transactions</a>
+        <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i> Wallet</a>
+        <a href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <h2 class="dashboard-title">Transactions</h2>
+
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-xl-3">
+                <div class="dashboard-card">
+                    <div class="icon-container bg-primary text-white"><i class="bi bi-cash-stack"></i></div>
+                    <p class="text-muted mb-1">Total Transactions</p>
+                    <h5 id="totalTransactions">Loading...</h5>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3">
+                <div class="dashboard-card">
+                    <div class="icon-container bg-success text-white"><i class="bi bi-currency-rupee"></i></div>
+                    <p class="text-muted mb-1">Total Amount</p>
+                    <h5 id="totalAmount">Loading...</h5>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3">
+                <div class="dashboard-card">
+                    <div class="icon-container bg-success text-white"><i class="bi bi-check-circle"></i></div>
+                    <p class="text-muted mb-1">Successful</p>
+                    <h5 id="successfulTransactions">Loading...</h5>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-3">
+                <div class="dashboard-card">
+                    <div class="icon-container bg-danger text-white"><i class="bi bi-x-circle"></i></div>
+                    <p class="text-muted mb-1">Failed</p>
+                    <h5 id="failedTransactions">Loading...</h5>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <h5 class="mb-3">All Transactions</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Date</th>
+                                    <th>User</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Payment</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center">Loading transactions data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Details Modal -->
+    <div class="modal fade" id="transactionModal" tabindex="-1" aria-labelledby="transactionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="transactionModalLabel">
+                        <i class="bi bi-receipt"></i> Order Details
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Transaction Summary Card -->
+                    <div class="card mb-3 border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h6 class="text-muted mb-2">Transaction ID</h6>
+                                        <h6 class="mb-0" id="modalTransactionId">-</h6>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h6 class="text-muted mb-2">Payment Amount</h6>
+                                        <h5 class="mb-0" id="modalAmount">-</h5>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h6 class="text-muted mb-2">Payment Status</h6>
+                                        <div id="modalStatus">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Payment Information -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-credit-card"></i> Payment Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-4">
+                                            <small class="text-muted">Payment Type:</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <div id="modalType">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-4">
+                                            <small class="text-muted">Credit/Debit:</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <div id="modalCreditDebit">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-4">
+                                            <small class="text-muted">Payment Method:</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <div id="modalPaymentMethodInfo">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <small class="text-muted">Description:</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <small id="modalDescription">-</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Customer Information -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-person"></i> Customer Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-4">
+                                            <small class="text-muted">User ID:</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <small id="modalUserId">-</small>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-4">
+                                            <small class="text-muted">Name:</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <small id="modalCustomerName">-</small>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-4">
+                                            <small class="text-muted">Phone:</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <small id="modalPhoneNumber">-</small>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-4">
+                                            <small class="text-muted">Email:</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <small id="modalCustomerEmail">-</small>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-4">
+                                            <small class="text-muted">Address:</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <small id="modalAddress">-</small>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <small class="text-muted">Description:</small>
+                                        </div>
+                                        <div class="col-8">
+                                            <small id="modalDescription">-</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Shipping Address -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-truck"></i> Shipping Address</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="modalShippingAddress">
+                                        <p class="text-muted">Loading shipping address...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Order Details (only for orders) -->
+                    <div class="row mt-3" id="additionalOrderDetails" style="display: none;">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="bi bi-box"></i> Additional Order Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Payment Method:</small>
+                                            <p id="modalPaymentMethod">-</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Order Status:</small>
+                                            <p id="modalOrderStatus">-</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Total Items:</small>
+                                            <p id="modalTotalItems">-</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center w-100">
+                        <div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="viewFullOrderDetails()">
+                                <i class="bi bi-box"></i> Order Details
+                            </button>
+                            <small class="text-muted ms-3" id="modalTimestamp">-</small>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPeriod = 'today';
+
+        // Initialize date inputs with today's date
+        function initializeDates() {
+            const today = new Date();
+            const todayString = today.toISOString().split('T')[0];
+            
+            document.getElementById('startDate').value = todayString;
+            document.getElementById('endDate').value = todayString;
+        }
+
+        // Handle period change - show/hide custom dates
+        function handlePeriodChange() {
+            const period = document.getElementById('periodFilter').value;
+            const customDateContainer = document.getElementById('customDateContainer');
+            
+            if (period === 'custom') {
+                customDateContainer.style.display = 'flex';
+                customDateContainer.style.alignItems = 'center';
+                customDateContainer.style.gap = '8px';
+            } else {
+                customDateContainer.style.display = 'none';
+            }
+            
+            updateTransactions();
+        }
+
+        async function updateTransactions() {
+            const period = document.getElementById('periodFilter').value;
+            currentPeriod = period;
+            
+            let url = `/admin/transactions-data?period=${period}`;
+            
+            // If custom range is selected, add date parameters
+            if (period === 'custom') {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                
+                if (startDate && endDate) {
+                    url += `&startDate=${startDate}&endDate=${endDate}`;
+                } else {
+                    alert('Please select both start and end dates');
+                    return;
+                }
+            }
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateStats(data.stats);
+                    updateTable(data.transactions);
+                } else {
+                    console.error('Error loading transactions data:', data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function updateStats(stats) {
+            document.getElementById('totalTransactions').textContent = stats.totalTransactions.toLocaleString();
+            document.getElementById('totalAmount').textContent = `₹${stats.totalAmount.toLocaleString('en-IN')}`;
+            document.getElementById('successfulTransactions').textContent = stats.successfulTransactions.toLocaleString();
+            document.getElementById('failedTransactions').textContent = stats.failedTransactions.toLocaleString();
+        }
+
+        function updateTable(transactions) {
+            const tbody = document.getElementById('transactionsTableBody');
+            tbody.innerHTML = '';
+            
+            // Store transactions globally for modal access
+            window.currentTransactions = transactions;
+            
+            if (transactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No transactions found for this period</td></tr>';
+                return;
+            }
+            
+            transactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                const isNegative = transaction.type === 'Order Cancelled' || transaction.type === 'Wallet Updated';
+                const amountClass = isNegative ? 'text-danger' : 'text-success';
+                const amountPrefix = isNegative ? '-₹' : '₹';
+                
+                row.innerHTML = `
+                    <td>${transaction.transactionId}</td>
+                    <td>${new Date(transaction.date).toLocaleDateString('en-IN')}</td>
+                    <td>${transaction.user}</td>
+                    <td><span class="badge bg-${getTypeColor(transaction.type)}">${transaction.type}</span></td>
+                    <td class="${amountClass}">${amountPrefix}${transaction.amount.toLocaleString('en-IN')}</td>
+                    <td>${transaction.paymentMethod}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewTransaction('${transaction._id}')">
+                            <i class="bi bi-eye"></i> View
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getTypeColor(type) {
+            switch(type) {
+                case 'Product Purchased': return 'success';
+                case 'Order Cancelled': return 'danger';
+                case 'Wallet Updated': return 'info';
+                default: return 'secondary';
+            }
+        }
+
+        function getStatusColor(status) {
+            switch(status) {
+                case 'Completed': return 'success';
+                case 'Delivered': return 'success';
+                case 'Processing': return 'warning';
+                case 'Pending': return 'warning';
+                case 'Failed': return 'danger';
+                case 'Cancelled': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        function exportData() {
+            console.log('Export functionality to be implemented');
+        }
+
+        function viewTransaction(transactionId) {
+            // Store current transaction ID for Order Details button
+            window.currentTransactionId = transactionId;
+            
+            // Find the transaction data from the current displayed data
+            const transactions = getCurrentTransactions();
+            const transaction = transactions.find(t => t._id === transactionId);
+            
+            if (transaction) {
+                // Populate modal with transaction details
+                document.getElementById('modalTransactionId').textContent = transaction.transactionId;
+                
+                // Format full date and time for footer timestamp
+                const transactionDate = new Date(transaction.date);
+                const fullDateTime = transactionDate.toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'numeric',
+                    year: 'numeric'
+                }) + ', ' + transactionDate.toLocaleTimeString('en-IN', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                });
+                
+                document.getElementById('modalType').innerHTML = `<span class="badge bg-${getTypeColor(transaction.type)}">${transaction.type}</span>`;
+                
+                // Format amount with color and prefix
+                const isNegative = transaction.type === 'Order Cancelled' || transaction.type === 'Wallet Updated';
+                const amountClass = isNegative ? 'text-danger' : 'text-success';
+                const amountPrefix = isNegative ? '-₹' : '₹';
+                document.getElementById('modalAmount').innerHTML = `<span class="${amountClass}">${amountPrefix}${transaction.amount.toLocaleString('en-IN')}</span>`;
+                
+                // Set Payment Status - show "Paid" for successful transactions
+                let paymentStatus = 'Paid';
+                let paymentStatusClass = 'success';
+                
+                if (transaction.status === 'Cancelled' || transaction.status === 'Failed') {
+                    paymentStatus = 'Failed';
+                    paymentStatusClass = 'danger';
+                } else if (transaction.status === 'Pending' || transaction.status === 'Processing') {
+                    paymentStatus = 'Pending';
+                    paymentStatusClass = 'warning';
+                }
+                
+                document.getElementById('modalStatus').innerHTML = `<span class="badge bg-${paymentStatusClass}">${paymentStatus}</span>`;
+                
+                // Set Credit/Debit based on transaction type
+                const creditDebit = isNegative ? 'Debit' : 'Credit';
+                const creditDebitClass = isNegative ? 'text-danger' : 'text-success';
+                document.getElementById('modalCreditDebit').innerHTML = `<span class="${creditDebitClass}">${creditDebit}</span>`;
+                
+                // Format Payment Method - show Razorpay for Razorpay, Netbanking for cards
+                let paymentMethod = transaction.paymentMethod || 'N/A';
+                const paymentMethodLower = paymentMethod.toLowerCase();
+                
+                if (paymentMethodLower === 'upi' || paymentMethodLower === 'razorpay') {
+                    paymentMethod = 'Razorpay';
+                } else if (paymentMethodLower === 'debit card' || paymentMethodLower === 'credit card' || 
+                          paymentMethodLower === 'card' || paymentMethodLower === 'netbanking') {
+                    paymentMethod = 'Netbanking';
+                }
+                document.getElementById('modalPaymentMethodInfo').textContent = paymentMethod;
+                
+                // Populate user details
+                document.getElementById('modalUserId').textContent = transaction.userId || 'N/A';
+                document.getElementById('modalCustomerName').textContent = transaction.user || 'N/A';
+                document.getElementById('modalPhoneNumber').textContent = transaction.phoneNumber || 'N/A';
+                document.getElementById('modalCustomerEmail').textContent = transaction.email || 'N/A';
+                document.getElementById('modalAddress').textContent = transaction.address || 'N/A';
+                document.getElementById('modalDescription').textContent = transaction.description || 'N/A';
+                
+                // Populate shipping address
+                displayShippingAddress(transaction.shippingAddress);
+                
+                // Show/hide additional order details based on transaction type
+                const isOrder = transaction.type === 'Product Purchased' || transaction.type === 'Order Cancelled';
+                const additionalDetailsSection = document.getElementById('additionalOrderDetails');
+                
+                if (isOrder) {
+                    additionalDetailsSection.style.display = 'block';
+                    document.getElementById('modalPaymentMethod').textContent = paymentMethod;
+                    document.getElementById('modalOrderStatus').innerHTML = `<span class="badge bg-${getStatusColor(transaction.status)}">${transaction.status}</span>`;
+                    document.getElementById('modalTotalItems').textContent = transaction.totalItems || 0;
+                } else {
+                    additionalDetailsSection.style.display = 'none';
+                }
+                
+                // Add timestamp in footer
+                document.getElementById('modalTimestamp').textContent = fullDateTime;
+                
+                // Show the modal
+                const modal = new bootstrap.Modal(document.getElementById('transactionModal'));
+                modal.show();
+            } else {
+                console.error('Transaction not found:', transactionId);
+            }
+        }
+
+        function displayShippingAddress(shippingAddress) {
+            const addressContainer = document.getElementById('modalShippingAddress');
+            
+            console.log('🏠 Shipping address data in frontend:', shippingAddress);
+            
+            if (shippingAddress && Object.keys(shippingAddress).length > 0) {
+                // Build address HTML with flexible field mapping
+                let addressHTML = `<strong>${shippingAddress.name || shippingAddress.fullName || 'N/A'} | ${shippingAddress.phone || shippingAddress.phoneNumber || 'N/A'}</strong><p>`;
+                
+                // Add address lines - check multiple field names
+                let addressLine1 = shippingAddress.addressLine1 || shippingAddress.address || shippingAddress.street || shippingAddress.house || 'N/A';
+                let addressLine2 = shippingAddress.addressLine2 || shippingAddress.street || '';
+                
+                addressHTML += `${addressLine1}`;
+                if (addressLine2 && addressLine2 !== addressLine1) {
+                    addressHTML += `, ${addressLine2}`;
+                }
+                
+                // Add landmark if exists (handle both field names)
+                if (shippingAddress.landMark || shippingAddress.landmark) {
+                    addressHTML += `, ${shippingAddress.landMark || shippingAddress.landmark}`;
+                }
+                
+                addressHTML += `<br>`;
+                
+                // Add city, state, pincode (handle both field names)
+                const city = shippingAddress.city || 'N/A';
+                const state = shippingAddress.state || 'N/A';
+                const pincode = shippingAddress.pinCode || shippingAddress.pincode || shippingAddress.postalCode || 'N/A';
+                
+                addressHTML += `${city}, ${state}, India - ${pincode}</p>`;
+                
+                // Add alt phone if exists
+                if (shippingAddress.altPhone || shippingAddress.alternatePhone) {
+                    addressHTML += `<p>Alt Phone: ${shippingAddress.altPhone || shippingAddress.alternatePhone}</p>`;
+                }
+                
+                // Add address type if exists
+                if (shippingAddress.addressType) {
+                    addressHTML += `<p><small class="text-muted">${shippingAddress.addressType}</small></p>`;
+                }
+                
+                console.log('📋 Generated address HTML:', addressHTML);
+                addressContainer.innerHTML = addressHTML;
+            } else {
+                console.log('❌ No shipping address available');
+                addressContainer.innerHTML = '<p class="text-muted">No shipping address available</p>';
+            }
+        }
+
+        function viewFullOrderDetails() {
+            // Get current transaction ID
+            const transactions = getCurrentTransactions();
+            const transaction = transactions.find(t => t._id === window.currentTransactionId);
+            
+            if (transaction) {
+                // Only navigate to order details for actual orders, not wallet transactions
+                if (transaction.type === 'Product Purchased' || transaction.type === 'Order Cancelled') {
+                    console.log('Navigating to order details for:', transaction._id);
+                    window.location.href = `/admin/order-detail/${transaction._id}`;
+                } else {
+                    // For wallet transactions, show a message
+                    console.log('Wallet transaction - no order details available');
+                    alert('Order details are only available for purchase transactions, not wallet transactions.');
+                }
+            } else {
+                console.error('Transaction not found:', window.currentTransactionId);
+            }
+        }
+
+        function getCurrentTransactions() {
+            // Store transactions globally or fetch from current table
+            // For now, we'll store them in a global variable when loaded
+            return window.currentTransactions || [];
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDates();
+            updateTransactions();
+        });
+    </script>
+</body>
+</html>

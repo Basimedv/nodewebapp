@@ -2,12 +2,14 @@ const express = require('express');
 const router = express.Router();
 const usercontroller = require('../controllers/user/usercontroller');
 const passport = require('passport');
+
 const profileController = require('../controllers/user/profileController');
 const walletController = require('../controllers/user/walletController');
 const checkoutcontroller = require('../controllers/user/checkoutcontroller');
 const addresscontroller = require('../controllers/user/addresscontroller');
 const { ensureAuth, ensureGuest, preventBack } = require('../middlewares/auth');
 const upload = require('../middlewares/multer');
+
 
 // Prevent cached pages after logout
 router.use(preventBack);
@@ -88,6 +90,10 @@ router.get('/user/payment', ensureAuth, checkoutcontroller.loadPayment);
 router.get('/payments', ensureAuth, checkoutcontroller.loadPayment);
 router.get('/user/payments', ensureAuth, checkoutcontroller.loadPayment);
 router.post('/payment/process', ensureAuth, checkoutcontroller.processPayment);
+
+// Coupon routes
+router.post('/checkout/apply-coupon', ensureAuth, checkoutcontroller.applyCoupon);
+router.post('/checkout/remove-coupon', ensureAuth, checkoutcontroller.removeCoupon);
 router.get('/payment-failure', ensureAuth, (req, res) => {
     res.render('user/paymentFailure', {
         title: 'Payment Failed',
@@ -98,16 +104,16 @@ router.get('/payment-failure', ensureAuth, (req, res) => {
 // ===== GOOGLE OAUTH ROUTES =====
 
 // Initiate Google OAuth
-router.get('/auth/google', 
-    passport.authenticate('google', { 
+router.get('/auth/google',
+    passport.authenticate('google', {
         scope: ['profile', 'email'],
         prompt: 'select_account' // Force account selection
     })
 );
 
 // Google OAuth callback
-router.get('/auth/google/callback', 
-    passport.authenticate('google', { 
+router.get('/auth/google/callback',
+    passport.authenticate('google', {
         failureRedirect: '/signup?error=oauth_failed',
         failureMessage: true
     }),
@@ -120,26 +126,26 @@ router.get('/auth/google/callback',
                 });
                 return res.redirect('/login?error=blocked');
             }
-            
+
             // Set session data
             req.session.user = {
                 _id: req.user._id,
                 fullName: req.user.fullName,
                 email: req.user.email
             };
-            
+
             // Save session before redirect
             req.session.save((err) => {
                 if (err) {
                     console.error('Session save error:', err);
                     return res.redirect('/login?error=session_failed');
                 }
-                
+
                 console.log("✅ Google login successful for:", req.user.email);
                 console.log("📦 Session user:", req.session.user);
                 return res.redirect('/landingPage');
             });
-            
+
         } catch (error) {
             console.error('❌ OAuth callback error:', error);
             return res.redirect('/signup?error=server_error');
@@ -147,6 +153,8 @@ router.get('/auth/google/callback',
     }
 );
 
-router.post("/product/:id/addReview", usercontroller.addReview);
+router.get('/user/coupons', ensureAuth, usercontroller.renderCouponsPage);
+router.get('/api/user/coupons', ensureAuth, usercontroller.getCouponsAPI);
+router.get('/coupons', ensureAuth, usercontroller.renderCouponsPage); // ✅ Changed to render HTML
 
 module.exports = router;

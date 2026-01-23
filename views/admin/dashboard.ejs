@@ -59,6 +59,7 @@
                 <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
                 <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
                 <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
+                <a href="/admin/coupons/add"><i class="bi bi-plus-circle"></i> Add Coupon</a>
                 <a href="/admin/sales-report"><i class="bi bi-bar-chart"></i> Sales Report</a>
                 <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i>Wallet</a>
                 <a href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
@@ -74,12 +75,12 @@
          <a href="/admin/brands"><i class="bi bi-badge-tm"></i> Brands</a>
        
         <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
-           <a href="/admin/addproducts"><i class="bi bi-box"></i> Add Products</a>
+           <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
+           <a href="/admin/coupons/add"><i class="bi bi-plus-circle"></i> Add Coupon</a>
         <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
         <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
-        <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
         <a href="/admin/sales-report"><i class="bi bi-bar-chart"></i> Sales Report</a>
-        <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i> Wallet</a>
+        <a href="/admin/transactions"><i class="bi bi-credit-card"></i>transactions</a>
         <a href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
     </div>
 
@@ -153,7 +154,7 @@
 
             <div class="col-md-4">
                 <div class="chart-container">
-                    <h5>Top 10 Best Selling Brands</h5>
+                    <h5>Sales by Location</h5>
                     <canvas id="brandsChart"></canvas>
                 </div>
             </div>
@@ -193,31 +194,112 @@
         let salesChart, ordersChart, productsChart, categoriesChart, brandsChart;
         let currentPeriod = 'monthly';
 
-        // Store initial server data
-        const initialData = {
-            users: " <%= typeof users !== 'undefined' ? users : 0 %>",
-            totalSales: "<%= typeof totalSales !== 'undefined' ? totalSales : 0 %>",
-            totalOrders: "<%= typeof totalOrders !== 'undefined' ? totalOrders : 0 %>",
-            totalProducts: "<%= typeof totalProducts !== 'undefined' ? totalProducts : 0 %>"
+        // Store server data
+        const serverData = {
+            totalRevenue: <%- typeof totalRevenue !== 'undefined' ? totalRevenue : 0 %>,
+            totalOrders: <%- typeof totalOrders !== 'undefined' ? totalOrders : 0 %>,
+            totalUsers: <%- typeof totalUsers !== 'undefined' ? totalUsers : 0 %>,
+            conversionRate: <%- typeof conversionRate !== 'undefined' ? conversionRate : 0 %>,
+            totalTransactions: <%- typeof totalTransactions !== 'undefined' ? totalTransactions : 0 %>,
+            paymentStats: <%- typeof paymentStats !== 'undefined' ? JSON.stringify(paymentStats) : '[]' %>,
+            recentTransactions: <%- typeof recentTransactions !== 'undefined' ? JSON.stringify(recentTransactions) : '[]' %>,
+            bestSellingProducts: <%- typeof bestSellingProducts !== 'undefined' ? JSON.stringify(bestSellingProducts) : '[]' %>,
+            bestCategories: <%- typeof bestCategories !== 'undefined' ? JSON.stringify(bestCategories) : '[]' %>,
+            salesByLocation: <%- typeof salesByLocation !== 'undefined' ? JSON.stringify(salesByLocation) : '[]' %>
         };
 
-        // Initialize dashboard
+        // Initialize dashboard with server data
         document.addEventListener('DOMContentLoaded', function () {
             // Set initial data
             setInitialData();
+            
             // Initialize charts
             initializeCharts();
-            // Load dynamic data
-            loadDashboardData();
-            loadBestSellingData();
+            
+            // Update charts with server data
+            updateChartsFromServerData();
         });
 
         // Set initial server data
         function setInitialData() {
-            document.getElementById('totalCustomers').textContent = initialData.users.toLocaleString();
-            document.getElementById('totalSales').textContent = '₹' + initialData.totalSales.toLocaleString();
-            document.getElementById('totalOrders').textContent = initialData.totalOrders.toLocaleString();
-            document.getElementById('productsSold').textContent = initialData.totalProducts.toLocaleString();
+            document.getElementById('totalCustomers').textContent = serverData.totalUsers.toLocaleString();
+            document.getElementById('totalSales').textContent = '₹' + serverData.totalRevenue.toLocaleString();
+            document.getElementById('totalOrders').textContent = serverData.totalOrders.toLocaleString();
+            document.getElementById('productsSold').textContent = serverData.totalOrders.toLocaleString();
+        }
+
+        // Update charts with server data
+        function updateChartsFromServerData() {
+            // Update sales chart
+            if (salesChart && serverData.paymentStats) {
+                // Create chart data from payment stats
+                const labels = ['Paid', 'Pending', 'Failed', 'Completed'];
+                const salesData = serverData.paymentStats.map(stat => stat.totalAmount || 0);
+                const ordersData = serverData.paymentStats.map(stat => stat.count || 0);
+                
+                salesChart.data.labels = labels;
+                salesChart.data.datasets[0].data = salesData;
+                salesChart.data.datasets[0].label = 'Sales Amount (₹)';
+                salesChart.update();
+            }
+            
+            // Update orders chart with sample data
+            if (ordersChart) {
+                const orderLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                const ordersData = [120, 145, 160, 178, 195, 210, 225];
+                
+                ordersChart.data.labels = orderLabels;
+                ordersChart.data.datasets[0].data = ordersData;
+                ordersChart.update();
+            }
+            
+            // Update products chart
+            if (productsChart && serverData.bestSellingProducts) {
+                const labels = serverData.bestSellingProducts.map(product => product.productName ? product.productName.substring(0, 15) + '...' : 'Unknown');
+                const data = serverData.bestSellingProducts.map(product => product.unitsSold || 0);
+                
+                productsChart.data.labels = labels;
+                productsChart.data.datasets[0].data = data;
+                productsChart.update();
+            }
+            
+            // Update categories chart
+            if (categoriesChart && serverData.bestCategories) {
+                console.log('🏷️ Categories data:', serverData.bestCategories);
+                
+                const labels = serverData.bestCategories.map(category => {
+                    console.log('🏷️ Processing category:', category);
+                    
+                    // Try multiple possible field names for category name
+                    const categoryName = category.categoryName || 
+                                       category.name || 
+                                       category.category_name || 
+                                       'Unknown Category';
+                    
+                    const displayName = categoryName ? categoryName.substring(0, 15) + '...' : 'Unknown';
+                    console.log('🏷️ Category name:', categoryName, 'Display name:', displayName);
+                    
+                    return displayName;
+                });
+                const data = serverData.bestCategories.map(category => category.totalUnitsSold || 0);
+                
+                console.log('🏷️ Final category labels:', labels);
+                console.log('🏷️ Final category data:', data);
+                
+                categoriesChart.data.labels = labels;
+                categoriesChart.data.datasets[0].data = data;
+                categoriesChart.update();
+            }
+            
+            // Update location chart
+            if (brandsChart && serverData.salesByLocation) {
+                const labels = serverData.salesByLocation.map(location => location.locationName ? location.locationName.substring(0, 15) + '...' : 'Unknown');
+                const data = serverData.salesByLocation.map(location => location.totalRevenue || 0);
+                
+                brandsChart.data.labels = labels;
+                brandsChart.data.datasets[0].data = data;
+                brandsChart.update();
+            }
         }
 
         // Initialize empty charts
@@ -387,57 +469,31 @@
             });
         }
 
-        // Load dashboard statistics
-        async function loadDashboardData() {
+        // Load all dashboard data
+        async function loadAllDashboardData() {
             try {
+                // Load dashboard statistics
+                const statsResponse = await fetch('/admin/dashboard/data?type=stats&period=monthly');
+                if (statsResponse.ok) {
+                    const statsResult = await statsResponse.json();
+                    if (statsResult.success) {
+                        const data = statsResult.data;
+                        document.getElementById('totalCustomers').textContent = data.totalUsers.toLocaleString();
+                        document.getElementById('totalSales').textContent = '₹' + data.totalRevenue.toLocaleString();
+                        document.getElementById('totalOrders').textContent = data.totalOrders.toLocaleString();
+                        document.getElementById('productsSold').textContent = data.totalOrders.toLocaleString();
+                    }
+                }
+
                 // Load chart data
-                const chartResponse = await fetch(`/admin/dashboard/data?type=chart&period=${currentPeriod}`);
-
-                if (!chartResponse.ok) {
-                    throw new Error(`HTTP error! status: ${chartResponse.status}`);
+                const chartResponse = await fetch('/admin/dashboard/data?type=chart&period=monthly');
+                if (chartResponse.ok) {
+                    const chartResult = await chartResponse.json();
+                    if (chartResult.success) {
+                        updateCharts(chartResult.data);
+                    }
                 }
 
-                const chartResult = await chartResponse.json();
-
-                if (chartResult.success) {
-                    updateCharts(chartResult.data);
-                } else {
-                    console.error('Chart data error:', chartResult.error);
-                    // Set empty data if API fails
-                    updateCharts({ labels: [], sales: [], orders: [] });
-                }
-            } catch (error) {
-                console.error('Error loading dashboard data:', error);
-                // Set empty data if fetch fails
-                updateCharts({ labels: [], sales: [], orders: [] });
-            }
-        }
-
-        // Update charts with new data
-        function updateCharts(data) {
-            if (!data) {
-                console.error('No chart data provided');
-                return;
-            }
-
-            // Update sales chart
-            if (salesChart && data.labels && data.sales) {
-                salesChart.data.labels = data.labels;
-                salesChart.data.datasets[0].data = data.sales;
-                salesChart.update();
-            }
-
-            // Update orders chart
-            if (ordersChart && data.labels && data.orders) {
-                ordersChart.data.labels = data.labels;
-                ordersChart.data.datasets[0].data = data.orders;
-                ordersChart.update();
-            }
-        }
-
-        // Load best selling data
-        async function loadBestSellingData() {
-            try {
                 // Load best selling products
                 const productsResponse = await fetch('/admin/dashboard/data?type=products');
                 if (productsResponse.ok) {
@@ -456,16 +512,17 @@
                     }
                 }
 
-                // Load best selling brands
-                const brandsResponse = await fetch('/admin/dashboard/data?type=brands');
-                if (brandsResponse.ok) {
-                    const brandsResult = await brandsResponse.json();
-                    if (brandsResult.success) {
-                        updateBrandsChart(brandsResult.data);
+                // Load sales by location
+                const locationResponse = await fetch('/admin/dashboard/data?type=locations');
+                if (locationResponse.ok) {
+                    const locationResult = await locationResponse.json();
+                    if (locationResult.success) {
+                        updateLocationChart(locationResult.data);
                     }
                 }
+
             } catch (error) {
-                console.error('Error loading best selling data:', error);
+                console.error('Error loading dashboard data:', error);
             }
         }
 
@@ -473,8 +530,8 @@
         function updateProductsChart(products) {
             if (!products || products.length === 0) return;
 
-            const labels = products.map(product => product.name ? product.name.substring(0, 20) + '...' : 'Unknown');
-            const data = products.map(product => product.totalQuantity || 0);
+            const labels = products.map(product => product.productName ? product.productName.substring(0, 20) + '...' : 'Unknown');
+            const data = products.map(product => product.unitsSold || 0);
 
             productsChart.data.labels = labels;
             productsChart.data.datasets[0].data = data;
@@ -485,24 +542,27 @@
         function updateCategoriesChart(categories) {
             if (!categories || categories.length === 0) return;
 
-            const labels = categories.map(category => category.name || 'Unknown');
-            const data = categories.map(category => category.totalQuantity || 0);
+            const labels = categories.map(category => category.categoryName || 'Unknown');
+            const data = categories.map(category => category.totalUnitsSold || 0);
 
             categoriesChart.data.labels = labels;
             categoriesChart.data.datasets[0].data = data;
             categoriesChart.update();
         }
 
-        // Update brands chart
-        function updateBrandsChart(brands) {
-            if (!brands || brands.length === 0) return;
+        // Update location chart
+        function updateLocationChart(locations) {
+            if (!locations || locations.length === 0) return;
 
-            const labels = brands.map(brand => brand.name || 'Unknown');
-            const data = brands.map(brand => brand.totalQuantity || 0);
+            const labels = locations.map(location => location.locationName || 'Unknown');
+            const data = locations.map(location => location.totalRevenue || 0);
 
-            brandsChart.data.labels = labels;
-            brandsChart.data.datasets[0].data = data;
-            brandsChart.update();
+            // Convert brands chart to location chart (doughnut)
+            if (brandsChart) {
+                brandsChart.data.labels = labels;
+                brandsChart.data.datasets[0].data = data;
+                brandsChart.update();
+            }
         }
 
         // Update dashboard when period changes

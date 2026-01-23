@@ -276,11 +276,8 @@
                                 <div class="wishlist-item-price">
                                     <% 
                                     const regularPrice = product.regularPrice || product.price || 0;
-                                    const salePrice = product.salePrice || 0;
                                     const offerPercent = product.offerPercent || 0;
-                                    const finalPrice = (salePrice > 0 && salePrice < regularPrice) 
-                                        ? salePrice 
-                                        : (offerPercent > 0 ? Math.round(regularPrice - (regularPrice * offerPercent / 100)) : regularPrice);
+                                    const finalPrice = offerPercent > 0 ? Math.round(regularPrice - (regularPrice * offerPercent / 100)) : regularPrice;
                                     %>
 
                                     <% if (finalPrice < regularPrice) { %>

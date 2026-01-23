@@ -634,10 +634,23 @@
                     <% products.forEach(product=> { 
                         // Calculate all variables at the start
                         const regular = Number(product.regularPrice || 0); 
-                        const sale = Number(product.salePrice || 0); 
-                        const offer = Number(product.offerPercent || 0); 
-                        const offerPrice = offer > 0 ? Math.round(regular - (regular * offer / 100)) : regular;
-                        const finalPrice = (sale > 0 && sale < regular) ? sale : (offer > 0 ? offerPrice : regular);
+                        const productOffer = Number(product.productOffer || 0);
+                        const categoryOffer = Number(product.category?.categoryOffer || 0);
+                        
+                        // Display the greater offer
+                        let appliedOffer = 0;
+                        let appliedOfferType = '';
+                        
+                        if (productOffer > categoryOffer) {
+                            appliedOffer = productOffer;
+                            appliedOfferType = 'product';
+                        } else if (categoryOffer > productOffer) {
+                            appliedOffer = categoryOffer;
+                            appliedOfferType = 'category';
+                        }
+                        
+                        const offerPrice = appliedOffer > 0 ? Math.round(regular - (regular * appliedOffer / 100)) : regular;
+                        const finalPrice = appliedOffer > 0 ? offerPrice : regular;
                         const totalStock = product.stock ? 
                             (product.stock.S || 0) + (product.stock.M || 0) + (product.stock.L || 0) + 
                             (product.stock.XL || 0) + (product.stock.XXL || 0) : 0;
@@ -675,6 +688,13 @@
                                         <% if (finalPrice < regular) { %>
                                             <span class="original-price">₹<%= regular.toLocaleString('en-IN') %>
                                             </span>
+                                        <% } %>
+                                    </div>
+                                    
+                                    <!-- Offer Badges -->
+                                    <div class="offer-badges mb-2">
+                                        <% if (appliedOffer > 0) { %>
+                                            <span class="badge bg-success"><%= appliedOffer %>% OFF</span>
                                         <% } %>
                                     </div>
 

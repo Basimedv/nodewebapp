@@ -710,23 +710,26 @@
 
                                             <div class="cart-item-price">
                                                 <div class="price-info mb-2">
-                                                    <% const regularPrice=item.productId.regularPrice || 0; %>
-                                                    <% const salePrice=item.productId.salePrice || 0; %>
-                                                    <% const offerPercent=item.productId.productOffer || 0; %>
-                                                    <% let finalPrice=regularPrice; %>
+                                                    <% const regularPrice=item.productId.regularPrice || 0;
+                                                    const productOffer=item.productId.productOffer || 0;
+                                                    const categoryOffer=item.productId.category?.categoryOffer || 0;
+                                                    
+                                                    // Display the greater offer
+                                                    let appliedOffer = 0;
+                                                    let appliedOfferType = '';
+                                                    
+                                                    if (productOffer > categoryOffer) {
+                                                        appliedOffer = productOffer;
+                                                        appliedOfferType = 'product';
+                                                    } else if (categoryOffer > productOffer) {
+                                                        appliedOffer = categoryOffer;
+                                                        appliedOfferType = 'category';
+                                                    }
+                                                    
+                                                    let finalPrice=regularPrice; %>
 
-                                                    <% if (salePrice> 0 && salePrice < regularPrice) { %>
-                                                        <div class="price-row">
-                                                            <small class="text-muted">Regular Price:</small>
-                                                            <span class="cart-item-original-price">₹<%= regularPrice.toLocaleString('en-IN') %></span>
-                                                        </div>
-                                                        <div class="price-row">
-                                                            <small class="text-muted">Sale Price:</small>
-                                                            <span class="text-success fw-semibold">₹<%= salePrice.toLocaleString('en-IN') %></span>
-                                                        </div>
-                                                        <% finalPrice=salePrice; %>
-                                                    <% } else if (offerPercent> 0) { %>
-                                                        <% const discountedPrice=Math.round(regularPrice - (regularPrice * offerPercent / 100)); %>
+                                                    <% if (appliedOffer > 0) { %>
+                                                        <% const discountedPrice=Math.round(regularPrice - (regularPrice * appliedOffer / 100)); %>
                                                         <div class="price-row">
                                                             <small class="text-muted">Regular Price:</small>
                                                             <span class="cart-item-original-price">₹<%= regularPrice.toLocaleString('en-IN') %></span>
@@ -734,7 +737,7 @@
                                                         <div class="price-row">
                                                             <small class="text-muted">Offer Price:</small>
                                                             <span class="text-success fw-semibold">₹<%= discountedPrice.toLocaleString('en-IN') %></span>
-                                                            <span class="badge bg-success ms-1"><%= offerPercent %>% OFF</span>
+                                                            <span class="badge bg-success ms-1"><%= appliedOffer %>% OFF</span>
                                                         </div>
                                                         <% finalPrice=discountedPrice; %>
                                                     <% } else { %>
@@ -743,6 +746,15 @@
                                                             <span class="fw-semibold">₹<%= regularPrice.toLocaleString('en-IN') %></span>
                                                         </div>
                                                     <% } %>
+                                                    
+                                                    <!-- Offer Details -->
+                                                    <div class="offer-badges mt-2">
+                                                        <% if (appliedOfferType === 'product') { %>
+                                                            <span class="badge bg-info small">Product: <%= productOffer %>%</span>
+                                                        <% } else if (appliedOfferType === 'category') { %>
+                                                            <span class="badge bg-warning small">Category: <%= categoryOffer %>%</span>
+                                                        <% } %>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -787,14 +799,22 @@
                                     <span>Subtotal (<%= cartItems.length %> items)</span>
                                     <span>₹<%= cartItems.reduce((total, item)=> {
                                             const regularPrice = item.productId.regularPrice || 0;
-                                            const salePrice = item.productId.salePrice || 0;
-                                            const offerPercent = item.productId.productOffer || 0;
-                                            const itemPrice = salePrice > 0 && salePrice < regularPrice ? salePrice :
-                                                offerPercent> 0 ? Math.round(regularPrice - (regularPrice * offerPercent
-                                                / 100)) :
-                                                regularPrice;
-                                                return total + (itemPrice * item.quantity);
-                                                }, 0) %></span>
+                                            const productOffer = item.productId.productOffer || 0;
+                                            const categoryOffer = item.productId.category?.offer || 0;
+                                            
+                                            // Prioritize product offer over category offer
+                                            let appliedOffer = 0;
+                                            if (productOffer > 0) {
+                                                appliedOffer = productOffer;
+                                            } else if (categoryOffer > 0) {
+                                                appliedOffer = categoryOffer;
+                                            }
+                                            
+                                            const itemPrice = appliedOffer> 0 ? Math.round(regularPrice - (regularPrice * appliedOffer
+                                            / 100)) :
+                                            regularPrice;
+                                            return total + (itemPrice * item.quantity);
+                                        }, 0).toLocaleString('en-IN') %></span>
                                 </div>
 
                                 <div class="summary-row">
@@ -806,14 +826,22 @@
                                     <span><strong>Total Amount</strong></span>
                                     <span><strong>₹<%= cartItems.reduce((total, item)=> {
                                                 const regularPrice = item.productId.regularPrice || 0;
-                                                const salePrice = item.productId.salePrice || 0;
-                                                const offerPercent = item.productId.productOffer || 0;
-                                                const itemPrice = salePrice > 0 && salePrice < regularPrice ? salePrice
-                                                    : offerPercent> 0 ? Math.round(regularPrice - (regularPrice *
-                                                    offerPercent / 100)) :
-                                                    regularPrice;
-                                                    return total + (itemPrice * item.quantity);
-                                                    }, 0) %></strong></span>
+                                                const productOffer = item.productId.productOffer || 0;
+                                                const categoryOffer = item.productId.category?.offer || 0;
+                                                
+                                                // Prioritize product offer over category offer
+                                                let appliedOffer = 0;
+                                                if (productOffer > 0) {
+                                                    appliedOffer = productOffer;
+                                                } else if (categoryOffer > 0) {
+                                                    appliedOffer = categoryOffer;
+                                                }
+                                                
+                                                const itemPrice = appliedOffer> 0 ? Math.round(regularPrice - (regularPrice *
+                                                appliedOffer / 100)) :
+                                                regularPrice;
+                                                return total + (itemPrice * item.quantity);
+                                            }, 0).toLocaleString('en-IN') %></strong></span>
                                 </div>
 
                                 <button class="checkout-btn" onclick="proceedToCheckout()">
@@ -1261,10 +1289,10 @@
                             let price = 0;
                             const priceText = priceElement.textContent;
 
-                            // Try to find sale price first (in green text)
-                            const salePriceMatch = priceText.match(/₹([\d,]+)/);
-                            if (salePriceMatch) {
-                                price = parseInt(salePriceMatch[1].replace(/,/g, ''));
+                            // Try to find offer price first (in green text)
+                            const offerPriceMatch = priceText.match(/₹([\d,]+)/);
+                            if (offerPriceMatch) {
+                                price = parseInt(offerPriceMatch[1].replace(/,/g, ''));
                             }
 
                             const itemTotal = price * quantity;
