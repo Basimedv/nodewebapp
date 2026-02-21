@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -15,7 +16,7 @@
         }
 
         body {
-             background-image: url(/images/background.jpg);
+            background-image: url(/images/background.jpg);
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             display: flex;
@@ -50,11 +51,6 @@
         .mainHead img {
             width: 40px;
             height: 40px;
-            /* border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 15px;
-            background-color: #e9ecef;
-            padding: 10px; */
         }
 
         .mainHead p {
@@ -90,6 +86,31 @@
             border-color: #6c63ff;
             box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
             outline: none;
+        }
+
+        /* Password wrapper styles */
+        .password-wrapper {
+            position: relative;
+            margin-bottom: 5px;
+        }
+
+        .password-wrapper input {
+            padding-right: 45px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            font-size: 18px;
+            transition: color 0.3s;
+        }
+
+        .toggle-password:hover {
+            color: #6c63ff;
         }
 
         button {
@@ -132,33 +153,46 @@
                 <p id="errorMsg" style="color:red;">
                     <%= error %>
                 </p>
-                <% } %>
-                    <form action="/admin/adminLogin" method="post">
-                      
+            <% } %>
 
-                                <label for="email">Email Address</label>
-                                <input type="email" name="email" id="email" placeholder="Enter your email" required>
+            <form action="/admin/adminLogin" method="post">
+                <label for="email">Email Address</label>
+                <input type="email" name="email" id="email" placeholder="Enter your email" required>
 
-                                <label for="password">Password</label>
-                                <input type="password" name="password" id="password" placeholder="Enter your password"
-                                    required>
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" name="password" id="password" placeholder="Enter your password" required>
+                    <i class="far fa-eye-slash toggle-password" onclick="togglePassword('password', this)"></i>
+                </div>
 
-                                <button type="submit">Sign In</button>
-                    </form>
+                <button type="submit">Sign In</button>
+            </form>
         </div>
     </main>
+
+    <script>
+        // Password Toggle Function
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        }
+
+        // Error Message Auto Hide
+        const errorMsg = document.getElementById('errorMsg');
+        if (errorMsg) {
+            setTimeout(() => {
+                errorMsg.style.display = 'none';
+            }, 3000);
+        }
+    </script>
 </body>
 
-
 </html>
-<script>
-  
- 
-  const errorMsg = document.getElementById('errorMsg');
-  if (errorMsg) {
-    setTimeout(() => {
-      errorMsg.style.display = 'none';
-    }, 3000);
-  }
-
-</script>

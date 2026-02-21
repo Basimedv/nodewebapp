@@ -1,37 +1,26 @@
-// config/cloudinary.js
 const cloudinary = require('cloudinary').v2;
-require('dotenv').config();
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const multer = require('multer');
 
-// Configure Cloudinary with environment variables
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  timeout: 60000, // 60 seconds timeout
-  secure: true
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Test connection (optional - useful for debugging)
-const testConnection = async () => {
-  try {
+// 1. Profile Storage (Square crop for avatars)
+const profileStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'user_profiles',
+        allowed_formats: ['jpg', 'png', 'jpeg'],
+        transformation: [{ width: 400, height: 400, crop: 'fill' }] 
+    },
+});
 
-    const result = await cloudinary.api.ping();
-  
-    return true;
-  } catch (error) {
-    console.error('❌ Cloudinary connection failed:', error.message);
-    return false;
-  }
-};
 
-// // Log configuration (without secrets)
-// console.log('☁️ Cloudinary Config:');
-// console.log('   Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME ? '✓' : '✗');
-// console.log('   API Key:', process.env.CLOUDINARY_API_KEY ? '✓' : '✗');
-// console.log('   API Secret:', process.env.CLOUDINARY_API_SECRET ? '✓' : '✗');
 
-// Export cloudinary instance
-module.exports = cloudinary;
+const uploadProfile = multer({ storage: profileStorage });
 
-// Optionally export test function
-module.exports.testConnection = testConnection;
+
+module.exports = { cloudinary, uploadProfile};

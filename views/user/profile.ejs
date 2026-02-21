@@ -193,6 +193,34 @@
         .btn-copy:hover {
             background-color: #146c43;
         }
+        /* This adds the animation track to your existing content area */
+.col-md-9 {
+    position: relative; /* Essential for the line to position itself */
+    overflow: hidden;   /* Keeps the line inside the content area */
+    padding-top: 10px;  /* Small gap so line doesn't touch the very top */
+}
+
+/* The Animated Green Line */
+.col-md-9::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        #198754 50%, 
+        transparent 100%);
+    animation: moveBorder 3s linear infinite;
+    z-index: 10; /* Ensures it stays on top */
+}
+
+@keyframes moveBorder {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+        
     </style>
 
 </head>
@@ -226,7 +254,7 @@
                         <p style="margin: 0; color: #666; font-size: 14px;">Member since <%= new Date(user.createdOn).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) %></p>
                     </div>
                 </div>
-                <a href="/profile/edit" class="btn-edit-profile">
+                <a href="/profile/getProfileEdit" class="btn-edit-profile">
                     <i class="fas fa-edit"></i> Edit Profile
                 </a>
             </div>

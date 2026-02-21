@@ -3,66 +3,65 @@ const path = require('path');
 const session = require('express-session');
 const passport = require('./config/passport');
 const dotenv = require('dotenv');
-const fs = require('fs');
 const morgan = require('morgan');
 const db = require('./config/db');
-const mongoose = require('mongoose');
 const userRouter = require('./routes/userRouter');
 const adminRouter = require('./routes/adminRouter');
-const paymentRouter = require('./routes/payment');
-const cloudinary = require('./config/cloudinary');
+const googleRoutes = require('./routes/googleRoute');
 
 dotenv.config();
+
+// Connect to Database
 db();
 
 const app = express();
 
-// Middleware
+// --- View Engine Setup ---
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
+// --- Standard Middlewares ---
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-
-// Test Cloudinary connection on startup
-cloudinary.testConnection().then(connected => {
-  if (connected) {
-    console.log('✅ Cloudinary connected successfully');
-  } else {
-    console.error('❌ Check your Cloudinary credentials in .env');
-  }
-});
-
-// Session configuration
+// --- Session Configuration ---
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false,
+        secure: false, // Set to true only if using HTTPS
         httpOnly: true,
         maxAge: 72 * 60 * 60 * 1000 // 72 hours
     }
 }));
 
-// Passport
+// --- Passport Initialization ---
+// IMPORTANT: Must be after session middleware
 app.use(passport.initialize());
 app.use(passport.session());
 
-// EJS setup
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
+// --- Routes ---
 
-// Static folder
-app.use(express.static(path.join(__dirname, 'public')));
+app.use('/auth', googleRoutes); 
 
-// Logger
-app.use(morgan('dev'));
+app.use('/', adminRouter);
 
-// Routes
+// User routes (e.g., /login, /profile)
 app.use('/', userRouter);
-app.use('/admin', adminRouter);
-app.use('/api/payment', paymentRouter); // Add this line
-
-// Server start
-app.listen(process.env.PORT || 3000, () => {
-    console.log('✅ Server started on port', process.env.PORT || 3000);
+// This should be at the very bottom of your app.js, after all other routes
+app.use((req, res) => {
+    res.status(404).render('user/pageNotFound', {
+        user: req.session.user || null // This fixes the "user is not defined" error
+    });
 });
+
+// --- Server Start ---
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`✅ Server started on port ${PORT}`);
+});
+
+module.exports = app;

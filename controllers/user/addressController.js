@@ -1,247 +1,142 @@
-const mongoose = require('mongoose');
+const HTTP_STATUS_CODES = require('../../constants/status_codes');
 const Address = require('../../models/addressSchema');
-const User=require('../../models/userSchema');
+const User = require('../../models/userSchema');
 
-// HTTP Status Codes
-const BAD_REQUEST = 400;
-const NOT_FOUND = 404;
-const INTERNAL_SERVER_ERROR = 500;
-
-const getAddresses = async (req, res) => {
+// 1. GET: Main Address Management Page
+const getAddress = async (req, res) => {
     try {
-        const userId = req.user._id || req.user.id;
-        const addressDocs = await Address.find({ userId });
-        
-        // Flatten the nested address array with proper field mapping
-        const addresses = addressDocs.reduce((acc, doc) => {
-            const flatAddresses = doc.address.map((addr, index) => ({
-                _id: addr._id || `${doc._id}-${index}`, // Generate unique ID if not present
-                addressType: addr.addressType || 'Home',
-                name: addr.name || '',
-                phone: addr.phone || '',
-                addressLine1: addr.landMark || '',
-                addressLine2: '',
-                city: addr.city || '',
-                state: addr.state || '',
-                pincode: addr.pinCode || '',
-                altPhone: addr.altPhone || ''
-            }));
-            return acc.concat(flatAddresses);
-        }, []);
-        
-        console.log('🔍 Flattened addresses:', addresses);
-        
-        // If it's a page request (not an AJAX call), render the page with addresses
-        if (req.headers.accept && req.headers.accept.includes('text/html')) {
-            return res.render('user/manageAddresses', { 
-                title: 'Manage Addresses',
-                user: req.user,
-                addresses: addresses
-            });
-        }
+        const userId = req.session.user;
+        const user = await User.findById(userId);
+        const addressDoc = await Address.findOne({ userId });
+        const addresses = addressDoc ? addressDoc.address : [];
 
-        // Otherwise, return JSON for API calls
-        res.status(200).json(addresses);
+        res.render('user/manageAddresses', { user, addresses });
     } catch (error) {
-        console.error('Error:', error);
-        
-        if (req.headers.accept && req.headers.accept.includes('text/html')) {
-            return res.status(INTERNAL_SERVER_ERROR).render('error', {
-                message: 'Failed to load page'
-            });
-        }
-        
-        res.status(INTERNAL_SERVER_ERROR).json({
-            success: false,
-            error: 'Failed to fetch addresses'
-        });
+        console.error("Error fetching addresses:", error);
+        res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
     }
 };
-// Add a new address
-const addAddress = async (req, res) => {
+
+// 2. GET: Render Add Address Page
+const getAddAddress = async (req, res) => {
     try {
-        const userId = req.user._id || req.user.id;
-        const { 
-            name,
-            addressLine1,
-            city,
-            state,
-            postalCode,
-            phone,
-            addressType = 'Home',
-            altPhone = ''
-        } = req.body;
+        const user = await User.findById(req.session.user);
+        res.render('user/addAddress', { user });
+    } catch (error) {
+        res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).send("Error loading page");
+    }
+};
 
-        console.log('🔍 Adding address with data:', req.body);
-
-        // Find or create user's address document
-        let userAddress = await Address.findOne({ userId });
+// 3. GET: Render Edit Address Page
+const getEditAddress = async (req, res) => {
+    try {
+        const userId = req.session.user;
+        const addressId = req.query.id;
         
+        const user = await User.findById(userId);
+        const addressDoc = await Address.findOne({ userId });
+        const address = addressDoc.address.find(item => item._id.toString() === addressId);
+
+        if (!address) return res.redirect('/address');
+
+        res.render('user/editAddress', { user, address });
+    } catch (error) {
+        res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).send("Error loading page");
+    }
+};
+
+// 4. POST: Save New Address
+const postAddAddress = async (req, res) => {
+    try {
+        const userId = req.session.user;
+        
+        // Destructuring helps ensure we are getting exactly what we need
+        const { name, phone, landMark, city, state, pinCode, addressType } = req.body;
+
+        const addressDoc = await Address.findOne({ userId });
+
         const newAddressData = {
-            _id: new mongoose.Types.ObjectId(), // Generate unique ID for the address
-            addressType,
             name,
-            city,
-            landMark: addressLine1,
-            state,
-            pinCode: parseInt(postalCode),
             phone,
-            altPhone
+            landMark,
+            city,
+            state,
+            pinCode,
+            addressType: addressType || 'Home'
         };
 
-        if (!userAddress) {
-            // Create new address document with nested address array
-            userAddress = new Address({
+        if (addressDoc) {
+            await Address.updateOne(
+                { userId },
+                { $push: { address: newAddressData } }
+            );
+        } else {
+            const newAddressDoc = new Address({
                 userId,
                 address: [newAddressData]
             });
-        } else {
-            // Add new address to existing document's address array
-            userAddress.address.push(newAddressData);
+            await newAddressDoc.save();
         }
-
-        await userAddress.save();
-
-        console.log('🔍 Saved address document:', userAddress);
-
-        // Get the newly added address (last one in the array)
-        const newAddress = userAddress.address[userAddress.address.length - 1];
-
-        res.status(201).json({
-            success: true,
-            message: 'Address added successfully',
-            data: {
-                _id: newAddress._id,
-                addressType: newAddress.addressType,
-                name: newAddress.name,
-                phone: newAddress.phone,
-                addressLine1: newAddress.landMark,
-                addressLine2: '',
-                city: newAddress.city,
-                state: newAddress.state,
-                pincode: newAddress.pinCode,
-                altPhone: newAddress.altPhone
-            }
-        });
+        res.status(HTTP_STATUS_CODES.OK).json({ success: true });
     } catch (error) {
-        console.error('Error adding address:', error);
-        res.status(INTERNAL_SERVER_ERROR).json({
-            success: false,
-            error: 'Failed to add address'
-        });
+        console.error("Add Address Error:", error);
+        res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to save address" });
     }
 };
 
-// Update an address
-const updateAddress = async (req, res) => {
+// 5. POST: Update Existing Address
+const postEditAddress = async (req, res) => {
     try {
-        const { id } = req.params;
-        const userId = req.user._id || req.user.id;
-        const updates = req.body;
+        const userId = req.session.user;
+        const { addressId, name, phone, landMark, city, state, pinCode, addressType } = req.body;
 
-        // Find the user's address document
-        const userAddress = await Address.findOne({ userId });
-        if (!userAddress) {
-            return res.status(NOT_FOUND).json({
-                success: false,
-                error: 'Address not found'
-            });
-        }
-
-        // Find the specific address in the array
-        const addressIndex = userAddress.address.findIndex(addr => 
-            addr._id && addr._id.toString() === id
-        );
-
-        if (addressIndex === -1) {
-            return res.status(NOT_FOUND).json({
-                success: false,
-                error: 'Address not found'
-            });
-        }
-
-        // Update the address fields
-        const updateData = {
-            ...updates,
-            landMark: updates.addressLine1 || updates.landMark,
-            pinCode: updates.postalCode || updates.pinCode
-        };
-
-        Object.assign(userAddress.address[addressIndex], updateData);
-        await userAddress.save();
-
-        const updatedAddress = userAddress.address[addressIndex];
-
-        res.status(200).json({
-            success: true,
-            message: 'Address updated successfully',
-            data: {
-                ...updatedAddress.toObject(),
-                addressLine1: updatedAddress.landMark,
-                addressLine2: '',
-                pincode: updatedAddress.pinCode
+        await Address.updateOne(
+            { userId, "address._id": addressId },
+            { 
+                $set: { 
+                    "address.$": {
+                        _id: addressId, // Keep the same ID
+                        name,
+                        phone,
+                        landMark,
+                        city,
+                        state,
+                        pinCode,
+                        addressType
+                    } 
+                } 
             }
-        });
+        );
+        res.status(HTTP_STATUS_CODES.OK).json({ success: true });
     } catch (error) {
-        console.error('Error updating address:', error);
-        res.status(INTERNAL_SERVER_ERROR).json({
-            success: false,
-            error: 'Failed to update address'
-        });
+        console.error("Edit Address Error:", error);
+        res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false });
     }
 };
 
-// Delete an address
+// 6. DELETE: Delete Address (Added this for your delete button)
 const deleteAddress = async (req, res) => {
     try {
-        const { id } = req.params;
-        const userId = req.user._id || req.user.id;
+        const userId = req.session.user;
+        const addressId = req.params.id;
 
-        // Find the user's address document
-        const userAddress = await Address.findOne({ userId });
-        if (!userAddress) {
-            return res.status(NOT_FOUND).json({
-                success: false,
-                error: 'Address not found'
-            });
-        }
-
-        // Find and remove the specific address from the array
-        const addressIndex = userAddress.address.findIndex(addr => 
-            addr._id && addr._id.toString() === id
+        await Address.updateOne(
+            { userId },
+            { $pull: { address: { _id: addressId } } }
         );
 
-        if (addressIndex === -1) {
-            return res.status(NOT_FOUND).json({
-                success: false,
-                error: 'Address not found'
-            });
-        }
-
-        userAddress.address.splice(addressIndex, 1);
-        await userAddress.save();
-
-        // If no addresses left, delete the document
-        if (userAddress.address.length === 0) {
-            await Address.deleteOne({ userId });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: 'Address deleted successfully'
-        });
+        res.json({ success: true });
     } catch (error) {
-        console.error('Error deleting address:', error);
-        res.status(INTERNAL_SERVER_ERROR).json({
-            success: false,
-            error: 'Failed to delete address'
-        });
+        console.error("Delete Error:", error);
+        res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false });
     }
 };
 
 module.exports = {
-    getAddresses,
-    addAddress,
-    updateAddress,
+    getAddress,
+    getAddAddress,
+    getEditAddress,
+    postAddAddress,
+    postEditAddress,
     deleteAddress
 };

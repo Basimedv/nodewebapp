@@ -7,6 +7,8 @@
     <title>COLINGUEST Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
+    <!-- Font Awesome for eye icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/login.css">
 </head>
 
@@ -17,34 +19,38 @@
             <div class="logo-container">
                 <img src="/images/colinguest.png" alt="COLINGUEST Logo" class="logo">
             </div>
-            
+
             <!-- Welcome Text -->
             <div class="welcome-section">
                 <h1 class="welcome-text">Welcome Back!</h1>
                 <p class="welcome-subtext">Login to your account</p>
             </div>
-            
+
             <!-- Login Form -->
             <form action="/login" method="POST" class="login-form">
                 <div class="form-group">
                     <input type="email" id="email" name="email" class="form-input" placeholder="Email" required>
                 </div>
-                
+
                 <div class="form-group">
-                    <input type="password" id="password" name="password" class="form-input" placeholder="Password" required>
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Password"
+                        required>
+                    <span class="toggle-password" onclick="togglePassword()">
+                        <i class="far fa-eye-slash" id="toggleIcon"></i>
+                    </span>
                 </div>
-                
+
                 <div class="form-actions">
                     <a href="/forgotPassword" class="forgot-password">Forgot Password?</a>
                     <button type="submit" class="login-button">Login</button>
                 </div>
             </form>
-            
+
             <!-- Divider -->
             <div class="divider">
                 <span>or</span>
             </div>
-            
+
             <!-- Google Sign In -->
             <div class="google-signin">
                 <a href="/auth/google" class="google-button">
@@ -52,27 +58,46 @@
                     <span>Continue with Google</span>
                 </a>
             </div>
-            
+
             <!-- Sign Up Link -->
             <div class="signup-link">
                 Don't have an account? <a href="/signup">Sign Up</a>
             </div>
-            
+
             <!-- Error Message -->
             <% if (message) { %>
                 <div class="error-message">
                     <%= message %>
                 </div>
-            <% } %>
+                <% } %>
         </div>
     </div>
+
     <script>
+        // Password toggle function
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+
+            if (passwordInput.type === 'password') {
+                // Show password
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            } else {
+                // Hide password
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            }
+        }
+
         // Handle error message auto-dismissal
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Try to find error message by class first, then by ID
-            let errorMessage = document.querySelector('.error-message') || 
-                             document.getElementById('error-message');
-            
+            let errorMessage = document.querySelector('.error-message') ||
+                document.getElementById('error-message');
+
             if (errorMessage) {
                 // Auto-hide after 3 seconds
                 setTimeout(() => {

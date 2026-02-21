@@ -1,5 +1,6 @@
 
 
+const { ROUTES } = require('../../constants/routes');
 const User = require('../../models/userSchema');
 
 // 🟢 Get customer list
@@ -48,11 +49,12 @@ const customerinfo = async (req, res) => {
             totalPages,
             currentPage: page,
             searchQuery: search,
+            path: "/admin/customers",
             errorMessage: ""
         });
     } catch (error) {
         console.error("❌ Error in customerinfo:", error);
-        res.redirect("/pageerror");
+        res.redirect(ROUTES.ADMIN.PAGE_ERROR);
     }
 };
 

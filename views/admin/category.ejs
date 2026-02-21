@@ -151,25 +151,7 @@
 </head>
 
 <body>
-
-    <nav class="navbar">
-        <a href="/admin" class="brand-name">COLINGUEST</a>
-    </nav>
-
-    <div class="sidebar">
-        <a href="/admin/dashboard"><i class="bi bi-grid"></i> Dashboard</a>
-        <a href="/admin/categories" class="active"><i class="bi bi-tag"></i> Categories</a>
-        <a href="/admin/brands"><i class="bi bi-badge-tm"></i> Brands</a>
-        <a href="/admin/offers"><i class="bi bi-gift"></i> Offers</a>
-        <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
-                         <a href="/admin/addproducts"><i class="bi bi-box"></i> Add Products</a>
-        <a href="/admin/customers"><i class="bi bi-people"></i> Customers</a>
-        <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
-        <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
-        <a href="/admin/sales-report"><i class="bi bi-bar-chart"></i> Sales Report</a>
-        <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i> Wallet</a>
-        <a href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
-    </div>
+<%- include("../partials/admin/header") %>
 
     <!-- Edit Category Modal -->
     <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-hidden="true">

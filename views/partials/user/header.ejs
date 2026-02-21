@@ -6,32 +6,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>COLINQUEST</title>
     <link rel="stylesheet" href="/css/header.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&display=swap"
-        rel="stylesheet">
-    <!-- 3d model -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&display=swap" rel="stylesheet">
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-   .user-dropdown {
-    position: relative;
-    display: inline-block;
-    background-color: transparent !important;
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-    top: 1px;
-       position: relative;
-    left: 110px;   /* increase/decrease as needed */
-}
+        /* --- DARK MODE LOGIC (GLOBAL) --- */
+        html.dark-mode-logic {
+            filter: invert(1) hue-rotate(180deg);
+        }
 
+        /* Fix inversion for media/icons so they look normal */
+        html.dark-mode-logic img, 
+        html.dark-mode-logic video, 
+        html.dark-mode-logic .model-viewer,
+        html.dark-mode-logic i,
+        html.dark-mode-logic .imageLogo,
+        html.dark-mode-logic .header-icon {
+            filter: invert(1) hue-rotate(180deg);
+        }
 
+        html {
+            transition: filter 0.3s ease;
+            background-color: white; /* Base for inversion */
+        }
+
+        /* Toggle Button Styling */
+        .theme-toggle-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #333;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* --- EXISTING STYLES --- */
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+            background-color: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            top: 1px;
+            left: 110px;
+        }
 
         .username-link {
             text-decoration: none;
@@ -61,7 +92,6 @@
             z-index: 1000;
             overflow: hidden;
             left: -100px; 
-
         }
 
         .dropdown-menu-custom.show {
@@ -112,7 +142,10 @@
                 <img src="/images/colinguest.png" class="imageLogo" alt="COLINQUEST">
             </a>
             <div class="buttons">
-                <!-- Cart and Wishlist Icons -->
+                <button id="theme-toggle" class="theme-toggle-btn" title="Toggle Dark Mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+
                 <% if (!user) { %>
                     <a href="#" class="header-icon guest-wishlist" aria-label="Wishlist" title="Wishlist">
                         <i class="fas fa-heart"></i>
@@ -129,35 +162,18 @@
                     </a>
                 <% } %>
 
-                <!-- User Authentication -->
                 <% if (user) { %>
                     <div class="user-dropdown">
                         <a href="#" class="username-link" id="userDropdown" onclick="toggleDropdown(event)">
                             <%= user.fullName ? user.fullName.split(" ")[0] : (user.name ? user.name.split(" ")[0] : user.username) %>
-                            <i  style="font-size: 12px; margin-left: 70px;"></i>
+                            <i style="font-size: 12px; margin-left: 70px;"></i>
                         </a>
                         <div class="dropdown-menu-custom" id="dropdownMenu">
                             <ul>
-                                <li>
-                                    <a href="/profile">
-                                        <i class="fa-solid fa-user"></i>My Profile
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="/orders">
-                                        <i class="fa-solid fa-box"></i>My Orders
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="/wallet">
-                                        <i class="fa-solid fa-wallet"></i>My Wallet
-                                    </a>
-                                </li>
-                                
-                                <li>
-                                   
-                        <a href="/logout" class="logout"><i class="fas fa-right-from-bracket"></i> <span>Logout</span></a>
-                                </li>
+                                <li><a href="/profile"><i class="fa-solid fa-user"></i>My Profile</a></li>
+                                <li><a href="/orders"><i class="fa-solid fa-box"></i>My Orders</a></li>
+                                <li><a href="/wallet"><i class="fa-solid fa-wallet"></i>My Wallet</a></li>
+                                <li><a href="/logout" class="logout"><i class="fas fa-right-from-bracket"></i> <span>Logout</span></a></li>
                             </ul>
                         </div>
                     </div>
@@ -172,21 +188,11 @@
         <div class="subhead">
             <nav>
                 <ul>
-                    <a href="/landingPage">
-                        <li>Home</li>
-                    </a>
-                    <a href="/productListing">
-                        <li>Shop</li>
-                    </a>
-                    <a href="/customListing">
-                        <li>Custom</li>
-                    </a>
-                    <a href="/about">
-                        <li>About</li>
-                    </a>
-                    <a href="/contact">
-                        <li>Contact</li>
-                    </a>
+                    <a href="/landingPage"><li>Home</li></a>
+                    <a href="/productListing"><li>Shop</li></a>
+                    <a href="/customListing"><li>Custom</li></a>
+                    <a href="/about"><li>About</li></a>
+                    <a href="/contact"><li>Contact</li></a>
                 </ul>
             </nav>
         </div>
@@ -194,7 +200,30 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Toggle dropdown menu
+        // --- DARK MODE JAVASCRIPT ---
+        const themeBtn = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const themeIcon = themeBtn.querySelector('i');
+
+        // Check preference on load
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            html.classList.add('dark-mode-logic');
+            themeIcon.classList.replace('fa-moon', 'fa-sun');
+        }
+
+        themeBtn.addEventListener('click', () => {
+            html.classList.toggle('dark-mode-logic');
+            
+            if (html.classList.contains('dark-mode-logic')) {
+                themeIcon.classList.replace('fa-moon', 'fa-sun');
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                themeIcon.classList.replace('fa-sun', 'fa-moon');
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        });
+
+        // --- EXISTING DROPDOWN & GUEST LOGIC ---
         function toggleDropdown(event) {
             event.preventDefault();
             event.stopPropagation();
@@ -202,17 +231,14 @@
             dropdown.classList.toggle('show');
         }
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('dropdownMenu');
             const userDropdown = document.getElementById('userDropdown');
-            
             if (dropdown && !userDropdown?.contains(event.target)) {
                 dropdown.classList.remove('show');
             }
         });
 
-        // Handle guest wishlist and cart clicks
         document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll(".guest-wishlist, .guest-cart").forEach(el => {
                 el.addEventListener("click", function (e) {

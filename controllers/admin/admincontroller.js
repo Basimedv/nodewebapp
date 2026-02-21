@@ -1,121 +1,78 @@
 // controllers/admin/admincontroller.js
+const { ROUTES } = require('../../constants/routes');
 const User = require('../../models/userSchema');
 const bcrypt = require('bcrypt');
 
-
-
 const pageerror = async (req, res) => {
-  res.render('admin/admin-error')
-}
-// GET admin login page
+    // Points to views/admin/admin-error.ejs
+    res.render('admin/admin-error');
+};
+
 const loadLogin = (req, res) => {
-  try {
-    if (req.session.admin) {
-      return res.redirect("/admin/dashboard");
-    }
-    // error message is optional
-    return res.render("admin/login", { error: null });
-  } catch (err) {
-    console.error("Error loading admin login:", err);
-    res.redirect("/pageNotFound");
-  }
-};
-
-// POST admin login
-const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // check if admin exists
-    const admin = await User.findOne({ email, isAdmin: true });
-
-    if (!admin) {
-      // email not found → show error
-      return res.render("admin/login", { error: "Admin email not found" });
-    }
-
-    // compare password
-    const passwordMatch = await bcrypt.compare(password, admin.password);
-
-    if (!passwordMatch) {
-      // wrong password → show error
-      return res.render("admin/login", { error: "Incorrect password" });
-    }
-
-    // ✅ login successful - only set admin session, preserve user session if exists
-    req.session.admin = { _id: admin._id, email: admin.email };
-    return res.redirect("/admin/dashboard");
-
-  } catch (error) {
-    console.error("Login error:", error);
-    return res.render("admin/login", { error: "Something went wrong, try again" });
-  }
-};
-
-// GET admin dashboard
-const loadDashboard = async (req, res) => {
-  if (req.session.admin) {
     try {
-      return res.render('admin/dashboard'); // make sure your dashboard view is in views/admin/
+        if (req.session.admin) {
+            return res.redirect(ROUTES.ADMIN.DASHBOARD);
+        }
+        return res.render('admin/login', { error: null });
+    } catch (err) {
+        res.redirect(ROUTES.ADMIN.PAGE_ERROR);
+    }
+};
+
+const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const admin = await User.findOne({ email, isAdmin: true });
+
+        if (!admin) {
+            return res.render('admin/login', { error: "Admin not found" });
+        }
+
+        const passwordMatch = await bcrypt.compare(password, admin.password);
+        if (!passwordMatch) {
+            return res.render('admin/login', { error: "Incorrect password" });
+        }
+
+        req.session.admin = true;
+
+        return res.redirect(ROUTES.ADMIN.DASHBOARD);
     } catch (error) {
-      console.error("Dashboard error:", error);
-      return res.redirect('/admin/pageerror');
+        return res.render('admin/login', { error: "Something went wrong" });
     }
-  } else {
-    return res.redirect('/admin/adminLogin');
-  }
 };
+
+const loadDashboard = async (req, res) => {
+    if (!req.session.admin) {
+        return res.redirect(ROUTES.ADMIN.LOGIN);
+    }
+    try {
+        // Pass the title and any other necessary data here
+        res.render('admin/dashboard', { 
+            title: 'Dashboard Overview' 
+        });
+    } catch (error) {
+        console.error("Dashboard Load Error:", error);
+        res.redirect(ROUTES.ADMIN.PAGE_ERROR);
+    }
+};
+
 const logout = async (req, res) => {
-  try {
-    // Only clear admin session data, preserving user session if it exists
-    delete req.session.admin;
-    req.session.save(() => {
-      res.clearCookie('connect.sid');
-      res.redirect('/admin/adminLogin');
-    });
-  } catch (error) {
-    console.log("Unexpected error during logout", error);
-    res.redirect('/pageerror');
-  }
-};
-
-// Load order detail page
-const loadOrderDetailPage = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const Order = require('../../models/orderSchema');
-    
-    // Find order and populate user and product details
-    const order = await Order.findById(id)
-      .populate('userId', 'fullName email phone')
-      .populate('orderedItems.product', 'productName productImage')
-      .lean();
-    
-    if (!order) {
-      console.log('❌ Order not found for detail page:', id);
-      return res.redirect('/admin/pageerror');
+    try {
+        // delete req.session.admin;
+        req.session.admin = false           
+        req.session.save((err) => {
+            if (err) console.error("Logout save error:", err);
+            res.redirect(ROUTES.ADMIN.LOGIN);
+        });
+    } catch (error) {
+        res.redirect(ROUTES.ADMIN.PAGE_ERROR);
     }
-    
-    console.log('✅ Loading order detail page:', order.orderId);
-    res.render('admin/order-detail', { 
-      order: order,
-      title: 'Order Details - Admin Panel'
-    });
-  } catch (error) {
-    console.error('Error loading order detail page:', error);
-    res.redirect('/admin/pageerror');
-  }
 };
-
 
 module.exports = {
-  loadLogin,
-  login,
-  loadDashboard,
-  pageerror,
-  logout,
-  loadOrderDetailPage,
+    loadLogin,
+    login,
+    loadDashboard,
+    pageerror,
+    logout,
 };
-
-
-

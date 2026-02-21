@@ -132,3 +132,30 @@
          margin: 0 15px;
      }
  }
+ 
+
+
+ .password-wrapper {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.password-wrapper input {
+    width: 87%;
+    padding-right: 40px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 18px;
+    transition: color 0.3s;
+}
+
+.toggle-password:hover {
+    color: rgba(255, 255, 255, 1);
+}

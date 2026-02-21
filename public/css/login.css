@@ -145,6 +145,7 @@ body {
 
 .form-group {
     margin-bottom: 16px;
+    position: relative;
 }
 
 .form-input {
@@ -166,6 +167,26 @@ body {
     outline: none;
     border-color: #1a73e8;
     box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+/* Password Toggle Icon Styles */
+.toggle-password {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    user-select: none;
+    color: rgba(255, 255, 255, 0.7);
+    transition: color 0.3s;
+}
+
+.toggle-password:hover {
+    color: rgba(255, 255, 255, 1);
+}
+
+.toggle-password i {
+    font-size: 18px;
 }
 
 .divider {

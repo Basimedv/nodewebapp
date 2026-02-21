@@ -1,41 +1,53 @@
 const User = require('../../models/userSchema');
+const HTTP_STATUS_CODES = require("../../constants/status_codes");
+
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
+const { ROUTES } = require('../../constants/routes');
 require('dotenv').config();
 
 // Get Profile Page
 const getProfilePage = async (req, res) => {
   try {
     if (!req.session.user) {
-      return res.redirect('/login');
+      return res.redirect(ROUTES.USER.LOGIN);
     }
     
     const user = await User.findById(req.session.user._id);
+    
+    // Add this check
+    if (!user) {
+      req.session.destroy(); // Clear invalid session
+      return res.redirect(ROUTES.USER.LOGIN);
+    }
+
     res.render('user/profile', { 
       user: user,
       title: 'My Profile'
     });
   } catch (error) {
     console.error('Error loading profile:', error);
-    res.redirect('/pageNotFound');
+    res.redirect(ROUTES.USER.PAGE_ERROR); 
   }
 };
+
+
 
 // Get Edit Profile Page
 const getEditProfilePage = async (req, res) => {
   try {
     if (!req.session.user) {
-      return res.redirect('/login');
+     return res.redirect(ROUTES.USER.LOGIN);
     }
     
     const user = await User.findById(req.session.user._id);
-    res.render('user/editProfile', { 
+    res.render("user/editProfile", { 
       user: user,
       title: 'Edit Profile'
     });
   } catch (error) {
     console.error('Error loading edit profile:', error);
-    res.redirect('/pageNotFound');
+     res.redirect(ROUTES.USER.PAGE_ERROR); 
   }
 };
 
@@ -55,7 +67,7 @@ const getForgotPage = (req, res) => {
     res.render('user/forgotPassword', { error: null });
   } catch (error) {
     console.error(error);
-    res.redirect('/user/pageNotFound');
+    res.redirect(ROUTES.USER.PAGE_ERROR); 
   }
 };
 
@@ -66,9 +78,9 @@ const ensureOtpVerified = (req, res, next) => {
     if (req.session && req.session.otpVerified && req.session.email) {
       return next();
     }
-    return res.redirect('/forgotPassword');
+    return res.redirect(ROUTES.USER.FORGOT_PASSWORD);
   } catch (e) {
-    return res.redirect('/forgotPassword');
+  return res.redirect(ROUTES.USER.FORGOT_PASSWORD);
   }
 };
 
@@ -143,7 +155,7 @@ const forgotEmailValid = async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.redirect('/user/pageNotFound');
+    res.redirect(ROUTES.USER.PAGE_ERROR);
   }
 };
 
@@ -166,12 +178,12 @@ const verifyForgotPassOtp = async (req, res) => {
       req.session.userOtp = null;
       req.session.otpExpiresAt = null;
       // Redirect to reset password page
-      res.json({ success: true, redirect: '/resetpassword' });
+      res.json({ success: true, redirect: ROUTES.USER.RESET_PASSWORD});
     } else {
       res.json({ success: false, message: "Invalid OTP, Please try again" });
     }
   } catch (error) {
-    res.status(500).json({ success: false, message: "An error occurred. Please try again" });
+    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "An error occurred. Please try again" });
   }
 };
 
@@ -181,7 +193,7 @@ const getResetPassPage = async (req, res) => {
     // ✅ FIXED: Correct view path
     res.render('user/resetPassword', { error: null, success: null });
   } catch (error) {
-    res.redirect('/user/pageNotFound');
+    res.redirect(ROUTES.USER.PAGE_ERROR);
   }
 };
 const resetPassword = async (req, res) => {
@@ -210,7 +222,7 @@ const resetPassword = async (req, res) => {
     req.session.otpExpiresAt = null;
 
     // Success: send JSON with redirect URL
-    res.json({ success: true, redirect: '/login' });
+    res.json({ success: true, redirect: ROUTES.USER.LOGIN });
 
   } catch (error) {
     console.error("Error resetting password:", error);
@@ -227,7 +239,7 @@ const resendOtp = async (req, res) => {
     const email = req.session.email || req.body.email;
 
     if (!email) {
-      return res.status(400).json({ success: false, message: "❌ Email not found. Please try again." });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: "❌ Email not found. Please try again." });
     }
 
     // Generate new OTP
@@ -237,7 +249,7 @@ const resendOtp = async (req, res) => {
     // Send OTP email
     const emailSent = await sendVerificationEmail(email, otp);
     if (!emailSent) {
-      return res.status(500).json({ success: false, message: "❌ Failed to resend OTP. Try again." });
+      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "❌ Failed to resend OTP. Try again." });
     }
 
     // Clear old OTP and save new OTP in session
@@ -250,204 +262,121 @@ const resendOtp = async (req, res) => {
 
   } catch (error) {
     console.error('Error resending OTP:', error);
-    res.status(500).json({ success: false, message: "Something went wrong. Please try again." });
+    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "Something went wrong. Please try again." });
   }
 };
 
-// Update Profile
 const updateProfile = async (req, res) => {
   try {
-    console.log('🔍 Profile update request received');
-    console.log('📦 Request body:', req.body);
-    console.log('📦 Request file:', req.file);
-    
-    if (!req.session.user) {
-      return res.status(401).json({ success: false, message: 'Please login to update profile' });
-    }
-    
-    // Handle both field name formats
-    const { fullName, firstName, lastName, email, phone, username, gender } = req.body;
     const userId = req.session.user._id;
-    
-    // Construct fullName from firstName + lastName if fullName not provided
-    const constructedFullName = fullName || `${firstName || ''} ${lastName || ''}`.trim();
-    
-    console.log('🔍 Extracted data:', { 
-      fullName, 
-      firstName, 
-      lastName, 
-      constructedFullName, 
-      email, 
-      phone, 
-      username,
-      gender, 
-      userId 
-    });
-    
-    // Validate input
-    if (!constructedFullName) {
-      return res.status(400).json({ success: false, message: 'Name is required' });
-    }
-    
-    // Get current user data to preserve email if not provided
-    const currentUser = await User.findById(userId);
-    if (!currentUser) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-    
-    console.log('👤 Current user:', { fullName: currentUser.fullName, email: currentUser.email });
-    
-    // Use provided email or keep existing email
-    const emailToUpdate = email || currentUser.email;
-    
-    // Check if email is being changed and if it's already taken by another user
-    if (email && email !== currentUser.email) {
-      const existingUser = await User.findOne({ 
-        email: email, 
-        _id: { $ne: userId } 
-      });
-      
-      if (existingUser) {
-        return res.status(400).json({ success: false, message: 'Email is already taken by another user' });
-      }
-    }
-    
-    // Prepare update data
-    const updateData = { 
-      fullName: constructedFullName,
-      email: emailToUpdate,
-      phone: phone ? phone.trim() : ''
+    const { firstName, lastName, phone, username, gender } = req.body;
+
+    const updateData = {
+      fullName: `${firstName} ${lastName}`.trim(),
+      gender: gender || "",
+      // If the input is empty, set it to undefined so it doesn't trigger the Unique constraint
+      phone: (phone && phone.trim()) ? phone.trim() : undefined,
+      username: (username && username.trim()) ? username.trim() : undefined
     };
-    
-    // Add username if provided
-    if (username !== undefined && username !== '') {
-      updateData.username = username.trim();
-    }
-    
-    // Add gender if provided
-    if (gender !== undefined && gender !== '') {
-      updateData.gender = gender.trim();
-    }
-    
-    // Handle profile image upload if present
+
     if (req.file) {
-      console.log('📸 Profile image uploaded:', req.file);
-      // Use the full Cloudinary URL instead of just filename
-      updateData.profileImage = req.file.path || req.file.filename;
+      updateData.profileImage = req.file.path;
     }
-    
-    console.log('🔄 Update data:', updateData);
-    
-    // Update user profile
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    );
-    
-    if (!updatedUser) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-    
-    console.log('✅ User updated successfully:', { fullName: updatedUser.fullName, email: updatedUser.email });
-    
-    // Update session with new user data
-    req.session.user = {
-      _id: updatedUser._id,
-      fullName: updatedUser.fullName,
-      email: updatedUser.email
-    };
-    
-    req.session.save((err) => {
-      if (err) {
-        console.error('Session save error:', err);
-      }
-    });
-    
-    res.json({ 
-      success: true, 
-      message: 'Profile updated successfully',
-      user: {
-        fullName: updatedUser.fullName,
-        email: updatedUser.email,
-        phone: updatedUser.phone,
-        username: updatedUser.username,
-        gender: updatedUser.gender,
-        profileImage: updatedUser.profileImage
-      }
-    });
-    
+
+    await User.findByIdAndUpdate(userId, { $set: updateData });
+    res.json({ success: true, message: 'Profile updated!' });
+
   } catch (error) {
-    console.error('❌ Error updating profile:', error);
-    console.error('❌ Error stack:', error.stack);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Something went wrong. Please try again.',
-      error: error.message 
-    });
+    if (error.code === 11000) {
+      return res.status(HTTP_STATUS_CODES.CONFLICT).json({ success: false, message: 'Username or Phone already taken' });
+    }
+    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error' });
   }
 };
-
-// Delete Profile Image
+// Delete Image
 const deleteProfileImage = async (req, res) => {
   try {
-    console.log('🗑️ Profile image delete request received');
-    
-    if (!req.session.user) {
-      return res.status(401).json({ success: false, message: 'Please login to delete profile image' });
-    }
-    
     const userId = req.session.user._id;
-    
-    // Get current user
-    const currentUser = await User.findById(userId);
-    if (!currentUser) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-    
-    console.log('👤 Current user profile image:', currentUser.profileImage);
-    
-    // Check if user has a profile image
-    if (!currentUser.profileImage) {
-      return res.status(400).json({ success: false, message: 'No profile image to delete' });
-    }
-    
-    // Remove profile image from database
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $unset: { profileImage: 1 } },
-      { new: true }
-    );
-    
-    if (!updatedUser) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-    
-    console.log('✅ Profile image deleted successfully');
-    
-    res.json({ 
-      success: true, 
-      message: 'Profile image deleted successfully',
-      user: {
-        fullName: updatedUser.fullName,
-        email: updatedUser.email,
-        phone: updatedUser.phone,
-        username: updatedUser.username,
-        profileImage: null  // Explicitly return null
-      }
-    });
-    
+    await User.findByIdAndUpdate(userId, { $set: { profileImage: null } });
+    res.json({ success: true, message: 'Photo removed successfully' });
   } catch (error) {
-    console.error('❌ Error deleting profile image:', error);
-    console.error('❌ Error stack:', error.stack);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Something went wrong. Please try again.',
-      error: error.message 
-    });
+    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Error removing photo' });
   }
 };
+// privacy logic in profileController.js
 
+const getPrivacyPage = async (req, res) => {
+    try {
+        const user = await User.findById(req.session.user._id);
+        // Convert googleId to boolean: true if it exists and isn't empty
+        const isGoogleUser = !!(user.googleId && user.googleId.trim() !== "");
+
+        res.render('user/privacy', { 
+            user, 
+            isGoogleUser, 
+            activePage: 'privacy' 
+        });
+    } catch (error) {
+        res.redirect(ROUTES.USER.PAGE_ERROR);
+    }
+};
+
+const changeEmail = async (req, res) => {
+    try {
+        const { newEmail } = req.body;
+        const user = await User.findById(req.session.user._id);
+
+        if (user.googleId) {
+            return res.json({ success: false, message: "Google accounts cannot change email here." });
+        }
+
+        const exists = await User.findOne({ email: newEmail });
+        if (exists) return res.json({ success: false, message: "Email already exists." });
+
+        await User.findByIdAndUpdate(user._id, { email: newEmail });
+        res.json({ success: true, message: "Email updated successfully!" });
+    } catch (error) {
+        res.json({ success: false, message: "Error updating email." });
+    }
+};
+
+// Logic to Change Password
+const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        
+        // Ensure user is in session
+        if (!req.session.user || !req.session.user._id) {
+            return res.json({ success: false, message: "Session expired. Please login again." });
+        }
+
+        const user = await User.findById(req.session.user._id);
+
+        if (!user) {
+            return res.json({ success: false, message: "User not found." });
+        }
+
+        // Check if user is Google User (Google users don't have local passwords to change)
+        if (user.googleId && user.googleId.trim() !== "") {
+            return res.json({ success: false, message: "Google accounts must manage passwords in Google settings." });
+        }
+
+        // Compare current password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.json({ success: false, message: "Current password is incorrect." });
+        }
+
+        // Hash and save new password
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
+
+        res.json({ success: true, message: "Password updated successfully!" });
+    } catch (error) {
+        console.error("Password Update Error:", error); // This helps you see the REAL error in your terminal
+        res.json({ success: false, message: "An internal error occurred. Please try again." });
+    }
+};
 module.exports = {
   getProfilePage,
   getEditProfilePage,
@@ -460,4 +389,7 @@ module.exports = {
   ensureOtpVerified,
   updateProfile,
   deleteProfileImage,
+  getPrivacyPage,
+    changeEmail,
+    changePassword
 };

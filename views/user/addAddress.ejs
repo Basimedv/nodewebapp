@@ -1,0 +1,150 @@
+<%- include("../partials/user/header") %>
+
+<style>
+    body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
+    
+    .profile-layout {
+        display: flex;
+        justify-content: flex-start;
+        max-width: 1200px;
+        margin: 40px auto;
+        gap: 30px;
+        padding: 0 20px;
+    }
+
+    .sidebar-container { flex: 0 0 280px; }
+
+    .form-container-box {
+        flex: 1;
+        background: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .form-title { color: #5b3f64; font-weight: 700; margin-bottom: 30px; }
+
+    .input-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 15px;
+    }
+
+    .form-label { font-weight: 600; color: #333; margin-bottom: 8px; display: block; font-size: 14px; }
+    .required::after { content: " *"; color: #ff0101; }
+
+    .form-control, .form-select {
+        border: 1px solid #dce0e4;
+        border-radius: 8px;
+        padding: 10px 15px;
+        width: 100%;
+    }
+
+    .form-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 30px;
+    }
+
+    .btn-save { background-color: #000; color: white; border: none; padding: 10px 30px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    .btn-cancel { background-color: #f8f9fa; color: #333; border: 1px solid #ddd; padding: 10px 30px; border-radius: 6px; text-decoration: none; }
+</style>
+
+<div class="profile-layout">
+    <div class="sidebar-container">
+        <%- include('../partials/user/profileSidebar', { activePage: 'address' }) %>
+    </div>
+
+    <div class="form-container-box">
+        <h4 class="form-title">Add New Address</h4>
+        
+        <form id="addAddressForm">
+            <div class="input-grid">
+                <div>
+                    <label class="form-label required">Full Name</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div>
+                    <label class="form-label required">Phone Number</label>
+                    <input type="tel" name="phone" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="input-grid">
+                <div>
+                    <label class="form-label required">Landmark / Area</label>
+                    <input type="text" name="landMark" class="form-control" required>
+                </div>
+                <div>
+                    <label class="form-label required">City</label>
+                    <input type="text" name="city" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="input-grid">
+                <div>
+                    <label class="form-label required">State</label>
+                    <input type="text" name="state" class="form-control" required>
+                </div>
+                <div>
+                    <label class="form-label required">Pincode</label>
+                    <input type="text" name="pinCode" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-footer">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn-save">Save Address</button>
+                    <a href="/address" class="btn-cancel">Cancel</a>
+                </div>
+
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="addressType" id="home" value="Home" checked>
+                        <label class="form-check-label" for="home">Home</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="addressType" id="work" value="Work">
+                        <label class="form-check-label" for="work">Work</label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.getElementById("addAddressForm").addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch('/addAddress', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Saved!",
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = "/address"; 
+                });
+            } else {
+                Swal.fire({ icon: "error", title: "Failed", text: result.message || "Error saving" });
+            }
+        } catch (error) {
+            Swal.fire({ icon: "error", title: "Error", text: "Server error" });
+        }
+    });
+</script>

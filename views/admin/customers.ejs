@@ -1,334 +1,230 @@
-<!DOCTYPE html>
-<html lang="en">
+<%- include("../partials/admin/header") %>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customers</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bellefair&family=Outfit:wght@400;500;700&display=swap"
-        rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    /* Status Badge Styling */
+    .status-active {
+        background-color: #8af5bf;
+        color: #0CAF60;
+        border: 1px solid #0CAF60;
+        font-weight: 500;
+    }
 
-    <style>
-        /* Your existing CSS from before, including navbar, sidebar, table, badges, pagination */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    .status-blocked {
+        background-color: #f9d3d3;
+        color: #FD6A6A;
+        border: 1px solid #FD6A6A;
+        font-weight: 500;
+    }
 
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: #f5f7fa;
-            min-height: 100vh;
-            display: flex;
-            overflow-x: hidden;
-        }
+    .main-content {
+        padding: 30px;
+        background: #f5f7fa;
+        min-height: 100vh;
+        margin-left: 250px; 
+    }
 
-        .stock-btn1 {
-            width: 75px;
-            border: 1px solid #0CAF60;
-            background-color: #8af5bf;
-            color: #0CAF60;
-            border-radius: 10px;
-        }
+    .table thead th {
+        background: #3b6da1;
+        color: white;
+        font-weight: 500;
+        border: none;
+        padding: 15px;
+    }
 
-        .stock-btn3 {
-            width: 75px;
-            border: 1px solid #FD6A6A;
-            background-color: #f9d3d3;
-            color: #FD6A6A;
-            border-radius: 10px;
-        }
+    .search-btn {
+        background-color: #3e29a8;
+        color: white;
+    }
 
-        .navbar {
-            background: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-        }
+    .search-btn:hover {
+        background-color: #2e1e82;
+        color: white;
+    }
 
-        .brand-name {
-            font-family: 'Bellefair', serif;
-            font-size: 28px;
-            text-decoration: none;
-            color: #192430;
-        }
+    .toggle-block {
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+    
+    .toggle-block:hover {
+        transform: scale(1.1);
+    }
+</style>
 
-        .sidebar {
-            width: 250px;
-            background: #f9f9f9;
-            padding: 20px 0;
-            position: fixed;
-            top: 60px;
-            bottom: 0;
-            left: 0;
-            z-index: 999;
-            overflow-y: auto;
-        }
+<aside class="sidebar d-none d-lg-block">
+    <%- include("../partials/admin/sidebar_links") %>
+</aside>
 
-        .sidebar a {
-            display: flex;
-            align-items: center;
-            padding: 15px 30px;
-            color: #192430;
-            text-decoration: none;
-            font-size: 16px;
-            border-radius: 15px;
-        }
+<main class="main-content">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold m-0" style="font-family: 'Outfit', sans-serif;">Customer Management</h2>
+            </div>
+        </div>
 
-        .sidebar a.active {
-            background: #3b6da1;
-            color: white;
-        }
-
-        .sidebar a i {
-            margin-right: 15px;
-            font-size: 18px;
-        }
-
-        .main-content {
-            margin-left: 250px;
-            padding: 80px 30px 30px;
-            flex: 1;
-        }
-
-        .dashboard-title {
-            font-size: 24px;
-            color: #192430;
-            margin-bottom: 20px;
-        }
-
-        .customer-table {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .customer-table table {
-            width: 100%;
-        }
-
-        .customer-table th {
-            background: #3b6da1;
-            color: white;
-            padding: 12px;
-            font-size: 14px;
-        }
-
-        .customer-table td {
-            padding: 12px;
-            font-size: 14px;
-            color: #192430;
-        }
-
-        .customer-table .actions a {
-            color: #666;
-            margin: 0 5px;
-            font-size: 16px;
-            text-decoration: none;
-        }
-
-        .customer-table .actions a:hover {
-            color: #28517D;
-        }
-
-        .pagination {
-            margin-top: 20px;
-            justify-content: center;
-        }
-    </style>
-</head>
-
-<body>
-
-    <nav class="navbar">
-        <a href="/admin" class="brand-name">COLINGUEST</a>
-    </nav>
-
-    <div class="sidebar">
-        <a href="/admin/dashboard"><i class="bi bi-grid"></i> Dashboard</a>
-        <a href="/admin/categories"><i class="bi bi-tag"></i> Categories</a>
-         <a href="/admin/offers"><i class="bi bi-gift"></i> Offers</a>
-         <a href="/admin/brands"><i class="bi bi-badge-tm"></i> Brands</a>
-       
-        <a href="/admin/products"><i class="bi bi-box"></i> Products</a>
-        <a href="/admin/addproducts"><i class="bi bi-box"></i> Add Products</a>
-        <a href="/admin/customers" class="active"><i class="bi bi-people"></i> Customers</a>
-        <a href="/admin/orders"><i class="bi bi-cart"></i> Orders</a>
-        <a href="/admin/coupons"><i class="bi bi-ticket"></i> Coupons</a>
-        <a href="/admin/sales-report"><i class="bi bi-bar-chart"></i> Sales Report</a>
-        <a href="/admin/wallet-management"><i class="bi bi-credit-card"></i> Wallet</a>
-        <a href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
-    </div>
-
-    <div class="main-content">
-        <h2 class="dashboard-title">Customers</h2>
-
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-            <div class="d-flex gap-2">
-                <div class="flex-grow-1" style="max-width:180px;">
-                    <select class="form-select filter-select">
-                        <option value="all" <%=selectedFilter==="all" ?"selected":"" %>>All</option>
-                        <option value="false" <%=selectedFilter==="false" ?"selected":"" %>>Active</option>
-                        <option value="true" <%=selectedFilter==="true" ?"selected":"" %>>Blocked</option>
-                    </select>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-3">
+                        <label class="small text-muted mb-1">Filter Status</label>
+                        <select class="form-select filter-select shadow-none">
+                            <option value="all" <%= selectedFilter === "all" ? "selected" : "" %>>All Customers</option>
+                            <option value="false" <%= selectedFilter === "false" ? "selected" : "" %>>Active Only</option>
+                            <option value="true" <%= selectedFilter === "true" ? "selected" : "" %>>Blocked Only</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 ms-auto">
+                        <label class="small text-muted mb-1">Search User</label>
+                        <form id="searchForm" class="input-group">
+                            <input type="text" class="form-control shadow-none" id="searchval" placeholder="Search name or email..." value="<%= searchQuery %>">
+                            <button class="btn search-btn px-4" type="submit">
+                                <i class="bi bi-search me-1"></i> Search
+                            </button>
+                            <a href="/admin/customers" class="btn btn-outline-secondary">Reset</a>
+                        </form>
+                    </div>
                 </div>
             </div>
-            <form class="d-flex search-container flex-grow-1" id="searchForm" style="max-width:300px;">
-                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="searchval"
-                    value="<%= searchQuery %>">
-                <button class="btn" type="submit" style="background-color:#3e29a8;">
-                    <i class="bi bi-search text-white"></i>
-                </button>&nbsp;
-                <a href="/admin/customers">
-                    <button class="btn" type="button" style="background-color:#3e29a8; color:white;">Reset</button>
-                </a>
-            </form>
         </div>
 
-        <div class="customer-table">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Customer ID</th>
-                        <th>Customer</th>
-                        <th>Email Id</th>
-                        <th>Phone</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% customers.forEach(customer=>{ %>
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="customerTable">
+                    <thead>
                         <tr>
-                            <td>
-                                <%= customer._id %>
-                            </td>
-                            <td>
-                                <%= customer.fullName %>
-                            </td>
-                            <td>
-                                <%= customer.email %>
-                            </td>
-                            <td>
-                                <%= customer.phone %>
-                            </td>
-                            <td>
-                                <% if(customer.isBlocked){ %>
-                                    <span class="badge stock-btn3">Blocked</span>
-                                    <% } else { %>
-                                        <span class="badge stock-btn1">Active</span>
-                                        <% } %>
-                            </td>
-                            <td>
-                                <a href="#" class="toggle-block me-2" data-id="<%= customer._id %>"
-                                    data-blocked="<%= customer.isBlocked %>">
-                                    <i
-                                        class="bi <%= customer.isBlocked?'bi-toggle-on text-danger fs-3':'bi-toggle-off text-success fs-3' %>"></i>
-                                </a>
-                            </td>
+                            <th class="ps-4">User ID</th>
+                            <th>Customer Name</th>
+                            <th>Email Address</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Manage Status</th>
                         </tr>
-                        <% }) %>
-                </tbody>
-            </table>
-
-            <nav aria-label="Page navigation">
-                <ul class="pagination">
-                    <% for(let i=1;i<=totalPages;i++){ %>
-                        <li class="page-item <%= i===currentPage?'active':'' %>">
-                            <a class="page-link"
-                                href="?page=<%= i %>&isBlocked=<%= selectedFilter!=='all'?selectedFilter:'' %>&query=<%= searchQuery %>">
-                                <%= i %>
-                            </a>
-                        </li>
+                    </thead>
+                    <tbody>
+                        <% if (customers && customers.length > 0) { %>
+                            <% customers.forEach(customer => { %>
+                                <tr>
+                                    <td class="ps-4 text-muted small"><%= customer._id %></td>
+                                    <td><div class="fw-bold"><%= customer.fullName %></div></td>
+                                    <td><%= customer.email %></td>
+                                    <td>
+                                        <% if(customer.isBlocked) { %>
+                                            <span class="badge rounded-pill status-blocked px-3 py-2">Blocked</span>
+                                        <% } else { %>
+                                            <span class="badge rounded-pill status-active px-3 py-2">Active</span>
+                                        <% } %>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <button class="btn toggle-block p-0 border-0 bg-transparent shadow-none" 
+                                                data-id="<%= customer._id %>" 
+                                                data-blocked="<%= customer.isBlocked %>"
+                                                type="button">
+                                            <i class="bi <%= customer.isBlocked ? 'bi-toggle-on text-danger' : 'bi-toggle-off text-success' %> fs-2"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">No customers found.</td>
+                            </tr>
                         <% } %>
-                </ul>
-            </nav>
+                    </tbody>
+                </table>
+            </div>
+            
+            <% if (totalPages > 1) { %>
+                <div class="card-footer bg-white border-top-0 py-3">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            <% for(let i=1; i<=totalPages; i++) { %>
+                                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                    <a class="page-link shadow-none" href="?page=<%= i %>&isBlocked=<%= selectedFilter !== 'all' ? selectedFilter : '' %>&query=<%= searchQuery %>"><%= i %></a>
+                                </li>
+                            <% } %>
+                        </ul>
+                    </nav>
+                </div>
+            <% } %>
         </div>
     </div>
+</main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
+<%- include("../partials/admin/footer") %>
 
-            const sidebarLinks = document.querySelectorAll('.sidebar a');
-            const currentPath = window.location.pathname;
-            sidebarLinks.forEach(link => {
-                if (link.getAttribute('href') === currentPath) link.classList.add('active');
-                link.addEventListener('click', function () { sidebarLinks.forEach(l => l.classList.remove('active')); this.classList.add('active'); });
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        const searchForm = document.getElementById('searchForm');
+        const filterSelect = document.querySelector('.filter-select');
+
+        function updateFilters() {
+            const searchQuery = document.getElementById('searchval').value.trim();
+            const isBlocked = filterSelect.value;
+            const params = new URLSearchParams();
+            
+            if (searchQuery) params.set('query', searchQuery);
+            if (isBlocked !== 'all') params.set('isBlocked', isBlocked);
+            params.set('page', '1');
+
+            window.location.href = `/admin/customers?${params.toString()}`;
+        }
+
+        if (searchForm) {
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                updateFilters();
+            });
+        }
+
+        if (filterSelect) {
+            filterSelect.addEventListener('change', updateFilters);
+        }
+
+        // Action Logic
+        const tableBody = document.querySelector('#customerTable tbody');
+        tableBody.addEventListener('click', async (event) => {
+            const button = event.target.closest('.toggle-block');
+            if (!button) return;
+
+            const customerId = button.getAttribute("data-id");
+            const currentlyBlocked = button.getAttribute("data-blocked") === "true";
+            const action = currentlyBlocked ? "unblock" : "block";
+
+            const confirmAction = await Swal.fire({
+                title: 'Confirm Action',
+                text: `Are you sure you want to ${action} this user?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: currentlyBlocked ? '#28a745' : '#dc3545',
+                confirmButtonText: `Yes, ${action}`
             });
 
-            // ✅ Toggle block/unblock working
-            document.querySelectorAll(".toggle-block").forEach(button => {
-                button.addEventListener("click", async event => {
-                    event.preventDefault();
-                    const customerId = button.getAttribute("data-id");
-                    const isBlocked = button.getAttribute("data-blocked") === "true";
-
-                    const confirmAction = await Swal.fire({
-                        title: 'Are you sure?',
-                        text: `Do you want to ${isBlocked ? "unblock" : "block"} this customer?`,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#3085d6',
-                        confirmButtonText: `Yes, ${isBlocked ? "unblock" : "block"}`,
-                        cancelButtonText: 'Cancel'
+            if (confirmAction.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/customers/${customerId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ isBlocked: !currentlyBlocked })
                     });
 
-                    if (confirmAction.isConfirmed) {
-                        try {
-                            const response = await fetch(`/admin/customers/${customerId}`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ isBlocked: !isBlocked })
-                            });
-                            const result = await response.json();
-                            if (response.ok) {
-                                Swal.fire({ position: 'top-center', icon: 'success', text: `Customer ${!isBlocked ? 'Blocked' : 'Unblocked'} successfully`, showConfirmButton: false, timer: 1500 }).then(() => location.reload());
-                            } else {
-                                Swal.fire({ icon: 'error', title: 'Failed to update status', text: result.error || 'Something went wrong.' });
-                            }
-                        } catch (error) {
-                            Swal.fire({ icon: 'error', title: 'Request failed', text: 'Something went wrong. Please try later.' });
-                        }
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        Swal.fire({ 
+                            icon: 'success', 
+                            title: 'Updated!', 
+                            showConfirmButton: false, 
+                            timer: 1000 
+                        }).then(() => location.reload());
+                    } else {
+                        throw new Error(result.error || 'Update failed');
                     }
-                });
-            });
-
-            document.querySelector('.filter-select').addEventListener('change', function () {
-                const filterValue = this.value;
-                let query = '';
-                if (filterValue === 'false') query = '?isBlocked=false';
-                else if (filterValue === 'true') query = '?isBlocked=true';
-                window.location.href = `/admin/customers${query}`;
-            });
-
-            document.getElementById('searchForm').addEventListener('submit', function (event) {
-                event.preventDefault();
-                const searchQuery = document.getElementById('searchval').value.trim();
-                const currentUrl = new URL(window.location.href);
-                const isBlocked = currentUrl.searchParams.get('isBlocked') || 'all';
-                const page = currentUrl.searchParams.get('page') || 1;
-                let queryParams = new URLSearchParams();
-                if (searchQuery) queryParams.set('query', searchQuery);
-                if (isBlocked !== 'all') queryParams.set('isBlocked', isBlocked);
-                queryParams.set('page', page);
-                window.location.href = `/admin/customers?${queryParams.toString()}`;
-            });
+                } catch (error) {
+                    Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+                }
+            }
         });
-    </script>
-</body>
-
-</html>
+    });
+</script>

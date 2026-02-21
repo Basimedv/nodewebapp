@@ -18,7 +18,7 @@ const userSchema = new Schema({
         required: false,
         unique: true,
         sparse: true,
-        default: null,
+       default: undefined // Change from '' to undefined
 
     },
     googleId: {
@@ -32,11 +32,10 @@ const userSchema = new Schema({
 
     },
 
-    profileImage: {
-        type: String,
-        required: false,
-        default: null
-    },
+   profileImage: {
+    url: { type: String, default: null },
+    public_id: { type: String, default: null }
+},
 
     gender: {
         type: String,
@@ -50,7 +49,7 @@ const userSchema = new Schema({
         required: false,
         unique: true,
         sparse: true,
-        default: ''
+    default: undefined // Change from '' to undefined
     },
 
     isBlocked: {

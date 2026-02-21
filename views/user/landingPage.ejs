@@ -91,56 +91,7 @@
                 <p>TRENDING</p>
             </div>
 
-          <div id="shopProductSection">
-    <% categories.forEach(function(category) { %>
-        <% const categoryProducts = productsByCategory[category] || []; %>
-        
-        <% if (categoryProducts.length > 0) { %>
-            <!-- Category Section -->
-            <div class="category-section">
-                <div class="category-header">
-                    <h3 class="category-title"><%= category %></h3>
-                    <a href="/productListing?category=<%= encodeURIComponent(category) %>" class="view-all-btn">
-                        View All <i class="fas fa-arrow-right"></i>
-                    </a>
-                </div>
-                
-                <div class="category-products">
-                    <% categoryProducts.forEach(function(product) { %>
-                        <div class="product">
-                            <div class="product-image">
-                                <img src="<%= (product.productImage && product.productImage[0]) ? product.productImage[0] : '/images/banner7.png' %>" 
-                                     alt="<%= product.productName || 'Product' %>">
-                            </div>
-
-                            <div class="product-details">
-                                <p><%= product.productName || '-' %></p>
-
-                                <p class="price">
-                                    <!-- Original Price -->
-                                    <span class="original-price">
-                                        Rs. <%= Number(product.regularPrice || 0).toFixed(2) %>
-                                    </span>
-
-                                    <!-- Discount Price -->
-                                    <% if (product.salePrice && Number(product.salePrice) > 0 && Number(product.salePrice) < Number(product.regularPrice || 0)) { %>
-                                        <span class="discount-price">
-                                            Rs. <%= Number(product.salePrice).toFixed(2) %>
-                                        </span>
-                                    <% } %>
-                                </p>
-                            </div>
-                        </div>
-                    <% }) %>
-                </div>
-            </div>
-        <% } %>
-    <% }) %>
-
-    <% if (!categories || categories.length === 0) { %>
-        <p class="text-muted">No products to show yet.</p>
-    <% } %>
-</div>
+   
 
 
             <div class="shopButton">
