@@ -7,6 +7,7 @@ const morgan = require('morgan');
 const db = require('./config/db');
 const userRouter = require('./routes/userRouter');
 const adminRouter = require('./routes/adminRouter');
+const { ROUTES } = require('./constants/routes');
 const googleRoutes = require('./routes/googleRoute');
 
 dotenv.config();
@@ -51,10 +52,17 @@ app.use('/', adminRouter);
 
 // User routes (e.g., /login, /profile)
 app.use('/', userRouter);
-// This should be at the very bottom of your app.js, after all other routes
+
+// --- Global 404 Handler ---
 app.use((req, res) => {
+    // If the URL starts with /admin, redirect to the admin error page
+    if (req.originalUrl.startsWith('/admin')) {
+        return res.redirect(ROUTES.ADMIN.PAGE_ERROR);
+    }
+
+    // Otherwise, show user-side 404
     res.status(404).render('user/pageNotFound', {
-        user: req.session.user || null // This fixes the "user is not defined" error
+        user: req.session.user || null
     });
 });
 

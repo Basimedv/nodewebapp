@@ -34,19 +34,23 @@
             background-color: white; /* Base for inversion */
         }
 
-        /* Toggle Button Styling */
-        .theme-toggle-btn {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            color: #333;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s ease;
-        }
+      /* Toggle Button Styling */
+.theme-toggle-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #333;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+
+    /* --- MOVE TO THE LEFT --- */
+    position: relative;
+    left: -25px; /* Adjust this number: -20px moves it more left, -5px moves it less */
+}
 
         .theme-toggle-btn:hover {
             transform: scale(1.1);
@@ -188,11 +192,11 @@
         <div class="subhead">
             <nav>
                 <ul>
-                    <a href="/landingPage"><li>Home</li></a>
+                    <a href="/"><li>Home</li></a>
                     <a href="/productListing"><li>Shop</li></a>
-                    <a href="/customListing"><li>Custom</li></a>
+                 
                     <a href="/about"><li>About</li></a>
-                    <a href="/contact"><li>Contact</li></a>
+                   
                 </ul>
             </nav>
         </div>

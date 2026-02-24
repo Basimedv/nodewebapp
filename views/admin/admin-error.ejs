@@ -1,220 +1,134 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Error - COLINGUEST</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            padding: 20px;
-        }
+<%- include("../partials/admin/header") %>
 
-        .error-container {
-            background: white;
-            border-radius: 20px;
-            padding: 60px 40px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
-            width: 100%;
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
-        }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
 
-        .error-icon {
-            font-size: 80px;
-            color: #dc3545;
-            margin-bottom: 30px;
-            animation: pulse 2s infinite;
-        }
+<style>
+    /* Wrapper to center content within the admin main-content area */
+    .admin-error-body {
+        background-color: #ffffff;
+        min-height: calc(100vh - 70px); /* Adjusts based on your header height */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Inter', sans-serif;
+        color: #1a1a1a;
+    }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
+    .error-container {
+        text-align: center;
+        padding: 40px;
+        max-width: 600px;
+        width: 100%;
+    }
 
-        .error-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 20px;
-        }
+    /* Professional Character Animation */
+    #lottie-character {
+        width: 300px;
+        height: 300px;
+        margin: 0 auto -50px; /* Slight overlap with numbers */
+        position: relative;
+        z-index: 2;
+    }
 
-        .error-message {
-            font-size: 1.2rem;
-            color: #666;
-            margin-bottom: 40px;
-            line-height: 1.6;
-        }
+    .error-visual {
+        position: relative;
+        display: inline-block;
+    }
 
-        .error-code {
-            background: #f8f9fa;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 1.1rem;
-            color: #dc3545;
-            margin-bottom: 40px;
-            border: 2px solid #dc3545;
-        }
+    .error-code {
+        font-size: 130px;
+        font-weight: 800;
+        line-height: 1;
+        margin: 0;
+        letter-spacing: -6px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #6C5DD3 0%, #5848C2 100%);
-            border: none;
-            padding: 15px 40px;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: white;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-            margin: 0 10px;
-        }
+    .digit-blue { color: #3b82f6; }
+    .digit-amber { color: #fbbf24; }
 
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(108, 93, 211, 0.3);
-            color: white;
-        }
+    .heading-text {
+        font-size: 40px;
+        font-weight: 800;
+        margin: 10px 0;
+        letter-spacing: -1px;
+    }
 
-        .btn-secondary {
-            background: #6c757d;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: white;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-            margin: 0 10px;
-        }
+    .status-muted {
+        color: #94a3b8;
+        font-weight: 400;
+    }
 
-        .btn-secondary:hover {
-            background: #5a6268;
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(108, 117, 125, 0.3);
-            color: white;
-        }
+    .message {
+        font-size: 1.15rem;
+        color: #475569;
+        margin-bottom: 35px;
+        line-height: 1.5;
+    }
 
-        .error-details {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 30px;
-            text-align: left;
-        }
+    /* Standard Admin Button */
+    .btn-return {
+        padding: 14px 32px;
+        background: #0f172a;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        display: inline-block;
+        transition: transform 0.2s, background 0.2s;
+    }
 
-        .error-details h5 {
-            color: #333;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
+    .btn-return:hover {
+        background: #334155;
+        transform: translateY(-2px);
+    }
 
-        .error-details p {
-            color: #666;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-        }
+    /* Technical Trace Info */
+    .system-footer-note {
+        margin-top: 50px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        color: #cbd5e1;
+        text-transform: uppercase;
+    }
+</style>
 
-        @media (max-width: 768px) {
-            .error-container {
-                padding: 40px 20px;
-                margin: 20px;
-            }
-
-            .error-title {
-                font-size: 2rem;
-            }
-
-            .error-message {
-                font-size: 1rem;
-            }
-
-            .btn-primary, .btn-secondary {
-                display: block;
-                margin: 10px 0;
-                width: 100%;
-            }
-        }
-    </style>
-</head>
-<body>
+<div class="admin-error-body">
     <div class="error-container">
-        <div class="error-icon">
-            <i class="fas fa-exclamation-triangle"></i>
+        <div id="lottie-character"></div>
+
+        <div class="error-visual">
+            <div class="error-code">
+                <span class="digit-blue">4</span>
+                <span class="digit-amber">0</span>
+                <span class="digit-blue">4</span>
+            </div>
         </div>
+
+        <h1 class="heading-text">Error occurred. <span class="status-muted">Page Missing.</span></h1>
         
-        <h1 class="error-title">Admin Error</h1>
-        
-        <p class="error-message">
-            Oops! Something went wrong in the admin panel. We're working to fix this issue.
+        <p class="message">
+            <%= typeof message !== 'undefined' ? message : "The requested administrative route could not be found. Please check the URL or return to the main dashboard." %>
         </p>
-        
-        <div class="error-code">
-            Error 500 - Internal Server Error
-        </div>
-        
-        <div class="error-details">
-            <h5><i class="fas fa-info-circle"></i> What happened?</h5>
-            <p>An unexpected error occurred while processing your request in the admin panel.</p>
-            <p>This could be due to:</p>
-            <ul style="color: #666; font-size: 0.9rem;">
-                <li>Database connection issues</li>
-                <li>Server configuration problems</li>
-                <li>Temporary system maintenance</li>
-                <li>Invalid request parameters</li>
-            </ul>
-        </div>
-        
-        <div style="margin-top: 40px;">
-            <a href="/admin/dashboard" class="btn-primary">
-                <i class="fas fa-home"></i> Go to Dashboard
-            </a>
-            <a href="/admin/adminLogin" class="btn-secondary">
-                <i class="fas fa-sign-in-alt"></i> Admin Login
-            </a>
-        </div>
-        
-        <div style="margin-top: 30px;">
-            <small style="color: #999;">
-                If this problem persists, please contact the system administrator.
-            </small>
+
+        <a href="/admin/dashboard" class="btn-return">Return to Dashboard</a>
+
+        <div class="system-footer-note">
+            Console_State: Error // Reference: <%= Math.random().toString(36).substring(7).toUpperCase() %>
         </div>
     </div>
+</div>
 
-    <script>
-        // Auto-redirect after 10 seconds
-        setTimeout(() => {
-            window.location.href = '/admin/dashboard';
-        }, 10000);
-
-        // Add some interactive effects
-        document.addEventListener('DOMContentLoaded', function() {
-            const errorIcon = document.querySelector('.error-icon');
-            const errorContainer = document.querySelector('.error-container');
-            
-            // Animate entrance
-            errorContainer.style.opacity = '0';
-            errorContainer.style.transform = 'translateY(30px)';
-            
-            setTimeout(() => {
-                errorContainer.style.transition = 'all 0.6s ease-out';
-                errorContainer.style.opacity = '1';
-                errorContainer.style.transform = 'translateY(0)';
-            }, 100);
-        });
-    </script>
-</body>
-</html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+<script>
+    lottie.loadAnimation({
+        container: document.getElementById('lottie-character'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'https://lottie.host/9c9535e5-7946-4444-9388-3751a4f91195/lYf9zXbW0k.json' 
+    });
+</script>
