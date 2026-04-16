@@ -1,161 +1,288 @@
- body {
-     background-image: url(/images/signupimage.jpeg);
-     font-family: 'Poppins', sans-serif;
- }
-
- .auth-container {
-     display: flex;
-     justify-content: center;
-     align-items: center;
-     min-height: 100vh;
- }
-
-
-
-
- .auth-form-container {
-     background: rgba(255, 255, 255, 0.1);
-     padding: 30px;
-     border-radius: 10px;
-     width: 100%;
-     max-width: 400px;
-     backdrop-filter: blur(10px);
- }
-
- .form-header {
-     text-align: center;
-     margin-bottom: 20px;
- }
-
- .form-header img {
-     width: 100px;
- }
-
- .form-header h1 {
-     font-size: 28px;
-     font-weight: 600;
-     letter-spacing: 2px;
-     color: #141414;
- }
-
- .form-body form {
-     display: flex;
-     flex-direction: column;
-     gap: 12px;
- }
-
- .form-body label {
-     font-size: 13px;
-     color: #fff;
- }
-
- .form-body input {
-     padding: 10px;
-     font-size: 14px;
-     border: 1px solid #ccc;
-     border-radius: 4px;
-     background-color: rgba(255, 255, 255, 0.2);
-     color: #fff;
- }
-
- .form-body button {
-     padding: 10px;
-     background-color: #61030e;
-     color: #fff;
-     font-weight: bold;
-     border: none;
-     border-radius: 5px;
-     cursor: pointer;
- }
-
- .switch-link {
-     margin-top: 15px;
-     text-align: center;
- }
-
- .switch-link a {
-     color: #fff;
-     font-size: 13px;
-     text-decoration: underline;
- }
-
-.login-link {
-  color: #000;
-  text-decoration: none;
-  font-size: 14px;       /* smaller text */
-  display: block;        /* makes centering work */
-  text-align: center;    /* centers the text */
-  margin-top: 10px;      /* moves it slightly down */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
+body {
+    background-image: url(/images/signupimage.jpeg);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
+/* ── Auth wrapper ── */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: 100%;
+}
 
+/* ── Glass card ── make container wider and taller */
+.auth-form-container {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 24px 48px 36px;   /* was 20px 40px 30px */
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;           /* was 340px */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    text-align: center;
+    color: #fff;
+    transition: all 0.3s ease;
+}
 
- .login-link:hover {
-     color: #000;
-     text-decoration: none;
- }
+.auth-form-container:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-3px);
+}
 
- .google-btn {
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     width: 100%;
-     height: 40px;
-     background-color: #ffffff;
-     border: 1px solid #ccc;
-     border-radius: 50px;
-     font-size: 14px;
-     color: #444;
-     text-decoration: none;
-     margin-top: 15px;
-     transition: background-color 0.3s ease;
- }
+/* ── Form header ── */
+.form-header {
+    text-align: center;
+    margin-bottom: 16px;
+}
 
- .google-btn:hover {
-     background-color: #f0f0f0;
- }
+.form-header img {
+    width: 80px;
+}
 
- .google-btn img {
-     height: 20px;
-     margin-right: 10px;
- }
- .error-message{
-    color: red;
-    font-size: 0.75rem;
-    display: none;
- }
+.form-header h1 {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: #ffffff;
+    margin-top: 4px;
+}
 
+/* ── Form body ── */
+.form-body form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
 
- @media (max-width: 600px) {
-     .auth-form-container {
-         margin: 0 15px;
-     }
- }
- 
-
-
- .password-wrapper {
+.input-group {
     position: relative;
-    margin-bottom: 10px;
+    margin-bottom: 14px;        /* was 6px */
+}
+
+.input-group input {
+    width: 100%;
+    padding: 18px 12px 6px;
+    font-size: 14px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1.2px solid rgba(220, 223, 223, 0.55);
+    border-radius: 6px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+    font-family: 'Poppins', sans-serif;
+}
+
+.input-group input:focus {
+    border-color: #fcfcfc;
+}
+
+/* Hide native placeholder */
+.input-group input::placeholder {
+    color: transparent;
+}
+
+.input-group label {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.65);
+    pointer-events: none;
+    transition: top 0.2s ease, font-size 0.2s ease,
+                background 0.2s ease, color 0.2s ease;
+    background: transparent;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.input-group input:focus ~ label,
+.input-group input:valid ~ label {
+    top: 0;
+    font-size: 11px;
+    background: rgba(30, 30, 60, 0.92);
+    color: #bdbebe;
+}
+
+.password-wrapper {
+    position: relative;
+    margin-bottom: 14px;        /* was 6px */
 }
 
 .password-wrapper input {
-    width: 87%;
-    padding-right: 40px;
+    width: 100%;
+    padding: 18px 40px 6px 12px;
+    font-size: 14px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1.2px solid rgba(220, 223, 223, 0.55);
+    border-radius: 6px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+    font-family: 'Poppins', sans-serif;
 }
 
+.password-wrapper input:focus {
+    border-color: #dcddde;
+}
+
+.password-wrapper input::placeholder {
+    color: transparent;
+}
+
+.password-wrapper label {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.65);
+    pointer-events: none;
+    transition: top 0.2s ease, font-size 0.2s ease,
+                background 0.2s ease, color 0.2s ease;
+    background: transparent;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.password-wrapper input:focus ~ label,
+.password-wrapper input:valid ~ label {
+    top: 0;
+    font-size: 11px;
+    background: rgba(30, 30, 60, 0.92);
+    color: #e1e7ee;
+}
+
+/* ── Password toggle icon ── */
 .toggle-password {
     position: absolute;
-    right: 15px;
+    right: 12px;
     top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
     color: rgba(255, 255, 255, 0.7);
-    font-size: 18px;
+    font-size: 15px;
     transition: color 0.3s;
 }
 
 .toggle-password:hover {
-    color: rgba(255, 255, 255, 1);
+    color: #fff;
+}
+
+/* ── Error message ── tighten it back up so it doesn't add too much gap */
+.error-message {
+    color: #ff6b6b;
+    font-size: 12px;
+    margin-top: -10px;          /* pull it closer to the input above */
+    margin-bottom: 6px;
+    display: none;
+    text-align: left;
+    padding-left: 2px;
+}
+/* ── Sign up button ── */
+button[type="submit"],
+.signup {
+    width: 100%;
+    padding: 11px;
+    background: #581808;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    margin-top: 10px;
+    transition: background 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+button[type="submit"]:hover,
+.signup:hover {
+    background: #7a2010;
+}
+
+/* ── Google button ── */
+.google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 38px;
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 50px;
+    font-size: 14px;
+    color: #444;
+    text-decoration: none;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.google-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.google-btn img {
+    height: 20px;
+    margin-right: 10px;
+}
+
+/* ── Login link ── */
+.login-link {
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+    display: block;
+    text-align: center;
+    margin-top: 12px;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+}
+
+.login-link:hover {
+    text-decoration: underline;
+    opacity: 1;
+}
+
+/* ── Flash message ── */
+#flash-message {
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+    .auth-form-container {
+        margin: 0 15px;
+        max-width: 100%;
+        padding: 20px 16px;
+    }
+
+    body {
+        overflow-y: auto;
+        height: auto;
+    }
 }

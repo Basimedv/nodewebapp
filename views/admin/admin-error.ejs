@@ -1,134 +1,141 @@
 <%- include("../partials/admin/header") %>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
 
-<style>
-    /* Wrapper to center content within the admin main-content area */
-    .admin-error-body {
-        background-color: #ffffff;
-        min-height: calc(100vh - 70px); /* Adjusts based on your header height */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'Inter', sans-serif;
-        color: #1a1a1a;
-    }
+    <style>
+        .admin-error-body {
+            background-color: #ffffff;
+            min-height: calc(100vh - 70px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            color: #1a1a1a;
+        }
 
-    .error-container {
-        text-align: center;
-        padding: 40px;
-        max-width: 600px;
-        width: 100%;
-    }
+        .error-container {
+            text-align: center;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
 
-    /* Professional Character Animation */
-    #lottie-character {
-        width: 300px;
-        height: 300px;
-        margin: 0 auto -50px; /* Slight overlap with numbers */
-        position: relative;
-        z-index: 2;
-    }
 
-    .error-visual {
-        position: relative;
-        display: inline-block;
-    }
+        #lottie-character {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto -50px;
+            position: relative;
+            z-index: 2;
+        }
 
-    .error-code {
-        font-size: 130px;
-        font-weight: 800;
-        line-height: 1;
-        margin: 0;
-        letter-spacing: -6px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+        .error-visual {
+            position: relative;
+            display: inline-block;
+        }
 
-    .digit-blue { color: #3b82f6; }
-    .digit-amber { color: #fbbf24; }
+        .error-code {
+            font-size: 130px;
+            font-weight: 800;
+            line-height: 1;
+            margin: 0;
+            letter-spacing: -6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    .heading-text {
-        font-size: 40px;
-        font-weight: 800;
-        margin: 10px 0;
-        letter-spacing: -1px;
-    }
+        .digit-blue {
+            color: #3b82f6;
+        }
 
-    .status-muted {
-        color: #94a3b8;
-        font-weight: 400;
-    }
+        .digit-amber {
+            color: #fbbf24;
+        }
 
-    .message {
-        font-size: 1.15rem;
-        color: #475569;
-        margin-bottom: 35px;
-        line-height: 1.5;
-    }
+        .heading-text {
+            font-size: 40px;
+            font-weight: 800;
+            margin: 10px 0;
+            letter-spacing: -1px;
+        }
 
-    /* Standard Admin Button */
-    .btn-return {
-        padding: 14px 32px;
-        background: #0f172a;
-        color: #ffffff;
-        text-decoration: none;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 1rem;
-        display: inline-block;
-        transition: transform 0.2s, background 0.2s;
-    }
+        .status-muted {
+            color: #94a3b8;
+            font-weight: 400;
+        }
 
-    .btn-return:hover {
-        background: #334155;
-        transform: translateY(-2px);
-    }
+        .message {
+            font-size: 1.15rem;
+            color: #475569;
+            margin-bottom: 35px;
+            line-height: 1.5;
+        }
 
-    /* Technical Trace Info */
-    .system-footer-note {
-        margin-top: 50px;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
-        color: #cbd5e1;
-        text-transform: uppercase;
-    }
-</style>
+        /* Standard Admin Button */
+        .btn-return {
+            padding: 14px 32px;
+            background: #0f172a;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            display: inline-block;
+            transition: transform 0.2s, background 0.2s;
+        }
 
-<div class="admin-error-body">
-    <div class="error-container">
-        <div id="lottie-character"></div>
+        .btn-return:hover {
+            background: #334155;
+            transform: translateY(-2px);
+        }
 
-        <div class="error-visual">
-            <div class="error-code">
-                <span class="digit-blue">4</span>
-                <span class="digit-amber">0</span>
-                <span class="digit-blue">4</span>
+        /* Technical Trace Info */
+        .system-footer-note {
+            margin-top: 50px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #cbd5e1;
+            text-transform: uppercase;
+        }
+    </style>
+
+    <div class="admin-error-body">
+        <div class="error-container">
+            <div id="lottie-character"></div>
+
+            <div class="error-visual">
+                <div class="error-code">
+                    <span class="digit-blue">4</span>
+                    <span class="digit-amber">0</span>
+                    <span class="digit-blue">4</span>
+                </div>
+            </div>
+
+            <h1 class="heading-text">Error occurred. <span class="status-muted">Page Missing.</span></h1>
+
+            <p class="message">
+                <%= typeof message !=='undefined' ? message
+                    : "The requested administrative route could not be found. Please check the URL or return to the main dashboard."
+                    %>
+            </p>
+
+            <a href="/admin/dashboard" class="btn-return">Return to Dashboard</a>
+
+            <div class="system-footer-note">
+                <%= Math.random().toString(36).substring(7).toUpperCase() %>
             </div>
         </div>
-
-        <h1 class="heading-text">Error occurred. <span class="status-muted">Page Missing.</span></h1>
-        
-        <p class="message">
-            <%= typeof message !== 'undefined' ? message : "The requested administrative route could not be found. Please check the URL or return to the main dashboard." %>
-        </p>
-
-        <a href="/admin/dashboard" class="btn-return">Return to Dashboard</a>
-
-        <div class="system-footer-note">
-            Console_State: Error // Reference: <%= Math.random().toString(36).substring(7).toUpperCase() %>
-        </div>
     </div>
-</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
-<script>
-    lottie.loadAnimation({
-        container: document.getElementById('lottie-character'),
-        renderer: 'svg',
-        loop: true,
-        autoplay: true,
-        path: 'https://lottie.host/9c9535e5-7946-4444-9388-3751a4f91195/lYf9zXbW0k.json' 
-    });
-</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script>
+        lottie.loadAnimation({
+            container: document.getElementById('lottie-character'),
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            path: 'https://lottie.host/9c9535e5-7946-4444-9388-3751a4f91195/lYf9zXbW0k.json'
+        });
+    </script>

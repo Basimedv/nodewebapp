@@ -26,16 +26,22 @@ const ROUTES = {
         FORGOT_PASSWORD: "/forgotPassword",
         FORGOT_EMAIL_VALID: "/forgot-Email-valid",
         VERIFY_FORGOT_OTP: "/verify-passForgot-otp",
+        RESEND_FORGOT_OTP: "/resend-otp",
         RESET_PASSWORD: "/resetpassword",
         PRIVACY: "/privacy",
         CHANGE_EMAIL: "/change-email",
-        CHANGE_PASSWORD: "/change-password"
+        VERIFY_EMAIL_OTP_PAGE: "/verify-email-change-otp",   
+        VERIFY_EMAIL_OTP: "/verify-email-otp",               
+        RESEND_EMAIL_OTP: "/resend-email-otp",              
+        VERIFY_CURRENT_PASSWORD: "/verify-current-password",  
+        CHANGE_PASSWORD_PAGE: "/change-password",         
+        CHANGE_PASSWORD: "/change-password",                  
     },
 
 
-ADMIN: {
-     
-        LOGIN: "/admin/adminLogin",   
+    ADMIN: {
+
+        LOGIN: "/admin/adminLogin",
         DASHBOARD: "/admin/dashboard",
         CUSTOMERS: "/admin/customers",
         CUSTOMERS_BLOCK: '/admin/customers/:id',

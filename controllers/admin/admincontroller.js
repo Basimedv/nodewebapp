@@ -1,22 +1,18 @@
-// controllers/admin/admincontroller.js
+
 const { ROUTES } = require('../../constants/routes');
 const User = require('../../models/userSchema');
 const bcrypt = require('bcrypt');
 
 const pageerror = async (req, res) => {
-    // Points to views/admin/admin-error.ejs
+
     res.render('admin/admin-error');
 };
 
 const loadLogin = (req, res) => {
-    try {
-        if (req.session.admin) {
-            return res.redirect(ROUTES.ADMIN.DASHBOARD);
-        }
-        return res.render('admin/login', { error: null });
-    } catch (err) {
-        res.redirect(ROUTES.ADMIN.PAGE_ERROR);
+    if (req.session.admin) {
+        return res.redirect(ROUTES.ADMIN.DASHBOARD);
     }
+    res.render('admin/login', { error: null });
 };
 
 const login = async (req, res) => {
@@ -46,9 +42,9 @@ const loadDashboard = async (req, res) => {
         return res.redirect(ROUTES.ADMIN.LOGIN);
     }
     try {
-        // Pass the title and any other necessary data here
-        res.render('admin/dashboard', { 
-            title: 'Dashboard Overview' 
+
+        res.render('admin/dashboard', {
+            title: 'Dashboard Overview'
         });
     } catch (error) {
         console.error("Dashboard Load Error:", error);
@@ -58,8 +54,8 @@ const loadDashboard = async (req, res) => {
 
 const logout = async (req, res) => {
     try {
-        // delete req.session.admin;
-        req.session.admin = false           
+
+        req.session.admin = false
         req.session.save((err) => {
             if (err) console.error("Logout save error:", err);
             res.redirect(ROUTES.ADMIN.LOGIN);

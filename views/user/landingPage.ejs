@@ -20,170 +20,206 @@
 
 <body>
 
-      <%- include("../partials/user/header") %>
-    <!-- 🔹 Main Content -->
-    <main>
-        <div id="banner">
-            <div id="banner1">
-                <p>"Unleash your creativity—turn your unique designs into amazing products!"</p>
-                <img src="/images/banner1.png" alt="">
-            </div>
-            <div id="banner2">
-                  <video autoplay muted loop playsinline id="heroVideo"
-          style="background: #000; width: 35%; height: 100%; object-fit: cover;">
-          <source src="/videos/copy_5EBCFB1D-B9B8-40C4-8950-636CF10444C8.mp4" type="video/mp4">
-        </video>
-        </div>
+    <%- include("../partials/user/header") %>
+        <!-- 🔹 Main Content -->
+        <main>
+            <div id="banner">
+                <div id="banner1">
+                    <p>"Unleash your creativity—turn your unique designs into amazing products!"</p>
+                    <img src="/images/banner1.png" alt="">
+                </div>
+                <div id="banner2">
+                    <video autoplay muted loop playsinline id="heroVideo"
+                        style="background: #000; width: 35%; height: 100%; object-fit: cover;">
+                        <source src="/videos/copy_5EBCFB1D-B9B8-40C4-8950-636CF10444C8.mp4" type="video/mp4">
+                    </video>
+                </div>
 
-        <div id="shop">
-            <div id="shopText">
-                <div class="textline"></div>
-                <p>Your one-stop shop everything you need,<br>
-                    just a click away!
-                </p>
-                <div class="text2line"></div>
-            </div>
-
-            <style>
-                .categoryIcon ul { list-style: none; display: flex; gap: 180px; justify-content: center; padding: 0; flex-wrap: wrap; row-gap: 64px; }
-                .categoryIcon li a { display: inline-flex; flex-direction: column; align-items: center; text-decoration: none; color: inherit; }
-                .categoryIcon li img { display: block; height: 68px; width: auto; object-fit: contain; }
-                .categoryIcon .cat-label { margin-top: 10px; font-weight: 700; letter-spacing: 1px; font-size: 12px; text-transform: uppercase; color: #1f2937; }
-                @media (max-width: 768px){ .categoryIcon ul { gap: 64px; row-gap: 40px; } }
-            </style>
-            <div class="categoryIcon">
-                <ul>
-                    <li>
-                        <a href="/productListing?category=UNISEX">
-                            <img src="/images/banner2.png" alt="UNISEX">
-                            <span class="cat-label">UNISEX</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/productListing?category=WOMEN%27S">
-                            <img src="/images/banner3.png" alt="WOMEN'S">
-                            <span class="cat-label">WOMEN'S</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/productListing?category=MEN%27S">
-                            <img src="/images/banner4.png" alt="MEN'S">
-                            <span class="cat-label">MEN'S</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/productListing?category=FORMAL%27S">
-                            <img src="/images/banner5.png" alt="FORMAL'S">
-                            <span class="cat-label">FORMAL'S</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/productListing?category=CASUAL%27S">
-                            <img src="/images/banner6.png" alt="CASUAL'S">
-                            <span class="cat-label">CASUAL'S</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="trendingText">
-                <div class="point"></div>
-                <p>TRENDING</p>
-            </div>
-
-   
-
-
-            <div class="shopButton">
-                <a href="/productListing" style="text-decoration: none;">
-                    <button type="submit">Explore Fashion ></button>
-                </a>
-            </div>
-        </div>
-
-        <div id="custom">
-            <div id="shopText">
-                <div class="textline"></div>
-                <p>Your Way, Your Style.<br>
-                    Upload your image and customize the product effortlessly. Personalization made simple, right on your
-                    website - U-Craft.
-                </p>
-                <div class="text2line"></div>
-            </div>
-
-            <div id="customProductSection">
-                <!-- Product 1 -->
-                <div class="customProduct">
-                    <div class="pointText">
-                        <div class="point"></div>
-                        <p>T-SHIRT</p>
-                    </div>
-                    <div class="product-image">
-                        <img src="/images/banner8.png" alt="Custom T-Shirt">
-                    </div>
-                    <div class="product-details">
-                        <p class="price">
-                            <span class="original-price">Rs. 1,299.00</span>
-                            <span class="discount-price">Rs. 999.00</span>
+                <div id="shop">
+                    <div id="shopText">
+                        <div class="textline"></div>
+                        <p>Your one-stop shop everything you need,<br>
+                            just a click away!
                         </p>
+                        <div class="text2line"></div>
+                    </div>
+
+                    <style>
+                        .categoryIcon ul {
+                            list-style: none;
+                            display: flex;
+                            gap: 180px;
+                            justify-content: center;
+                            padding: 0;
+                            flex-wrap: wrap;
+                            row-gap: 64px;
+                        }
+
+                        .categoryIcon li a {
+                            display: inline-flex;
+                            flex-direction: column;
+                            align-items: center;
+                            text-decoration: none;
+                            color: inherit;
+                        }
+
+                        .categoryIcon li img {
+                            display: block;
+                            height: 68px;
+                            width: auto;
+                            object-fit: contain;
+                        }
+
+                        .categoryIcon .cat-label {
+                            margin-top: 10px;
+                            font-weight: 700;
+                            letter-spacing: 1px;
+                            font-size: 12px;
+                            text-transform: uppercase;
+                            color: #1f2937;
+                        }
+
+                        @media (max-width: 768px) {
+                            .categoryIcon ul {
+                                gap: 64px;
+                                row-gap: 40px;
+                            }
+                        }
+                    </style>
+                    <div class="categoryIcon">
+                        <ul>
+                            <li>
+                                <a href="/productListing?category=UNISEX">
+                                    <img src="/images/banner2.png" alt="UNISEX">
+                                    <span class="cat-label">UNISEX</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/productListing?category=WOMEN%27S">
+                                    <img src="/images/banner3.png" alt="WOMEN'S">
+                                    <span class="cat-label">WOMEN'S</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/productListing?category=MEN%27S">
+                                    <img src="/images/banner4.png" alt="MEN'S">
+                                    <span class="cat-label">MEN'S</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/productListing?category=FORMAL%27S">
+                                    <img src="/images/banner5.png" alt="FORMAL'S">
+                                    <span class="cat-label">FORMAL'S</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/productListing?category=CASUAL%27S">
+                                    <img src="/images/banner6.png" alt="CASUAL'S">
+                                    <span class="cat-label">CASUAL'S</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="trendingText">
+                        <div class="point"></div>
+                        <p>TRENDING</p>
+                    </div>
+
+
+
+
+                    <div class="shopButton">
+                        <a href="/productListing" style="text-decoration: none;">
+                            <button type="submit">Explore Fashion ></button>
+                        </a>
                     </div>
                 </div>
 
-                <!-- Product 2 -->
-                <div class="customProductMain">
-                    <div class="pointText">
-                        <div class="point"></div>
-                        <p>HOODIE'S</p>
+                <div id="custom">
+                    <div id="shopText">
+                        <div class="textline"></div>
+                        <p>Your Way, Your Style.<br>
+                            Upload your image and customize the product effortlessly. Personalization made simple, right
+                            on your
+                            website - U-Craft.
+                        </p>
+                        <div class="text2line"></div>
                     </div>
-                    <div class="product-image">
-                        <div class="model-container">
-                            <img src="/images/image 116.png" alt="Custom Hoodie">
-                            <model-viewer id="modelViewer" class="model"
-                                src="/models/Fashion_Duo_0401103937_texture.glb" alt="3D Model" auto-rotate
-                                camera-controls>
-                            </model-viewer>
+
+                    <div id="customProductSection">
+                        <!-- Product 1 -->
+                        <div class="customProduct">
+                            <div class="pointText">
+                                <div class="point"></div>
+                                <p>T-SHIRT</p>
+                            </div>
+                            <div class="product-image">
+                                <img src="/images/banner8.png" alt="Custom T-Shirt">
+                            </div>
+                            <div class="product-details">
+                                <p class="price">
+                                    <span class="original-price">Rs. 1,299.00</span>
+                                    <span class="discount-price">Rs. 999.00</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Product 2 -->
+                        <div class="customProductMain">
+                            <div class="pointText">
+                                <div class="point"></div>
+                                <p>HOODIE'S</p>
+                            </div>
+                            <div class="product-image">
+                                <div class="model-container">
+                                    <img src="/images/image 116.png" alt="Custom Hoodie">
+                                    <model-viewer id="modelViewer" class="model"
+                                        src="/models/Fashion_Duo_0401103937_texture.glb" alt="3D Model" auto-rotate
+                                        camera-controls>
+                                    </model-viewer>
+                                </div>
+                            </div>
+                            <div class="product-details">
+                                <p class="price">
+                                    <span class="original-price">Rs. 2,999.00</span>
+                                    <span class="discount-price">Rs. 2,399.00</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Product 3 -->
+                        <div class="customProduct">
+                            <div class="pointText">
+                                <div class="point"></div>
+                                <p>SLEEVELESS</p>
+                            </div>
+                            <div class="product-image">
+                                <img src="/images/banner8.png" alt="Custom Sleeveless">
+                            </div>
+                            <div class="product-details">
+                                <p class="price">
+                                    <span class="original-price">Rs. 1,599.00</span>
+                                    <span class="discount-price">Rs. 1,199.00</span>
+                                </p>
+                            </div>
                         </div>
                     </div>
-                    <div class="product-details">
-                        <p class="price">
-                            <span class="original-price">Rs. 2,999.00</span>
-                            <span class="discount-price">Rs. 2,399.00</span>
-                        </p>
+
+                    <div class="customShopButton">
+                        <button type="submit">Get Into Custom World ></button>
                     </div>
                 </div>
+        </main>
 
-                <!-- Product 3 -->
-                <div class="customProduct">
-                    <div class="pointText">
-                        <div class="point"></div>
-                        <p>SLEEVELESS</p>
-                    </div>
-                    <div class="product-image">
-                        <img src="/images/banner8.png" alt="Custom Sleeveless">
-                    </div>
-                    <div class="product-details">
-                        <p class="price">
-                            <span class="original-price">Rs. 1,599.00</span>
-                            <span class="discount-price">Rs. 1,199.00</span>
-                        </p>
-                    </div>
-                </div>
-            </div>
 
-            <div class="customShopButton">
-                <button type="submit">Get Into Custom World ></button>
-            </div>
-        </div>
-    </main>
-
-    <!-- 🔹 Normal Footer -->
-    <%-include("../../views/partials/user/footer")%>
+        <%-include(".. /../views/partials/user/footer")%>
 
 </body>
 
 </html>
 <script>
-    // User dropdown toggle and outside-click handling
+
     document.addEventListener('click', (e) => {
         const toggle = document.getElementById('userMenuToggle');
         const dropdown = document.getElementById('userDropdown');

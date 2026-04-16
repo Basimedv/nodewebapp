@@ -6,22 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>COLINQUEST</title>
     <link rel="stylesheet" href="/css/header.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&display=swap"
+        rel="stylesheet">
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- DARK MODE LOGIC (GLOBAL) --- */
+       
         html.dark-mode-logic {
             filter: invert(1) hue-rotate(180deg);
         }
 
-        /* Fix inversion for media/icons so they look normal */
-        html.dark-mode-logic img, 
-        html.dark-mode-logic video, 
+      
+        html.dark-mode-logic img,
+        html.dark-mode-logic video,
         html.dark-mode-logic .model-viewer,
         html.dark-mode-logic i,
         html.dark-mode-logic .imageLogo,
@@ -31,26 +34,28 @@
 
         html {
             transition: filter 0.3s ease;
-            background-color: white; /* Base for inversion */
+            background-color: white;
+            /* Base for inversion */
         }
 
-      /* Toggle Button Styling */
-.theme-toggle-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
-    color: #333;
-    padding: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease;
+    
+        .theme-toggle-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #333;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
 
-    /* --- MOVE TO THE LEFT --- */
-    position: relative;
-    left: -25px; /* Adjust this number: -20px moves it more left, -5px moves it less */
-}
+
+            position: relative;
+            left: -25px;
+            /* Adjust this number: -20px moves it more left, -5px moves it less */
+        }
 
         .theme-toggle-btn:hover {
             transform: scale(1.1);
@@ -90,12 +95,12 @@
             background: white;
             border: 1px solid #ddd;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             min-width: 200px;
             margin-top: 8px;
             z-index: 1000;
             overflow: hidden;
-            left: -100px; 
+            left: -100px;
         }
 
         .dropdown-menu-custom.show {
@@ -157,46 +162,54 @@
                     <a href="#" class="header-icon guest-cart" aria-label="Cart" title="Cart">
                         <i class="fas fa-cart-shopping"></i>
                     </a>
-                <% } else { %>
-                    <a href="/wishlist" class="header-icon" aria-label="Wishlist" title="Wishlist">
-                        <i class="fas fa-heart"></i>
-                    </a>
-                    <a href="/cart" class="header-icon" aria-label="Cart" title="Cart">
-                        <i class="fas fa-cart-shopping"></i>
-                    </a>
-                <% } %>
-
-                <% if (user) { %>
-                    <div class="user-dropdown">
-                        <a href="#" class="username-link" id="userDropdown" onclick="toggleDropdown(event)">
-                            <%= user.fullName ? user.fullName.split(" ")[0] : (user.name ? user.name.split(" ")[0] : user.username) %>
-                            <i style="font-size: 12px; margin-left: 70px;"></i>
+                    <% } else { %>
+                        <a href="/wishlist" class="header-icon" aria-label="Wishlist" title="Wishlist">
+                            <i class="fas fa-heart"></i>
                         </a>
-                        <div class="dropdown-menu-custom" id="dropdownMenu">
-                            <ul>
-                                <li><a href="/profile"><i class="fa-solid fa-user"></i>My Profile</a></li>
-                                <li><a href="/orders"><i class="fa-solid fa-box"></i>My Orders</a></li>
-                                <li><a href="/wallet"><i class="fa-solid fa-wallet"></i>My Wallet</a></li>
-                                <li><a href="/logout" class="logout"><i class="fas fa-right-from-bracket"></i> <span>Logout</span></a></li>
-                            </ul>
-                        </div>
-                    </div>
-                <% } else { %>
-                    <form action="/login" method="GET" style="display:inline; margin: 0;">
-                        <button type="submit" class="sign-in-btn">Sign In</button>
-                    </form>
-                <% } %>
+                        <a href="/cart" class="header-icon" aria-label="Cart" title="Cart">
+                            <i class="fas fa-cart-shopping"></i>
+                        </a>
+                        <% } %>
+
+                            <% if (user) { %>
+                                <div class="user-dropdown">
+                                    <a href="#" class="username-link" id="userDropdown" onclick="toggleDropdown(event)">
+                                        <%= user.fullName ? user.fullName.split(" ")[0] : (user.name ? user.name.split(" ")[0] : user.username) %>
+                            <i style=" font-size: 12px; margin-left: 70px;"></i>
+                                    </a>
+                                    <div class="dropdown-menu-custom" id="dropdownMenu">
+                                        <ul>
+                                            <li><a href="/profile"><i class="fa-solid fa-user"></i>My Profile</a></li>
+                                            <li><a href="/orders"><i class="fa-solid fa-box"></i>My Orders</a></li>
+                                            <li><a href="/wallet"><i class="fa-solid fa-wallet"></i>My Wallet</a></li>
+                                            <li><a href="/logout" class="logout"><i
+                                                        class="fas fa-right-from-bracket"></i> <span>Logout</span></a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <% } else { %>
+                                    <form action="/login" method="GET" style="display:inline; margin: 0;">
+                                        <button type="submit" class="sign-in-btn">Sign In</button>
+                                    </form>
+                                    <% } %>
             </div>
         </div>
-        
+
         <div class="subhead">
             <nav>
                 <ul>
-                    <a href="/"><li>Home</li></a>
-                    <a href="/productListing"><li>Shop</li></a>
-                 
-                    <a href="/about"><li>About</li></a>
-                   
+                    <a href="/">
+                        <li>Home</li>
+                    </a>
+                    <a href="/productListing">
+                        <li>Shop</li>
+                    </a>
+
+                    <a href="/about">
+                        <li>About</li>
+                    </a>
+
                 </ul>
             </nav>
         </div>
@@ -217,7 +230,7 @@
 
         themeBtn.addEventListener('click', () => {
             html.classList.toggle('dark-mode-logic');
-            
+
             if (html.classList.contains('dark-mode-logic')) {
                 themeIcon.classList.replace('fa-moon', 'fa-sun');
                 localStorage.setItem('darkMode', 'enabled');
@@ -235,7 +248,7 @@
             dropdown.classList.toggle('show');
         }
 
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const dropdown = document.getElementById('dropdownMenu');
             const userDropdown = document.getElementById('userDropdown');
             if (dropdown && !userDropdown?.contains(event.target)) {

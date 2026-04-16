@@ -1,14 +1,25 @@
 /* --- GLOBAL RESET --- */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Outfit', sans-serif; background: #f5f7fa; color: #192430; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background: #f5f7fa;
+    color: #192430;
+}
 
 /* --- DARK MODE ENGINE --- */
 /* The invert filter turns white to black. Hue-rotate fixes color shifts. */
-html.dark-mode-logic { filter: invert(1) hue-rotate(180deg); }
+html.dark-mode-logic {
+    filter: invert(1) hue-rotate(180deg);
+}
 
 /* Prevent inversion for these elements so colors stay natural */
-html.dark-mode-logic img, 
-html.dark-mode-logic canvas, 
+html.dark-mode-logic img,
+html.dark-mode-logic canvas,
 html.dark-mode-logic i,
 html.dark-mode-logic .icon-container,
 html.dark-mode-logic .dashboard-card,
@@ -16,42 +27,84 @@ html.dark-mode-logic .btn-danger,
 html.dark-mode-logic .btn-primary {
     filter: invert(1) hue-rotate(180deg);
 }
-html { transition: filter 0.3s ease; background-color: white; }
+
+html {
+    transition: filter 0.3s ease;
+    background-color: white;
+}
 
 /* --- COMPONENTS --- */
 .navbar {
-    background: white; padding: 15px 30px; display: flex;
-    justify-content: space-between; align-items: center;
+    background: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
 }
 
 .sidebar {
-    width: 250px; background: white; padding: 20px 10px;
-    position: fixed; top: 70px; bottom: 0; left: 0;
-    z-index: 999; border-right: 1px solid #eee; overflow-y: auto;
+    width: 250px;
+    background: white;
+    padding: 20px 10px;
+    position: fixed;
+    top: 70px;
+    bottom: 0;
+    left: 0;
+    z-index: 999;
+    border-right: 1px solid #eee;
+    overflow-y: auto;
 }
 
 .sidebar a {
-    display: flex; align-items: center; padding: 12px 20px;
-    color: #555; text-decoration: none; border-radius: 10px; margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #555;
+    text-decoration: none;
+    border-radius: 10px;
+    margin-bottom: 5px;
 }
 
-.sidebar a.active, .sidebar a:hover { background: #3b6da1; color: white; }
+.sidebar a.active,
+.sidebar a:hover {
+    background: #3b6da1;
+    color: white;
+}
 
-.main-content { margin-left: 250px; padding: 100px 30px 40px; min-height: 100vh; }
+.main-content {
+    margin-left: 250px;
+    padding: 100px 30px 40px;
+    min-height: 100vh;
+}
 
 .dashboard-card {
-    background: white; border-radius: 15px; padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    text-align: center;
 }
 
 .chart-container {
-    background: white; border-radius: 15px; padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: 400px;
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    height: 400px;
 }
 
 @media (max-width: 991px) {
-    .sidebar { display: none; }
-    .main-content { margin-left: 0; }
+    .sidebar {
+        display: none;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
 }

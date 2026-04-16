@@ -6,12 +6,12 @@ const bcrypt = require('bcrypt');
 const HTTP_STATUS_CODES = require("../../constants/status_codes");
 const { ROUTES } = require("../../constants/routes");
 
-// 🟢 404 Page
+
 const pageNotFound = async (req, res) => {
   res.render("user/pageNotFound", { user: req.session.user || null });
 };
 
-// 🟢 Home Page
+
 const loadHomepage = async (req, res) => {
   try {
     const userData = req.session.user || null;
@@ -21,7 +21,7 @@ const loadHomepage = async (req, res) => {
   }
 };
 
-// 🟢 Landing Page
+
 const loadLandingPage = async (req, res) => {
   try {
     const userData = req.session.user || null;
@@ -31,9 +31,9 @@ const loadLandingPage = async (req, res) => {
   }
 };
 
-// --- Signup & OTP Logic ---
 
-// 🟢 Load Signup
+
+
 const loadSignup = (req, res) => {
   if (req.session.user) return res.redirect(ROUTES.USER.LANDING_PAGE);
   res.render('user/signup', { msg: req.query.msg, type: req.query.type });
@@ -52,7 +52,7 @@ const signup = async (req, res) => {
     }
 
     const otp = generateOtp();
-    console.log("Generated OTP:", otp); 
+    console.log("Generated OTP:", otp);
     const emailSent = await sendVerificationEmail(email, otp);
 
     if (!emailSent) return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).send("Email failed");
@@ -61,7 +61,7 @@ const signup = async (req, res) => {
     req.session.otpExpiresAt = Date.now() + 60000;
     req.session.userData = { fullName, email, phone, password };
 
-    // Rendering view file path
+
     res.render('user/verifyOTP', { email, type: 'signup' });
   } catch (error) {
     res.redirect(ROUTES.USER.PAGE_ERROR);
@@ -89,21 +89,22 @@ const verifyOtp = async (req, res) => {
     });
 
     req.session.user = { _id: newUser._id, fullName: newUser.fullName, email: newUser.email };
-    
-    // Using constant for JSON response redirect
+
+
     res.json({ success: true, redirectUrl: ROUTES.USER.LANDING_PAGE });
   } catch (error) {
     res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "Verification failed" });
   }
 };
 
-// 🟢 Resend OTP
+
 const resendOtp = async (req, res) => {
   try {
     const email = req.session.userData?.email || req.session.email;
     if (!email) return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json({ success: false, message: "Email not found" });
 
     const otp = generateOtp();
+    console.log("Resend OTP :", otp);
     req.session.userOtp = otp;
     req.session.otpExpiresAt = Date.now() + 60000;
 
@@ -114,9 +115,9 @@ const resendOtp = async (req, res) => {
   }
 };
 
-// --- Login & Logout ---
 
-// 🟢 Load Login
+
+
 const loadLogin = (req, res) => {
   if (req.session.user) return res.redirect(ROUTES.USER.LANDING_PAGE);
   res.render("user/login", { message: null });
@@ -134,20 +135,20 @@ const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.render("user/login", { message: "Incorrect password" });
 
-    // SET SESSION
+
     req.session.user = { _id: user._id, email: user.email, name: user.fullName };
-    
-    // SAVE SESSION EXPLICITLY
+
+
     req.session.save((err) => {
-        if (err) return next(err);
-        res.redirect(ROUTES.USER.LANDING_PAGE);
+      if (err) return next(err);
+      res.redirect(ROUTES.USER.LANDING_PAGE);
     });
   } catch (error) {
     res.render("user/login", { message: "Login failed" });
   }
 };
 
-// 🟢 Logout
+
 const logout = (req, res) => {
   delete req.session.user;
   req.session.save(() => res.redirect(ROUTES.USER.HOME));

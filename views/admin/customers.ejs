@@ -1,230 +1,265 @@
 <%- include("../partials/admin/header") %>
 
-<style>
-    /* Status Badge Styling */
-    .status-active {
-        background-color: #8af5bf;
-        color: #0CAF60;
-        border: 1px solid #0CAF60;
-        font-weight: 500;
-    }
+    <style>
+      
+        .status-active {
+            background-color: #8af5bf;
+            color: #0CAF60;
+            border: 1px solid #0CAF60;
+            font-weight: 500;
+        }
 
-    .status-blocked {
-        background-color: #f9d3d3;
-        color: #FD6A6A;
-        border: 1px solid #FD6A6A;
-        font-weight: 500;
-    }
+        .status-blocked {
+            background-color: #f9d3d3;
+            color: #FD6A6A;
+            border: 1px solid #FD6A6A;
+            font-weight: 500;
+        }
 
-    .main-content {
-        padding: 30px;
-        background: #f5f7fa;
-        min-height: 100vh;
-        margin-left: 250px; 
-    }
+        .main-content {
+            padding: 30px;
+            background: #f5f7fa;
+            min-height: 100vh;
+            margin-left: 250px;
+        }
 
-    .table thead th {
-        background: #3b6da1;
-        color: white;
-        font-weight: 500;
-        border: none;
-        padding: 15px;
-    }
+        .table thead th {
+            background: #3b6da1;
+            color: white;
+            font-weight: 500;
+            border: none;
+            padding: 15px;
+        }
 
-    .search-btn {
-        background-color: #3e29a8;
-        color: white;
-    }
+        .search-btn {
+            background-color: #3e29a8;
+            color: white;
+        }
 
-    .search-btn:hover {
-        background-color: #2e1e82;
-        color: white;
-    }
+        .search-btn:hover {
+            background-color: #2e1e82;
+            color: white;
+        }
 
-    .toggle-block {
-        transition: transform 0.2s;
-        cursor: pointer;
-    }
-    
-    .toggle-block:hover {
-        transform: scale(1.1);
-    }
-</style>
+        .toggle-block {
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
 
-<aside class="sidebar d-none d-lg-block">
-    <%- include("../partials/admin/sidebar_links") %>
-</aside>
+        .toggle-block:hover {
+            transform: scale(1.1);
+        }
+    </style>
 
-<main class="main-content">
-    <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="fw-bold m-0" style="font-family: 'Outfit', sans-serif;">Customer Management</h2>
+    <aside class="sidebar d-none d-lg-block">
+        <%- include("../partials/admin/sidebar_links") %>
+    </aside>
+
+    <main class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold m-0" style="font-family: 'Outfit', sans-serif;">Customer Management</h2>
+                </div>
             </div>
-        </div>
 
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body">
-                <div class="row g-3 align-items-center">
-                    <div class="col-md-3">
-                        <label class="small text-muted mb-1">Filter Status</label>
-                        <select class="form-select filter-select shadow-none">
-                            <option value="all" <%= selectedFilter === "all" ? "selected" : "" %>>All Customers</option>
-                            <option value="false" <%= selectedFilter === "false" ? "selected" : "" %>>Active Only</option>
-                            <option value="true" <%= selectedFilter === "true" ? "selected" : "" %>>Blocked Only</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6 ms-auto">
-                        <label class="small text-muted mb-1">Search User</label>
-                        <form id="searchForm" class="input-group">
-                            <input type="text" class="form-control shadow-none" id="searchval" placeholder="Search name or email..." value="<%= searchQuery %>">
-                            <button class="btn search-btn px-4" type="submit">
-                                <i class="bi bi-search me-1"></i> Search
-                            </button>
-                            <a href="/admin/customers" class="btn btn-outline-secondary">Reset</a>
-                        </form>
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-3">
+                            <label class="small text-muted mb-1">Filter Status</label>
+                            <select class="form-select filter-select shadow-none">
+                                <option value="all" <%=selectedFilter==="all" ? "selected" : "" %>>All Customers
+                                </option>
+                                <option value="false" <%=selectedFilter==="false" ? "selected" : "" %>>Active Only
+                                </option>
+                                <option value="true" <%=selectedFilter==="true" ? "selected" : "" %>>Blocked Only
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 ms-auto">
+                            <label class="small text-muted mb-1">Search User</label>
+                            <form id="searchForm" class="input-group">
+                                <input type="text" class="form-control shadow-none" id="searchval"
+                                    placeholder="Search name or email..." value="<%= searchQuery %>">
+                                <button class="btn search-btn px-4" type="submit">
+                                    <i class="bi bi-search me-1"></i> Search
+                                </button>
+                                <a href="/admin/customers" class="btn btn-outline-secondary">Reset</a>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card border-0 shadow-sm overflow-hidden">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="customerTable">
-                    <thead>
-                        <tr>
-                            <th class="ps-4">User ID</th>
-                            <th>Customer Name</th>
-                            <th>Email Address</th>
-                            <th>Status</th>
-                            <th class="text-end pe-4">Manage Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (customers && customers.length > 0) { %>
-                            <% customers.forEach(customer => { %>
-                                <tr>
-                                    <td class="ps-4 text-muted small"><%= customer._id %></td>
-                                    <td><div class="fw-bold"><%= customer.fullName %></div></td>
-                                    <td><%= customer.email %></td>
-                                    <td>
-                                        <% if(customer.isBlocked) { %>
-                                            <span class="badge rounded-pill status-blocked px-3 py-2">Blocked</span>
-                                        <% } else { %>
-                                            <span class="badge rounded-pill status-active px-3 py-2">Active</span>
-                                        <% } %>
-                                    </td>
-                                    <td class="text-end pe-4">
-                                        <button class="btn toggle-block p-0 border-0 bg-transparent shadow-none" 
-                                                data-id="<%= customer._id %>" 
-                                                data-blocked="<%= customer.isBlocked %>"
-                                                type="button">
-                                            <i class="bi <%= customer.isBlocked ? 'bi-toggle-on text-danger' : 'bi-toggle-off text-success' %> fs-2"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        <% } else { %>
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="customerTable">
+                        <thead>
                             <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">No customers found.</td>
+                                <th class="ps-4">User ID</th>
+                                <th>Customer Name</th>
+                                <th>Email Address</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Manage Status</th>
                             </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
-            
-            <% if (totalPages > 1) { %>
-                <div class="card-footer bg-white border-top-0 py-3">
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination justify-content-center mb-0">
-                            <% for(let i=1; i<=totalPages; i++) { %>
-                                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                    <a class="page-link shadow-none" href="?page=<%= i %>&isBlocked=<%= selectedFilter !== 'all' ? selectedFilter : '' %>&query=<%= searchQuery %>"><%= i %></a>
-                                </li>
-                            <% } %>
-                        </ul>
-                    </nav>
+                        </thead>
+                        <tbody>
+                            <% if (customers && customers.length> 0) { %>
+                                <% customers.forEach(customer=> { %>
+                                    <tr>
+                                        <td class="ps-4 text-muted small">
+                                            <%= customer._id %>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">
+                                                <%= customer.fullName %>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <%= customer.email %>
+                                        </td>
+                                        <td>
+                                            <% if(customer.isBlocked) { %>
+                                                <span class="badge rounded-pill status-blocked px-3 py-2">Blocked</span>
+                                                <% } else { %>
+                                                    <span
+                                                        class="badge rounded-pill status-active px-3 py-2">Active</span>
+                                                    <% } %>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <button class="btn toggle-block p-0 border-0 bg-transparent shadow-none"
+                                                data-id="<%= customer._id %>" data-blocked="<%= customer.isBlocked %>"
+                                                type="button">
+                                                <i
+                                                    class="bi <%= customer.isBlocked ? 'bi-toggle-on text-danger' : 'bi-toggle-off text-success' %> fs-2"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                                        <% } else { %>
+                                            <tr>
+                                                <td colspan="5" class="text-center py-5 text-muted">No customers found.
+                                                </td>
+                                            </tr>
+                                            <% } %>
+                        </tbody>
+                    </table>
                 </div>
-            <% } %>
+
+                <% if (totalPages> 1) { %>
+                    <div class="d-flex justify-content-center py-3">
+                        <nav>
+                            <ul class="pagination mb-0">
+
+                                <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                                    <a class="page-link"
+                                        href="?page=<%= currentPage - 1 %>&isBlocked=<%= selectedFilter !== 'all' ? selectedFilter : '' %>&query=<%= searchQuery %>">←</a>
+                                </li>
+
+                                <% for (let i=1; i <=totalPages; i++) { %>
+                                    <% if (i===1 || i===totalPages || (i>= currentPage - 2 && i <= currentPage + 2)) {
+                                            %>
+                                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                                <a class="page-link"
+                                                    href="?page=<%= i %>&isBlocked=<%= selectedFilter !== 'all' ? selectedFilter : '' %>&query=<%= searchQuery %>">
+                                                    <%= i %>
+                                                </a>
+                                            </li>
+                                            <% } else if (i===currentPage - 3 || i===currentPage + 3) { %>
+                                                <li class="page-item disabled"><span class="page-link">…</span></li>
+                                                <% } %>
+                                                    <% } %>
+
+                                                        <li
+                                                            class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                                            <a class="page-link"
+                                                                href="?page=<%= currentPage + 1 %>&isBlocked=<%= selectedFilter !== 'all' ? selectedFilter : '' %>&query=<%= searchQuery %>">→</a>
+                                                        </li>
+
+                            </ul>
+                        </nav>
+                    </div>
+                    <% } %>
+            </div>
         </div>
-    </div>
-</main>
+    </main>
 
-<%- include("../partials/admin/footer") %>
+    <%- include("../partials/admin/footer") %>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        
-        const searchForm = document.getElementById('searchForm');
-        const filterSelect = document.querySelector('.filter-select');
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
 
-        function updateFilters() {
-            const searchQuery = document.getElementById('searchval').value.trim();
-            const isBlocked = filterSelect.value;
-            const params = new URLSearchParams();
-            
-            if (searchQuery) params.set('query', searchQuery);
-            if (isBlocked !== 'all') params.set('isBlocked', isBlocked);
-            params.set('page', '1');
+                const searchForm = document.getElementById('searchForm');
+                const filterSelect = document.querySelector('.filter-select');
 
-            window.location.href = `/admin/customers?${params.toString()}`;
-        }
+                function updateFilters() {
+                    const searchQuery = document.getElementById('searchval').value.trim();
+                    const isBlocked = filterSelect.value;
+                    const params = new URLSearchParams();
 
-        if (searchForm) {
-            searchForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                updateFilters();
-            });
-        }
+                    if (searchQuery) params.set('query', searchQuery);
+                    if (isBlocked !== 'all') params.set('isBlocked', isBlocked);
+                    params.set('page', '1');
 
-        if (filterSelect) {
-            filterSelect.addEventListener('change', updateFilters);
-        }
+                    window.location.href = `/admin/customers?${params.toString()}`;
+                }
 
-        // Action Logic
-        const tableBody = document.querySelector('#customerTable tbody');
-        tableBody.addEventListener('click', async (event) => {
-            const button = event.target.closest('.toggle-block');
-            if (!button) return;
+                if (searchForm) {
+                    searchForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        updateFilters();
+                    });
+                }
 
-            const customerId = button.getAttribute("data-id");
-            const currentlyBlocked = button.getAttribute("data-blocked") === "true";
-            const action = currentlyBlocked ? "unblock" : "block";
+                if (filterSelect) {
+                    filterSelect.addEventListener('change', updateFilters);
+                }
 
-            const confirmAction = await Swal.fire({
-                title: 'Confirm Action',
-                text: `Are you sure you want to ${action} this user?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: currentlyBlocked ? '#28a745' : '#dc3545',
-                confirmButtonText: `Yes, ${action}`
-            });
+                // Action Logic
+                const tableBody = document.querySelector('#customerTable tbody');
+                tableBody.addEventListener('click', async (event) => {
+                    const button = event.target.closest('.toggle-block');
+                    if (!button) return;
 
-            if (confirmAction.isConfirmed) {
-                try {
-                    const response = await fetch(`/admin/customers/${customerId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ isBlocked: !currentlyBlocked })
+                    const customerId = button.getAttribute("data-id");
+                    const currentlyBlocked = button.getAttribute("data-blocked") === "true";
+                    const action = currentlyBlocked ? "unblock" : "block";
+
+                    const confirmAction = await Swal.fire({
+                        title: 'Confirm Action',
+                        text: `Are you sure you want to ${action} this user?`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: currentlyBlocked ? '#28a745' : '#dc3545',
+                        confirmButtonText: `Yes, ${action}`
                     });
 
-                    const result = await response.json();
+                    if (confirmAction.isConfirmed) {
+                        try {
+                            const response = await fetch(`/admin/customers/${customerId}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ isBlocked: !currentlyBlocked })
+                            });
 
-                    if (response.ok && result.success) {
-                        Swal.fire({ 
-                            icon: 'success', 
-                            title: 'Updated!', 
-                            showConfirmButton: false, 
-                            timer: 1000 
-                        }).then(() => location.reload());
-                    } else {
-                        throw new Error(result.error || 'Update failed');
+                            const result = await response.json();
+
+                            if (response.ok && result.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Updated!',
+                                    showConfirmButton: false,
+                                    timer: 1000
+                                }).then(() => location.reload());
+                            } else {
+                                throw new Error(result.error || 'Update failed');
+                            }
+                        } catch (error) {
+                            Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+                        }
                     }
-                } catch (error) {
-                    Swal.fire({ icon: 'error', title: 'Error', text: error.message });
-                }
-            }
-        });
-    });
-</script>
+                });
+            });
+        </script>

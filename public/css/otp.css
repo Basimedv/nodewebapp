@@ -1,345 +1,237 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-        body {
-            background-image: url('/images/otp.jpg');
-            background-size: contain;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 40px;
-
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
 }
 
-header p {
-    font-size: 24px;
-    font-weight: 600;
-    color: #fff;
+body {
+    background-image: url('/images/otp.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
     margin: 0;
 }
 
-header .buttons button {
-    padding: 8px 20px;
-    margin-left: 10px;
-    background-color: #61030e;
-    color: #fff;
-    font-weight: 500;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+/* ── Hide nav and buttons — keep only logo + dark mode toggle ── */
+header .subhead,
+header .sign-in-btn,
+header .header-icon,
+header .user-dropdown {
+  display: none !important;
 }
-
-header .buttons button:hover {
-    background-color: #8b0a1a;
-}
-
 
 main {
+    min-height: calc(100vh - 130px);
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-grow: 1;
-}
-#loginHeadLogo {
-  filter: brightness(0) saturate(100%) invert(7%) sepia(80%) saturate(4000%) hue-rotate(340deg) brightness(85%) contrast(95%);
-    position: relative;
-  top: -40px; /* move up by 20px */
-    width: 70px;
-  height: 70px;
+    padding: 20px;
 }
 
-
+/* ── Glass card ── */
 #loginContainer {
     display: flex;
-    width: 80vw;   /* 80% of screen width */
-    height: 70vh;  /* 70% of screen height */
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    backdrop-filter: blur(10px);
+    flex-direction: row;
+    width: 680px;
+    max-width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: #fff;
     overflow: hidden;
 }
 
-
+/* ── Left image panel ── */
 #loginLeft {
-    flex: 1;
+    width: 260px;
+    flex-shrink: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    
+    padding: 24px 20px;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-#loginImage {
-    max-width: 100%;
-    height: auto;
-   transition: transform 1s ease-in-out;
+#loginLeft img {
+    width: 200px;
+    height: 200px;
+    object-fit: contain;
+    opacity: 0.9;
 }
+
 .rotate {
-    animation: spin 1s linear infinite;
+    animation: spin 1s linear;
 }
 
 @keyframes spin {
     from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    to   { transform: rotate(360deg); }
 }
 
+/* ── Right form panel ── */
 #loginRight {
     flex: 1;
-    padding: 30px;
+    padding: 32px 28px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-}
-
-#rightHeader {
+    align-items: center;
     text-align: center;
-    margin-bottom: 20px;
 }
 
-#rightHeader img {
-    width: 100px;
-    margin-bottom: 10px;
+/* ── Header ── */
+#rightHeader {
+    margin-bottom: 4px;
 }
+
 #rightHeader h2 {
-       font-size: 28px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    color: #fff;
-    /* margin-top: -60px; */
-    /* margin-bottom: 100px; */
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 6px;
 }
 
 #rightHeader p {
-    font-size: 14px;
-    color: #ccc;
-    margin: 0;
-}
-
-#rightBody {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.input-group {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-#otp {
-    padding: 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #fff;
-    width: 100%;
-    max-width: 200px;
-
-    margin-left: 100px; /* 👉 moves right */
-}
-
-
-#resend-otp {
-    padding: 10px 20px;
-    background-color: #61030e;
-    color: #fff;
-    font-weight: 500;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    /* center by default to match new UI */
-    margin: 0 auto;
-    display: inline-block;
-    
-}
-.imageLogo {
-  width: 100px;   /* adjust size */
-  height: auto;   /* keep aspect ratio */
-}
-
-
-#resend-otp:disabled {
-    background-color: #4a030a;
-    cursor: not-allowed;
-}
-
-#resend-otp:hover:not(:disabled) {
-    background-color: #8b0a1a;
-}
-
-#verify-button {
-    padding: 10px;
-    background-color: #61030e;
-    color: #fff;
-    font-weight: bold;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-
-    /* center the verify button to match .btn-confirm */
-    margin: 16px auto 8px;
-    display: block;
-}
-
-
-#verify-button:hover {
-    background-color: #8b0a1a;
-}
-
-#loginButton {
-    text-align: center;
-}
-/* .loginLeft, #loginLeft, .auth-image-container {
-    width: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.3s ease-in-out, filter 0.3s ease-in-out;
-} */
-
-.loginLeft:hover, #loginLeft:hover, .auth-image-container:hover {
-    transform: scale(1.05) rotate(180deg);
-}
-
-
-#loginButton button {
-    padding: 10px 20px;
-    background-color: transparent;
-    color: #fff;
     font-size: 13px;
-    border-radius: 5px;
-    cursor: pointer;
-     background-color: #8b0a1a;
-    transition: background-color 0.3s ease;
-    margin-top: 40px;
-}
-.expired {
-    font-size: 20px;
-    font-style: inherit;
-  color: rgb(172, 14, 14);
-  font-weight: bold;
-   margin-top: 150px;
-  margin-right: 50px;
+    color: rgba(255, 255, 255, 0.6);
 }
 
-
-
-
-#loginButton button:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* ===== New OTP UI styles ===== */
+/* ── OTP boxes ── */
 .otp-boxes {
     display: flex;
-    gap: 16px;
+    gap: 14px;
     justify-content: center;
-    margin: 24px 0 16px;
+    margin: 22px 0 18px;
 }
 
 .otp-input {
-    width: 56px;
-    height: 56px;
+    width: 58px;
+    height: 58px;
     text-align: center;
     font-size: 24px;
-    border: 2px solid transparent;
-    border-radius: 10px;
-    background: transparent;
-    color: #0a372f;
-    outline: none;
-
-    /* 3D effect using shadows */
-    box-shadow: 
-        inset 0 2px 4px rgba(255, 255, 255, 0.6),  /* light top highlight */
-        inset 0 -2px 4px rgba(0, 0, 0, 0.1),       /* subtle inner shadow */
-        0 4px 6px rgba(0, 0, 0, 0.15);             /* outer shadow (depth) */
-
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.otp-input:focus {
-    border-color: #0f7a5f;
-    box-shadow: 0 0 0 3px rgba(15, 122, 95, 0.15);
-}
-
-.btn-confirm {
-    display: block;
-    margin: 16px auto 8px;
-    width: 320px;
-    max-width: 90%;
-    padding: 14px 20px;
-    background: #0f7a5f;
-    color: #fff;
-    font-weight: 600;
+    font-weight: 700;
     border: none;
     border-radius: 10px;
-    cursor: pointer;
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    outline: none;
+    caret-color: #ffffff;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
     transition: background 0.2s ease;
 }
 
-.btn-confirm:hover { background: #0c5f4b; }
-
-.resend-wrap {
-    text-align: center;
-    margin-top: 12px;
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    gap: 8px;
+.otp-input:focus {
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2), 0 0 0 2px rgba(255,255,255,0.35);
 }
 
-.resend-hint { color: #d71111; font-weight: 500; }
+/* ── Confirm button ── */
+.btn-confirm {
+    width: 100%;
+    padding: 12px;
+    background: #6b1010;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    transition: background 0.3s ease;
+}
 
+.btn-confirm:hover {
+    background: #8b1515;
+}
+
+/* ── Resend section ── */
+.resend-wrap {
+    text-align: center;
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.resend-hint {
+    color: #f87171;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+#timerValue {
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.expired {
+    font-size: 13px;
+    color: #f87171;
+    font-weight: 700;
+}
+
+/* ── Resend button ── */
 .btn-resend {
     background: #ffffff;
-    color: #0f7a5f;
-    border: 2px solid #cde7df;
-    padding: 8px 14px;
-    border-radius: 10px;
+    color: #1a1a1a;
+    border: none;
+    padding: 9px 32px;
+    border-radius: 8px;
     cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: background 0.2s ease;
 }
 
 .btn-resend:disabled {
-    background: #f3f5f6;
-    color: #9aa3a7;
-    border-color: #e3ece9;
+    background: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.35);
     cursor: not-allowed;
 }
 
-.btn-resend:hover:not(:disabled) { background: #eef7f4; }
+.btn-resend:hover:not(:disabled) {
+    background: #eeeeee;
+}
 
-.back-login { text-align: center; margin-top: 24px; }
-.back-link { color: #5f4e4e; font-weight: 700; text-decoration: none; }
-.back-link:hover { text-decoration: underline; }
+/* ── Back to login ── */
+.back-login {
+    text-align: center;
+    margin-top: 18px;
+}
 
-@media (max-width: 600px) {
-    header {
-        padding: 15px;
-    }
+.back-link {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+}
 
-    header p {
-        font-size: 20px;
-    }
+.back-link:hover {
+    text-decoration: underline;
+    opacity: 0.85;
+}
 
+/* ── form fills width ── */
+#otpForm {
+    width: 100%;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
     #loginContainer {
         flex-direction: column;
-        margin: 0 20px;
+        width: 100%;
     }
 
     #loginLeft {
@@ -347,10 +239,12 @@ main {
     }
 
     #loginRight {
-        padding: 400px;
+        padding: 28px 18px;
     }
 
-    #otp {
-        max-width: 100%;
+    .otp-input {
+        width: 52px;
+        height: 52px;
+        font-size: 20px;
     }
 }

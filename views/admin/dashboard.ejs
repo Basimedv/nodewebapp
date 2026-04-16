@@ -1,83 +1,83 @@
-  <link rel="stylesheet" href="/css/admindashboard.css">
+<link rel="stylesheet" href="/css/admindashboard.css">
 <%- include("../partials/admin/header") %>
 
-<div class="sidebar d-none d-lg-block">
-    <%- include("../partials/admin/sidebar_links") %>
-</div>
-
-<main class="main-content">
-    <div class="container-fluid">
-        <h2 class="dashboard-title">Dashboard Overview</h2>
-
-        <div class="row g-4 mb-4">
-            <div class="col-md-6 col-xl-3">
-                <div class="dashboard-card">
-                    <div class="icon-container bg-danger text-white"><i class="bi bi-people"></i></div>
-                    <p class="text-muted mb-1">Total Customers</p>
-                    <h5 id="totalCustomers">Loading...</h5>
-                </div>
-            </div>
-            <div class="col-md-6 col-xl-3">
-                <div class="dashboard-card">
-                    <div class="icon-container bg-primary text-white"><i class="bi bi-wallet"></i></div>
-                    <p class="text-muted mb-1">Total Sales</p>
-                    <h5 id="totalSales">Loading...</h5>
-                </div>
-            </div>
-            <div class="col-md-6 col-xl-3">
-                <div class="dashboard-card">
-                    <div class="icon-container bg-warning text-white"><i class="bi bi-cart"></i></div>
-                    <p class="text-muted mb-1">Total Orders</p>
-                    <h5 id="totalOrders">Loading...</h5>
-                </div>
-            </div>
-            <div class="col-md-6 col-xl-3">
-                <div class="dashboard-card">
-                    <div class="icon-container bg-success text-white"><i class="bi bi-pie-chart"></i></div>
-                    <p class="text-muted mb-1">Products Sold</p>
-                    <h5 id="productsSold">Loading...</h5>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-4 mb-4">
-            <div class="col-lg-6">
-                <div class="chart-container">
-                    <h5>Sales Overview</h5>
-                    <canvas id="salesChart"></canvas>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="chart-container">
-                    <h5>Orders Overview</h5>
-                    <canvas id="ordersChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-4 mb-4">
-            <div class="col-md-4">
-                <div class="chart-container">
-                    <h5>Top 10 Products</h5>
-                    <canvas id="productsChart"></canvas>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="chart-container">
-                    <h5>Top 10 Categories</h5>
-                    <canvas id="categoriesChart"></canvas>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="chart-container">
-                    <h5>Top 10 Brands</h5>
-                    <canvas id="brandsChart"></canvas>
-                </div>
-            </div>
-        </div>
+    <div class="sidebar d-none d-lg-block">
+        <%- include("../partials/admin/sidebar_links") %>
     </div>
-</main>
-  <script>
+
+    <main class="main-content">
+        <div class="container-fluid">
+            <h2 class="dashboard-title">Dashboard Overview</h2>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6 col-xl-3">
+                    <div class="dashboard-card">
+                        <div class="icon-container bg-danger text-white"><i class="bi bi-people"></i></div>
+                        <p class="text-muted mb-1">Total Customers</p>
+                        <h5 id="totalCustomers">Loading...</h5>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="dashboard-card">
+                        <div class="icon-container bg-primary text-white"><i class="bi bi-wallet"></i></div>
+                        <p class="text-muted mb-1">Total Sales</p>
+                        <h5 id="totalSales">Loading...</h5>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="dashboard-card">
+                        <div class="icon-container bg-warning text-white"><i class="bi bi-cart"></i></div>
+                        <p class="text-muted mb-1">Total Orders</p>
+                        <h5 id="totalOrders">Loading...</h5>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="dashboard-card">
+                        <div class="icon-container bg-success text-white"><i class="bi bi-pie-chart"></i></div>
+                        <p class="text-muted mb-1">Products Sold</p>
+                        <h5 id="productsSold">Loading...</h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="chart-container">
+                        <h5>Sales Overview</h5>
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-container">
+                        <h5>Orders Overview</h5>
+                        <canvas id="ordersChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="chart-container">
+                        <h5>Top 10 Products</h5>
+                        <canvas id="productsChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="chart-container">
+                        <h5>Top 10 Categories</h5>
+                        <canvas id="categoriesChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="chart-container">
+                        <h5>Top 10 Brands</h5>
+                        <canvas id="brandsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
 
 
 
@@ -887,9 +887,9 @@
 
         // Back navigation lock for admin dashboard
 
-        (function lockBackNavigation(){
+        (function lockBackNavigation() {
 
-            try{
+            try {
 
                 console.log('Back lock script loaded for admin dashboard');
 
@@ -903,7 +903,7 @@
 
 
 
-                window.addEventListener('popstate', function(event){
+                window.addEventListener('popstate', function (event) {
 
                     console.log('Back button pressed on admin dashboard, forcing stay');
 
@@ -933,7 +933,7 @@
 
 
 
-                window.addEventListener('beforeunload', function(e){
+                window.addEventListener('beforeunload', function (e) {
 
                     history.pushState(null, '', location.href);
 
@@ -943,16 +943,16 @@
 
                 // Additional: Try to go forward on load
 
-                window.onload = function() {
+                window.onload = function () {
 
                     history.pushState(null, '', location.href);
 
                 };
 
-            }catch(e){ console.error('Error in back lock script:', e); }
+            } catch (e) { console.error('Error in back lock script:', e); }
 
         })();
 
     </script>
 
-<%- include("../partials/admin/footer") %>
+    <%- include("../partials/admin/footer") %>

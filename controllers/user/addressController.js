@@ -2,7 +2,7 @@ const HTTP_STATUS_CODES = require('../../constants/status_codes');
 const Address = require('../../models/addressSchema');
 const User = require('../../models/userSchema');
 
-// 1. GET: Main Address Management Page
+
 const getAddress = async (req, res) => {
     try {
         const userId = req.session.user;
@@ -17,7 +17,6 @@ const getAddress = async (req, res) => {
     }
 };
 
-// 2. GET: Render Add Address Page
 const getAddAddress = async (req, res) => {
     try {
         const user = await User.findById(req.session.user);
@@ -27,12 +26,12 @@ const getAddAddress = async (req, res) => {
     }
 };
 
-// 3. GET: Render Edit Address Page
+
 const getEditAddress = async (req, res) => {
     try {
         const userId = req.session.user;
         const addressId = req.query.id;
-        
+
         const user = await User.findById(userId);
         const addressDoc = await Address.findOne({ userId });
         const address = addressDoc.address.find(item => item._id.toString() === addressId);
@@ -45,12 +44,12 @@ const getEditAddress = async (req, res) => {
     }
 };
 
-// 4. POST: Save New Address
+
 const postAddAddress = async (req, res) => {
     try {
         const userId = req.session.user;
-        
-        // Destructuring helps ensure we are getting exactly what we need
+
+
         const { name, phone, landMark, city, state, pinCode, addressType } = req.body;
 
         const addressDoc = await Address.findOne({ userId });
@@ -84,37 +83,57 @@ const postAddAddress = async (req, res) => {
     }
 };
 
-// 5. POST: Update Existing Address
 const postEditAddress = async (req, res) => {
     try {
         const userId = req.session.user;
         const { addressId, name, phone, landMark, city, state, pinCode, addressType } = req.body;
 
+        
+        if (!name || !/^[a-zA-Z\s]{3,50}$/.test(name.trim())) {
+            return res.status(400).json({ success: false, message: 'Invalid name.' });
+        }
+        if (!phone || !/^[6-9]\d{9}$/.test(phone.trim())) {
+            return res.status(400).json({ success: false, message: 'Invalid phone number.' });
+        }
+        if (!landMark || !landMark.trim()) {
+            return res.status(400).json({ success: false, message: 'Landmark is required.' });
+        }
+        if (!city || !city.trim()) {
+            return res.status(400).json({ success: false, message: 'City is required.' });
+        }
+        if (!state || !state.trim()) {
+            return res.status(400).json({ success: false, message: 'State is required.' });
+        }
+        if (!pinCode || !/^\d{6}$/.test(pinCode.trim())) {
+            return res.status(400).json({ success: false, message: 'Invalid pincode.' });
+        }
+
+
         await Address.updateOne(
             { userId, "address._id": addressId },
-            { 
-                $set: { 
+            {
+                $set: {
                     "address.$": {
-                        _id: addressId, // Keep the same ID
-                        name,
-                        phone,
-                        landMark,
-                        city,
-                        state,
-                        pinCode,
-                        addressType
-                    } 
-                } 
+                        _id: addressId,
+                        name: name.trim(),
+                        phone: phone.trim(),
+                        landMark: landMark.trim(),
+                        city: city.trim(),
+                        state: state.trim(),
+                        pinCode: pinCode.trim(),
+                        addressType: addressType || 'Home'
+                    }
+                }
             }
         );
-        res.status(HTTP_STATUS_CODES.OK).json({ success: true });
+
+        res.status(200).json({ success: true });
     } catch (error) {
         console.error("Edit Address Error:", error);
-        res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false });
+        res.status(500).json({ success: false, message: 'Server error.' });
     }
 };
 
-// 6. DELETE: Delete Address (Added this for your delete button)
 const deleteAddress = async (req, res) => {
     try {
         const userId = req.session.user;

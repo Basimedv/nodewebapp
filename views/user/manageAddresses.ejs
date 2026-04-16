@@ -1,244 +1,261 @@
 <%- include("../partials/user/header") %>
 
-<style>
-   body { 
-    background-color: #f8f9fa; 
-    font-family: 'Inter', sans-serif; 
-    margin: 0;
-    padding: 0;
-    display: block;        /* This turns off Flexbox/Grid centering */
-    min-height: 100vh;
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+        }
 
-}
-    
-    /* Layout alignment */
-    .profile-container { max-width: 1300px; margin: 40px auto; padding: 0 20px; }
-    
-.main-content-area {
-    top: 690px;
-   right: -80px;
-    background: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    min-height: 500px;
-    width: 100%;              
-    max-width: 900px;   
-    
-    /* '0' forces it to the top, 'auto' keeps it horizontally centered */
-    margin: -650px auto; 
-    position: relative;    /* Ensures it follows normal document flow */
-    margin-right: 15%;  /* Adjust this percentage to move it left or right */
-}
+        .page-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
 
-    .address-card {
-        padding: 20px;
-        background: #ffffff;
-        border-radius: 12px;
-        border: 1px solid #edeff2;
-        transition: all 0.3s ease;
-        position: relative;
-        height: 100%;
-    }
+        /* Sidebar stays on left, fixed width */
+        .sidebar-container {
+            width: 270px;
+            flex-shrink: 0;
+            min-height: 100vh;
+        }
 
-    .address-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.06);
-        border-color: #d1d5db;
-    }
+        /* Content takes remaining space */
+        .content-wrapper {
+            flex: 1;
+            padding: 40px 30px;
+            min-width: 0;
+        }
 
-    /* Badge fix for undefined values */
-    .badge.address-type {
-        padding: 5px 12px;
-        border-radius: 50px;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        margin-bottom: 15px;
-        display: inline-block;
-    }
-    .badge.home { background: #e8f5e9; color: #2e7d32; }
-    .badge.work { background: #e3f2fd; color: #1565c0; }
-    .badge.other { background: #f5f5f5; color: #616161; }
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
 
-    .addr-name { font-size: 18px; font-weight: 700; color: #111; display: block; margin-bottom: 5px; }
-    .addr-details p { font-size: 14px; color: #666; margin-bottom: 5px; line-height: 1.5; }
-    
-    .action-btns { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; }
-    
-    .edit-link, .delete-btn {
-        width: 32px; height: 32px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        text-decoration: none; border: none; cursor: pointer; transition: 0.2s;
-    }
-    .edit-link { background: #f3f4f6; color: #4b5563; }
-    .delete-btn { background: #fee2e2; color: #ef4444; }
-    .edit-link:hover { background: #000; color: #fff; }
-    .delete-btn:hover { background: #dc2626; color: #fff; }
+        .address-heading {
+            font-size: 24px;
+            font-weight: 700;
+            color: #222;
+            margin: 0;
+        }
 
-   .add-btn {
-    position: absolute;
-    top: 150px;     /* move down from top */
-    right: 30px;   /* move left from right edge */
+        .add-btn {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+        }
 
-    background: #000;
-    color: #fff;
-    border: none;
-    padding: 12px 25px;
-    border-radius: 8px;
-    font-weight: 600;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: 0.3s;
-}
+        .add-btn:hover {
+            background: #333;
+            color: #fff;
+        }
 
-    .add-btn:hover { background: #333; color: #fff; transform: scale(1.02); }
-/* Remove the gutter/gap from the edge of the screen */
-.container-fluid {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-}
+        .address-card {
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #edeff2;
+            transition: all 0.3s ease;
+            position: relative;
+            height: 100%;
+        }
 
-.row {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-}
+        .address-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
+            border-color: #d1d5db;
+        }
 
-/* Ensure the sidebar container has no margin on the left */
-.sidebar-container {
-    position: fixed;
-    left: 0;
-    top: 160px;
-}
+        .badge.address-type {
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
 
-.address-heading {
-    font-size: 26px;          /* Bigger text */
-    font-weight: 700;         /* Bold */
-    color: #222;              /* Dark smooth color */
-    letter-spacing: 0.5px;    /* Spacing between letters */
-    position: relative;
-    display: inline-block;
-    margin-bottom: 20px;
-}
+        .badge.home {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
 
-.move-left {
-    margin-left: 250px;
-}
+        .badge.work {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
 
+        .badge.other {
+            background: #f5f5f5;
+            color: #616161;
+        }
 
+        .addr-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111;
+            display: block;
+            margin-bottom: 5px;
+        }
 
-</style>
-<div class="container-fluid">
-<div class="profile-container">
-    <div class="row">
-        <div class="col-lg-3" style="padding-left: 0;">
-           <div class="sidebar-container">
-        <%- include('../partials/user/profileSidebar', { activePage: 'address' }) %>
-    </div>
+        .addr-details p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+
+        .action-btns {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .edit-link,
+        .delete-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .edit-link {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .delete-btn {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .edit-link:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            color: #fff;
+        }
+    </style>
+
+    <div class="page-wrapper">
+
+        <!-- Sidebar -->
+        <div class="sidebar-container">
+            <%- include('../partials/user/profileSidebar', { activePage: 'address' }) %>
         </div>
-        <h4 class="address-heading move-left">Manage Addresses</h4>
 
+        <!-- Main Content -->
+        <div class="content-wrapper">
 
-        <div class="col-lg-9">
-  
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                    
-              
+            <div class="content-header">
+                <h4 class="address-heading">Manage Addresses</h4>
                 <a href="/addAddress" class="add-btn">
                     <i class="fas fa-plus"></i> Add New Address
                 </a>
             </div>
 
-            <div class="main-content-area">
-                <div class="row g-4">
-                    <% if (addresses && addresses.length > 0) { %>
-                        <% addresses.forEach(addr => { %>
-                            <div class="col-md-6">
-                                <div class="address-card">
-                                    <div class="action-btns">
-                                        <a href="/editAddress?id=<%= addr._id %>" class="edit-link" title="Edit">
-                                            <i class="fas fa-pen"></i>
-                                        </a>
-                                        <button class="delete-btn" onclick="handleDelete('<%= addr._id %>')" title="Delete">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </div>
+            <div class="row g-4">
+                <% if (addresses && addresses.length> 0) { %>
+                    <% addresses.forEach(addr=> { %>
+                        <div class="col-md-6">
+                            <div class="address-card">
+                                <div class="action-btns">
+                                    <a href="/editAddress?id=<%= addr._id %>" class="edit-link" title="Edit">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                    <button class="delete-btn" onclick="handleDelete('<%= addr._id %>')" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
 
-                                    <% const type = (addr.addressType) ? addr.addressType.toLowerCase() : 'other'; %>
+                                <% const type=addr.addressType ? addr.addressType.toLowerCase() : 'other' ; %>
                                     <span class="badge address-type <%= type %>">
                                         <%= addr.addressType || 'Other' %>
                                     </span>
 
-                                    <span class="addr-name"><%= addr.name %></span>
-                                    
+                                    <span class="addr-name">
+                                        <%= addr.name %>
+                                    </span>
+
                                     <div class="addr-details">
-                                        <p class="mb-2">
-                                            <i class="fas fa-phone-alt me-2"></i><strong><%= addr.phone %></strong>
-                                        </p>
+                                        <p><i class="fas fa-phone-alt me-2"></i><strong>
+                                                <%= addr.phone %>
+                                            </strong></p>
                                         <p class="text-muted">
-                                            <i class="fas fa-map-marker-alt me-2"></i><%= addr.landMark %><br>
-                                            <%= addr.city %>, <%= addr.state %> — <strong><%= addr.pinCode %></strong>
+                                            <i class="fas fa-map-marker-alt me-2"></i>
+                                            <%= addr.landMark %><br>
+                                                <%= addr.city %>, <%= addr.state %> — <strong>
+                                                            <%= addr.pinCode %>
+                                                        </strong>
                                         </p>
                                     </div>
-                                </div>
                             </div>
-                        <% }) %>
-                    <% } else { %>
-                        <div class="col-12 text-center py-5">
-                            <img src="https://cdn-icons-png.flaticon.com/512/927/927667.png" width="80" class="opacity-25 mb-3">
-                            <p class="text-muted">No addresses saved yet.</p>
                         </div>
-                    <% } %>
-                </div>
-                
+                        <% }) %>
+                            <% } else { %>
+                                <div class="col-12 text-center py-5">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/927/927667.png" width="80"
+                                        class="opacity-25 mb-3">
+                                    <p class="text-muted">No addresses saved yet.</p>
+                                </div>
+                                <% } %>
             </div>
+
         </div>
     </div>
-</div>
-<!-- <div class="page-header text-start mb-4">
-    <h3 class="fw-bold m-0">My Addresses</h3>
-</div> -->
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    async function handleDelete(id) {
-        const result = await Swal.fire({
-            title: 'Delete Address?',
-            text: "This action cannot be undone.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#000',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete'
-        });
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        async function handleDelete(id) {
+            const result = await Swal.fire({
+                title: 'Delete Address?',
+                text: "This action cannot be undone.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#000',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete'
+            });
 
-        if (result.isConfirmed) {
-            try {
-                // Ensure this route matches your backend controller
-                const res = await fetch(`/deleteAddress/${id}`, { 
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Deleted!',
-                        timer: 1000,
-                        showConfirmButton: false
-                    }).then(() => location.reload());
-                } else {
-                    Swal.fire('Error', data.message || 'Failed to delete', 'error');
+            if (result.isConfirmed) {
+                try {
+                    const res = await fetch(`/deleteAddress/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1000, showConfirmButton: false })
+                            .then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', data.message || 'Failed to delete', 'error');
+                    }
+                } catch (err) {
+                    Swal.fire('Error', 'Something went wrong', 'error');
                 }
-            } catch (err) {
-                console.error(err);
-                Swal.fire('Error', 'Something went wrong', 'error');
             }
         }
-    }
-</script>
+    </script>
+
+    <%- include("../partials/user/footer") %>

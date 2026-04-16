@@ -1,167 +1,416 @@
 <%- include("../partials/user/header") %>
 
-<style>
-    body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
-    
-      .profile-layout {
-    display: flex;
-    justify-content: flex-start; /* push items to left */
-    max-width: 100%;             /* remove center limit */
-    margin: 20px 0;              /* remove auto centering */
-    gap: 40px;
-    padding: 0;                  /* remove side padding */
-}
-
-    .sidebar-container { flex: 0 0 280px; }
-
-    .form-container-box {
-        flex: 1;
-        background: #fff;
-        padding: 40px;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    }
-
-    .form-title { color: #5b3f64; font-weight: 700; margin-bottom: 30px; }
-
-    /* The same two-column grid */
-    .input-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-        margin-bottom: 15px;
-    }
-
-    .form-label { font-weight: 600; color: #333; margin-bottom: 8px; display: block; font-size: 14px; }
-    .required::after { content: " *"; color: #ff0101; }
-
-    .form-control, .form-select {
-        border: 1px solid #dce0e4;
-        border-radius: 8px;
-        padding: 10px 15px;
-        width: 100%;
-    }
-
-    .form-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 30px;
-    }
-
-    .btn-update { background-color: #2d5a45; color: white; border: none; padding: 10px 25px; border-radius: 6px; font-weight: 600; }
-    .btn-cancel { background-color: #f1f8f5; color: #2d5a45; border: 1px solid #d1e7dd; padding: 10px 25px; border-radius: 6px; text-decoration: none; }
-</style>
-
-
-
-<div class="profile-layout">
-    <div class="sidebar-container">
-        <%- include('../partials/user/profileSidebar', { activePage: 'address' }) %>
-    </div>
-
-    <div class="form-container-box">
-        <h4 class="form-title">Edit Address</h4>
-        
-        <form id="editAddressForm">
-            <input type="hidden" name="addressId" value="<%= address._id %>">
-            
-            <div class="input-grid">
-                <div>
-                    <label class="form-label required">Full Name</label>
-                    <input type="text" name="name" class="form-control" value="<%= address.name %>" required>
-                </div>
-                <div>
-                    <label class="form-label required">Phone Number</label>
-                    <input type="tel" name="phone" class="form-control" value="<%= address.phone %>" required>
-                </div>
-            </div>
-
-            <div class="input-grid">
-                <div>
-                    <label class="form-label required">Address Line 1</label>
-                    <input type="text" name="landMark" class="form-control" value="<%= address.landMark %>" required>
-                </div>
-                <div>
-                    <label class="form-label">Address Line 2 (Optional)</label>
-                    <input type="text" name="addressLine2" class="form-control" value="<%= address.addressLine2 || '' %>">
-                </div>
-            </div>
-
-            <div class="input-grid">
-                <div>
-                    <label class="form-label required">City</label>
-                    <input type="text" name="city" class="form-control" value="<%= address.city %>" required>
-                </div>
-                <div>
-                    <label class="form-label required">State</label>
-                    <input type="text" name="state" class="form-control" value="<%= address.state %>" required>
-                </div>
-            </div>
-
-            <div class="input-grid">
-                <div>
-                    <label class="form-label required">Pincode</label>
-                    <input type="text" name="pinCode" class="form-control" value="<%= address.pinCode %>" required>
-                </div>
-                <div>
-                    <label class="form-label">Country</label>
-                    <input type="text" class="form-control" value="India" readonly disabled>
-                </div>
-            </div>
-
-            <div class="form-footer">
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn-update">
-                        <i class="fas fa-save me-1"></i> Update Address
-                    </button>
-                    <a href="/address" class="btn-cancel">Cancel</a>
-                </div>
-
-                <div class="d-flex gap-3 align-items-center">
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="addressType" id="home" value="Home" <%= address.addressType==='Home'?'checked':'' %>>
-                        <label class="form-check-label" for="home">Home</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="addressType" id="work" value="Work" <%= address.addressType==='Work'?'checked':'' %>>
-                        <label class="form-check-label" for="work">Work</label>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    document.getElementById('editAddressForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
-
-        try {
-            const response = await fetch('/editAddress', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                Swal.fire({ 
-                    icon: 'success', 
-                    title: 'Updated!', 
-                    text: 'Address updated successfully',
-                    timer: 1500,
-                    showConfirmButton: false 
-                }).then(() => window.location.href = '/address');
-            } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: result.message || 'Update failed' });
-            }
-        } catch (err) {
-            Swal.fire({ icon: 'error', title: 'Oops', text: 'Something went wrong' });
+    <style>
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Inter', sans-serif;
         }
-    };
-</script>
+
+        .profile-layout {
+            display: flex;
+            max-width: 1200px;
+            margin: 40px auto;
+            gap: 30px;
+            padding: 0 20px;
+        }
+
+        .sidebar-container {
+            flex: 0 0 280px;
+        }
+
+        .form-container-box {
+            flex: 1;
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-title {
+            color: #5b3f64;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .input-full {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 14px;
+        }
+
+        .required::after {
+            content: " *";
+            color: #ff0101;
+        }
+
+        .form-control,
+        .form-select {
+            border: 1px solid #dce0e4;
+            border-radius: 8px;
+            padding: 10px 15px;
+            width: 100%;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2d5a45;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(45, 90, 69, 0.1);
+        }
+
+        .form-control[readonly] {
+            background-color: #f8f9fa;
+            color: #555;
+            cursor: not-allowed;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .pincode-wrapper {
+            position: relative;
+        }
+
+        .pincode-spinner {
+            display: none;
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            border: 2px solid #ddd;
+            border-top-color: #2d5a45;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: translateY(-50%) rotate(360deg);
+            }
+        }
+
+        .pincode-status {
+            font-size: 12px;
+            margin-top: 5px;
+            min-height: 16px;
+        }
+
+        .pincode-status.success {
+            color: #28a745;
+        }
+
+        .pincode-status.error {
+            color: #dc3545;
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .btn-update {
+            background-color: #2d5a45;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background-color: #f1f8f5;
+            color: #2d5a45;
+            border: 1px solid #d1e7dd;
+            padding: 10px 25px;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+    </style>
+
+    <div class="profile-layout">
+        <div class="sidebar-container">
+            <%- include('../partials/user/profileSidebar', { activePage: 'address' }) %>
+        </div>
+
+        <div class="form-container-box">
+            <h4 class="form-title">Edit Address</h4>
+
+            <form id="editAddressForm">
+                <input type="hidden" name="addressId" value="<%= address._id %>">
+
+                <!-- Row 1: Name + Phone -->
+                <div class="input-grid">
+                    <div>
+                        <label class="form-label required">Full Name</label>
+                        <input type="text" name="name" class="form-control" value="<%= address.name %>" required>
+                    </div>
+                    <div>
+                        <label class="form-label required">Phone Number</label>
+                        <input type="tel" name="phone" class="form-control" value="<%= address.phone %>" required>
+                    </div>
+                </div>
+
+                <!-- Row 2: Pincode + Locality -->
+                <div class="input-grid">
+                    <div>
+                        <label class="form-label required">Pincode</label>
+                        <div class="pincode-wrapper">
+                            <input type="text" name="pinCode" id="pinCode" class="form-control"
+                                value="<%= address.pinCode %>" maxlength="6" required>
+                            <span class="pincode-spinner" id="pincodeSpinner"></span>
+                        </div>
+                        <div class="pincode-status" id="pincodeStatus"></div>
+                    </div>
+                    <div>
+                        <label class="form-label">Locality</label>
+                        <input type="text" name="locality" id="locality" class="form-control"
+                            value="<%= address.locality || '' %>" placeholder="Auto-filled from pincode" readonly>
+                    </div>
+                </div>
+
+                <!-- Row 3: City + State -->
+                <div class="input-grid">
+                    <div>
+                        <label class="form-label required">City / District</label>
+                        <input type="text" name="city" id="city" class="form-control" value="<%= address.city %>"
+                            placeholder="Auto-filled from pincode" readonly required>
+                    </div>
+                    <div>
+                        <label class="form-label required">State</label>
+                        <select name="state" id="state" class="form-select" required>
+                            <option value="">-- Select state --</option>
+                            <option value="Andhra Pradesh" <%=address.state==='Andhra Pradesh' ?'selected':''%>>Andhra
+                                Pradesh</option>
+                            <option value="Arunachal Pradesh" <%=address.state==='Arunachal Pradesh' ?'selected':''%>
+                                >Arunachal Pradesh</option>
+                            <option value="Assam" <%=address.state==='Assam' ?'selected':''%>>Assam</option>
+                            <option value="Bihar" <%=address.state==='Bihar' ?'selected':''%>>Bihar</option>
+                            <option value="Chhattisgarh" <%=address.state==='Chhattisgarh' ?'selected':''%>>Chhattisgarh
+                            </option>
+                            <option value="Goa" <%=address.state==='Goa' ?'selected':''%>>Goa</option>
+                            <option value="Gujarat" <%=address.state==='Gujarat' ?'selected':''%>>Gujarat</option>
+                            <option value="Haryana" <%=address.state==='Haryana' ?'selected':''%>>Haryana</option>
+                            <option value="Himachal Pradesh" <%=address.state==='Himachal Pradesh' ?'selected':''%>
+                                >Himachal Pradesh</option>
+                            <option value="Jharkhand" <%=address.state==='Jharkhand' ?'selected':''%>>Jharkhand</option>
+                            <option value="Karnataka" <%=address.state==='Karnataka' ?'selected':''%>>Karnataka</option>
+                            <option value="Kerala" <%=address.state==='Kerala' ?'selected':''%>>Kerala</option>
+                            <option value="Madhya Pradesh" <%=address.state==='Madhya Pradesh' ?'selected':''%>>Madhya
+                                Pradesh</option>
+                            <option value="Maharashtra" <%=address.state==='Maharashtra' ?'selected':''%>>Maharashtra
+                            </option>
+                            <option value="Manipur" <%=address.state==='Manipur' ?'selected':''%>>Manipur</option>
+                            <option value="Meghalaya" <%=address.state==='Meghalaya' ?'selected':''%>>Meghalaya</option>
+                            <option value="Mizoram" <%=address.state==='Mizoram' ?'selected':''%>>Mizoram</option>
+                            <option value="Nagaland" <%=address.state==='Nagaland' ?'selected':''%>>Nagaland</option>
+                            <option value="Odisha" <%=address.state==='Odisha' ?'selected':''%>>Odisha</option>
+                            <option value="Punjab" <%=address.state==='Punjab' ?'selected':''%>>Punjab</option>
+                            <option value="Rajasthan" <%=address.state==='Rajasthan' ?'selected':''%>>Rajasthan</option>
+                            <option value="Sikkim" <%=address.state==='Sikkim' ?'selected':''%>>Sikkim</option>
+                            <option value="Tamil Nadu" <%=address.state==='Tamil Nadu' ?'selected':''%>>Tamil Nadu
+                            </option>
+                            <option value="Telangana" <%=address.state==='Telangana' ?'selected':''%>>Telangana</option>
+                            <option value="Tripura" <%=address.state==='Tripura' ?'selected':''%>>Tripura</option>
+                            <option value="Uttar Pradesh" <%=address.state==='Uttar Pradesh' ?'selected':''%>>Uttar
+                                Pradesh</option>
+                            <option value="Uttarakhand" <%=address.state==='Uttarakhand' ?'selected':''%>>Uttarakhand
+                            </option>
+                            <option value="West Bengal" <%=address.state==='West Bengal' ?'selected':''%>>West Bengal
+                            </option>
+                            <option value="Andaman and Nicobar Islands" <%=address.state==='Andaman and Nicobar Islands'
+                                ?'selected':''%>>Andaman and Nicobar Islands</option>
+                            <option value="Chandigarh" <%=address.state==='Chandigarh' ?'selected':''%>>Chandigarh
+                            </option>
+                            <option value="Dadra and Nagar Haveli and Daman and Diu"
+                                <%=address.state==='Dadra and Nagar Haveli and Daman and Diu' ?'selected':''%>>Dadra and
+                                Nagar Haveli and Daman and Diu</option>
+                            <option value="Delhi" <%=address.state==='Delhi' ?'selected':''%>>Delhi</option>
+                            <option value="Jammu and Kashmir" <%=address.state==='Jammu and Kashmir' ?'selected':''%>
+                                >Jammu and Kashmir</option>
+                            <option value="Ladakh" <%=address.state==='Ladakh' ?'selected':''%>>Ladakh</option>
+                            <option value="Lakshadweep" <%=address.state==='Lakshadweep' ?'selected':''%>>Lakshadweep
+                            </option>
+                            <option value="Puducherry" <%=address.state==='Puducherry' ?'selected':''%>>Puducherry
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 4: Landmark -->
+                <div class="input-grid">
+                    <div>
+                        <label class="form-label required">Landmark / Area</label>
+                        <input type="text" name="landMark" class="form-control" value="<%= address.landMark %>"
+                            placeholder="e.g. Near City Mall" required>
+                    </div>
+                    <div></div>
+                </div>
+
+
+                <div class="input-grid">
+                    <div class="input-full">
+                        <label class="form-label required">Address</label>
+                        <textarea name="address" class="form-control"
+                            placeholder="House No. / Flat No., Street Name, Building / Colony name..."
+                            required><%= address.address || '' %></textarea>
+                    </div>
+                </div>
+
+
+                <div class="form-footer">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn-update">Update Address</button>
+                        <a href="/address" class="btn-cancel">Cancel</a>
+                    </div>
+
+                    <div class="d-flex gap-3 align-items-center">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="addressType" id="home" value="Home"
+                                <%=address.addressType==='Home' ? 'checked' : '' %>>
+                            <label class="form-check-label" for="home">Home</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="addressType" id="work" value="Work"
+                                <%=address.addressType==='Work' ? 'checked' : '' %>>
+                            <label class="form-check-label" for="work">Work</label>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+
+        const pincodeInput = document.getElementById('pinCode');
+        const cityInput = document.getElementById('city');
+        const stateSelect = document.getElementById('state');
+        const localityInput = document.getElementById('locality');
+        const spinner = document.getElementById('pincodeSpinner');
+        const statusEl = document.getElementById('pincodeStatus');
+
+        pincodeInput.addEventListener('input', async function () {
+            const pin = this.value.trim();
+
+            // Reset fields on change
+            cityInput.value = '';
+            stateSelect.value = '';
+            localityInput.value = '';
+            statusEl.textContent = '';
+            statusEl.className = 'pincode-status';
+
+            if (pin.length !== 6 || !/^\d{6}$/.test(pin)) return;
+
+            spinner.style.display = 'block';
+
+            try {
+                const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+                const data = await res.json();
+
+                if (data[0].Status === 'Success' && data[0].PostOffice.length > 0) {
+                    const po = data[0].PostOffice[0];
+
+                    cityInput.value = po.District || '';
+                    localityInput.value = po.Name || '';
+
+                    const stateValue = po.State || '';
+                    const option = Array.from(stateSelect.options)
+                        .find(o => o.value.toLowerCase() === stateValue.toLowerCase());
+                    if (option) stateSelect.value = option.value;
+
+                    statusEl.textContent = '✓ Location found';
+                    statusEl.className = 'pincode-status success';
+                } else {
+                    statusEl.textContent = '✗ Invalid pincode';
+                    statusEl.className = 'pincode-status error';
+                }
+            } catch (err) {
+                statusEl.textContent = '✗ Could not fetch pincode data';
+                statusEl.className = 'pincode-status error';
+            } finally {
+                spinner.style.display = 'none';
+            }
+        });
+
+
+        document.getElementById('editAddressForm').onsubmit = async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            const nameRegex = /^[a-zA-Z\s]{3,50}$/;
+            const phoneRegex = /^[6-9]\d{9}$/;
+            const pincodeRegex = /^\d{6}$/;
+
+            if (!nameRegex.test(data.name.trim())) {
+                return Swal.fire({ icon: 'warning', title: 'Invalid Name', text: 'Name must be 3–50 letters only.' });
+            }
+            if (!phoneRegex.test(data.phone.trim())) {
+                return Swal.fire({ icon: 'warning', title: 'Invalid Phone', text: 'Enter a valid 10-digit Indian mobile number.' });
+            }
+            if (!pincodeRegex.test(data.pinCode.trim())) {
+                return Swal.fire({ icon: 'warning', title: 'Invalid Pincode', text: 'Pincode must be exactly 6 digits.' });
+            }
+            if (!data.city || !data.city.trim()) {
+                return Swal.fire({ icon: 'warning', title: 'Missing Field', text: 'Please enter a valid pincode to auto-fill City.' });
+            }
+            if (!data.state || !data.state.trim()) {
+                return Swal.fire({ icon: 'warning', title: 'Missing Field', text: 'Please select a State.' });
+            }
+            if (!data.landMark.trim()) {
+                return Swal.fire({ icon: 'warning', title: 'Missing Field', text: 'Landmark / Area is required.' });
+            }
+            if (!data.address || !data.address.trim()) {
+                return Swal.fire({ icon: 'warning', title: 'Missing Field', text: 'Detailed Address is required.' });
+            }
+
+            try {
+                const response = await fetch('/editAddress', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Updated!',
+                        text: 'Address updated successfully',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => window.location.href = '/address');
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.message || 'Update failed' });
+                }
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Oops', text: 'Something went wrong. Please try again.' });
+            }
+        };
+    </script>

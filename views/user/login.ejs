@@ -7,7 +7,6 @@
     <title>COLINGUEST Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
-    <!-- Font Awesome for eye icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/login.css">
 </head>
@@ -15,43 +14,44 @@
 <body class="login-page">
     <div class="login-container">
         <div class="login-card">
-            <!-- Logo -->
+
             <div class="logo-container">
                 <img src="/images/colinguest.png" alt="COLINGUEST Logo" class="logo">
             </div>
 
-            <!-- Welcome Text -->
             <div class="welcome-section">
                 <h1 class="welcome-text">Welcome Back!</h1>
                 <p class="welcome-subtext">Login to your account</p>
             </div>
 
-            <!-- Login Form -->
-            <form action="/login" method="POST" class="login-form">
-                <div class="form-group">
-                    <input type="email" id="email" name="email" class="form-input" placeholder="Email" required>
+            <form action="/login" method="POST" class="login-form" id="loginForm">
+
+                <div class="form-group input-group">
+                    <input type="email" id="email" name="email" class="form-input" required />
+                    <label for="email">Email</label>
+                    <div id="emailError" class="error-message" style="display:none;"></div>
                 </div>
 
-                <div class="form-group">
-                    <input type="password" id="password" name="password" class="form-input" placeholder="Password"
-                        required>
+                <div class="form-group input-group">
+                    <input type="password" id="password" name="password" class="form-input" required />
+                    <label for="password">Password</label>
                     <span class="toggle-password" onclick="togglePassword()">
                         <i class="far fa-eye-slash" id="toggleIcon"></i>
                     </span>
+                    <div id="passwordError" class="error-message" style="display:none;"></div>
                 </div>
 
                 <div class="form-actions">
                     <a href="/forgotPassword" class="forgot-password">Forgot Password?</a>
                     <button type="submit" class="login-button">Login</button>
                 </div>
+
             </form>
 
-            <!-- Divider -->
             <div class="divider">
                 <span>or</span>
             </div>
 
-            <!-- Google Sign In -->
             <div class="google-signin">
                 <a href="/auth/google" class="google-button">
                     <img src="/images/google.png" alt="Google">
@@ -59,55 +59,102 @@
                 </a>
             </div>
 
-            <!-- Sign Up Link -->
             <div class="signup-link">
                 Don't have an account? <a href="/signup">Sign Up</a>
             </div>
 
-            <!-- Error Message -->
             <% if (message) { %>
-                <div class="error-message">
+                <div id="flash-message" class="error-message">
                     <%= message %>
                 </div>
                 <% } %>
+
         </div>
     </div>
 
     <script>
-        // Password toggle function
+
         function togglePassword() {
             const passwordInput = document.getElementById('password');
             const toggleIcon = document.getElementById('toggleIcon');
-
             if (passwordInput.type === 'password') {
-                // Show password
                 passwordInput.type = 'text';
                 toggleIcon.classList.remove('fa-eye-slash');
                 toggleIcon.classList.add('fa-eye');
             } else {
-                // Hide password
                 passwordInput.type = 'password';
                 toggleIcon.classList.remove('fa-eye');
                 toggleIcon.classList.add('fa-eye-slash');
             }
         }
 
-        // Handle error message auto-dismissal
-        document.addEventListener('DOMContentLoaded', function () {
-            // Try to find error message by class first, then by ID
-            let errorMessage = document.querySelector('.error-message') ||
-                document.getElementById('error-message');
-
-            if (errorMessage) {
-                // Auto-hide after 3 seconds
+        const flashMessage = document.getElementById('flash-message');
+        if (flashMessage) {
+            setTimeout(() => {
+                flashMessage.style.opacity = '0';
                 setTimeout(() => {
-                    errorMessage.style.opacity = '0';
-                    setTimeout(() => {
-                        errorMessage.style.display = 'none';
-                    }, 300);
-                }, 3000);
+                    flashMessage.style.display = 'none';
+                }, 300);
+            }, 3000);
+        }
+
+        const emailid = document.getElementById('email');
+        const passwordid = document.getElementById('password');
+        const emailError = document.getElementById('emailError');
+        const passwordError = document.getElementById('passwordError');
+        const loginForm = document.getElementById('loginForm');
+
+        let formSubmitted = false;
+
+        function emailValidateChecking() {
+            const emailval = emailid.value.trim();
+            const emailpattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailval) {
+                emailError.style.display = "block";
+                emailError.innerHTML = "Enter email";
+            } else if (!emailpattern.test(emailval)) {
+                emailError.style.display = "block";
+                emailError.innerHTML = "Invalid email format";
+            } else {
+                emailError.style.display = "none";
+                emailError.innerHTML = "";
             }
+        }
+
+        function passwordValidateChecking() {
+            const passval = passwordid.value.trim();
+            if (!passval) {
+                passwordError.style.display = "block";
+                passwordError.innerHTML = "Enter password";
+            } else if (passval.length < 8) {
+                passwordError.style.display = "block";
+                passwordError.innerHTML = "Min 8 characters";
+            } else {
+                passwordError.style.display = "none";
+                passwordError.innerHTML = "";
+            }
+        }
+
+        emailid.addEventListener('input', () => { if (formSubmitted) emailValidateChecking(); });
+        passwordid.addEventListener('input', () => { if (formSubmitted) passwordValidateChecking(); });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            loginForm.addEventListener("submit", function (e) {
+                formSubmitted = true;
+
+                emailValidateChecking();
+                passwordValidateChecking();
+
+                const hasError =
+                    emailError.innerHTML ||
+                    passwordError.innerHTML;
+
+                if (hasError) {
+                    e.preventDefault();
+                }
+            });
         });
+
     </script>
 </body>
 

@@ -7,10 +7,8 @@
     <title>Signup - COLINGUEST</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet" />
-    <!-- Font Awesome for eye icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="/css/auth.css" />
-
 </head>
 
 <body>
@@ -31,40 +29,46 @@
                             </p>
                             <% } %>
                                 <% } %>
-
-
             </div>
+
             <div class="form-body">
                 <form id="signform" method="POST" action="/signup">
-                    <label for="fullName">Full Name</label>
-                    <input type="text" id="fullName" name="fullName" placeholder=" enter fullName" />
+
+                    <div class="input-group">
+                        <input type="text" id="fullName" name="fullName" required />
+                        <label for="fullName">Full Name</label>
+                    </div>
                     <div id="error1" class="error-message"></div>
-                    
-                    <label for="phone">Phone</label>
-                    <input type="tel" id="phone" name="phone" placeholder=" enter phoneNumber" />
+
+                    <div class="input-group">
+                        <input type="tel" id="phone" name="phone" required />
+                        <label for="phone">Phone</label>
+                    </div>
                     <div id="error3" class="error-message"></div>
-                    
-                    <label for="email">Email</label>
-                    <input type="text" id="email" name="email" placeholder=" enter Email" />
+
+                    <div class="input-group">
+                        <input type="text" id="email" name="email" required />
+                        <label for="email">Email</label>
+                    </div>
                     <div id="error2" class="error-message"></div>
 
-                    <label for="password">Password</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="password" name="password" placeholder="enter password" />
+                    <div class="input-group password-wrapper">
+                        <input type="password" id="password" name="password" required />
+                        <label for="password">Password</label>
                         <i class="far fa-eye-slash toggle-password" onclick="togglePassword('password', this)"></i>
                     </div>
                     <div id="error4" class="error-message"></div>
-                    
-                    <label for="confirmPassword">Confirm Password</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="confirmPassword" name="confirmPassword"
-                            placeholder="confirmPassword" />
+
+                    <div class="input-group password-wrapper">
+                        <input type="password" id="confirmPassword" name="confirmPassword" required />
+                        <label for="confirmPassword">Confirm Password</label>
                         <i class="far fa-eye-slash toggle-password"
                             onclick="togglePassword('confirmPassword', this)"></i>
                     </div>
                     <div id="error5" class="error-message"></div>
-                    
+
                     <button type="submit" class="signup">Sign Up</button>
+
                     <a href="/auth/google" class="google-btn">
                         <img src="/images/google.png" alt="Google Icon">
                         <span>Sign up with Google</span>
@@ -72,23 +76,15 @@
 
                 </form>
 
-
-                <a href="/login" class="login-link">
-                    Already have an account? Login here
-                </a>
-
-
-
+                <a href="/login" class="login-link">Already have an account? Login here</a>
             </div>
-
         </div>
     </div>
-    
+
     <script>
-        // Password Toggle Function
+
         function togglePassword(inputId, icon) {
             const input = document.getElementById(inputId);
-            
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.classList.remove('fa-eye-slash');
@@ -100,136 +96,152 @@
             }
         }
 
-        // Flash Message
-        const flashMessage = document.getElementById('flash-message')
+        const flashMessage = document.getElementById('flash-message');
         if (flashMessage) {
             setTimeout(() => {
-                flashMessage.style.display = "none"
+                flashMessage.style.display = "none";
             }, 3000);
         }
 
-        // Form Validation
-        const nameid = document.getElementById('fullName')
-        const emailid = document.getElementById('email')
-        const phoneid = document.getElementById('phone')
-        const passwordid = document.getElementById('password')
-        const confirmpassid = document.getElementById('confirmPassword')
-        const error1 = document.getElementById('error1')
-        const error2 = document.getElementById('error2')
-        const error3 = document.getElementById('error3')
-        const error4 = document.getElementById('error4')
-        const error5 = document.getElementById('error5')
-        const signform = document.getElementById('signform')
+        const nameid = document.getElementById('fullName');
+        const emailid = document.getElementById('email');
+        const phoneid = document.getElementById('phone');
+        const passwordid = document.getElementById('password');
+        const confirmpassid = document.getElementById('confirmPassword');
+        const error1 = document.getElementById('error1');
+        const error2 = document.getElementById('error2');
+        const error3 = document.getElementById('error3');
+        const error4 = document.getElementById('error4');
+        const error5 = document.getElementById('error5');
+        const signform = document.getElementById('signform');
 
+        let formSubmitted = false;
 
-        function nameValidateChecking(e) {
-            const nameval = nameid.value;
+        function nameValidateChecking() {
+            const nameval = nameid.value.trim();
             const namepattern = /^[A-Za-z\s]+$/;
-            if (nameval.trim() === "") {
-                error1.style.display = 'block'
-                error1.innerHTML = "please enter a valid name"
+            const repeatedPattern = /^(.)\1+$/;
+            let message = "";
+            if (!nameval) {
+                message = "Enter name";
+            } else if (nameval.length < 3) {
+                message = "Min 3 characters";
             } else if (!namepattern.test(nameval)) {
-                error1.style.display = "block"
-                error1.innerHTML = 'Name can only contain alphabets and spaces'
-
-            } else {
-                error1.style.display = "none"
-                error1.innerHTML = ""
+                message = "Only letters allowed";
+            } else if (repeatedPattern.test(nameval.replace(/\s/g, ""))) {
+                message = "Invalid name";
             }
-
-
+            if (message) {
+                error1.style.display = "block";
+                error1.innerHTML = message;
+            } else {
+                error1.style.display = "none";
+                error1.innerHTML = "";
+            }
         }
-        function emailValidateChecking(e) {
+
+        function emailValidateChecking() {
             const emailval = emailid.value;
-            const emailpattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-            if (!emailpattern.test(emailval)) {
-                error2.style.display = "block"
-                error2.innerHTML = "Invalid Format"
+            const emailpattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailval) {
+                error2.style.display = "block";
+                error2.innerHTML = "Enter email";
+            } else if (!emailpattern.test(emailval)) {
+                error2.style.display = "block";
+                error2.innerHTML = "Invalid format";
             } else {
-                error2.style.display = 'none'
-                error2.innerHTML = ""
+                error2.style.display = "none";
+                error2.innerHTML = "";
             }
+        }
 
-        }
-        function phoneValidateChecking(e) {
-            const phoneval = phoneid.value;
-            const phonepattern = /^\d{10}$/
-            if (!phonepattern.test(phoneval)) {
-                error3.style.display = 'block'
-                error3.innerHTML = "Enter Valid phone number"
-            } else if (phoneval.length > 10 || phoneval.length < 10) {
-                error3.style.display = "block"
-                error3.innerHTML = "Enter 10 digit"
+        function phoneValidateChecking() {
+            const phoneval = phoneid.value.trim();
+            const phonepattern = /^(?!([0-9])\1{9})[6-9]\d{9}$/;
+            if (!phoneval) {
+                error3.style.display = "block";
+                error3.innerHTML = "Enter phone number";
+            } else if (!phonepattern.test(phoneval)) {
+                error3.style.display = "block";
+                error3.innerHTML = "Enter valid 10-digit number";
             } else {
-                error3.style.display = "none"
-                error3.innerHTML = ""
+                error3.style.display = "none";
+                error3.innerHTML = "";
             }
         }
-        function passValidateChecking(e) {
-            const passval = passwordid.value;
-            const cpassval = confirmpassid.value;
-            const alpha = /[a-zA-Z]/;
-            const digit = /\d/;
-            if (passval.length < 8) {
-                error4.style.display = "block"
-                error4.innerHTML = "should contain atleast 8 characters"
-            } else if (!alpha.test(passval) || !digit.test(passval)) {
-                error4.style.display = "block"
-                error4.innerHTML = "Should contain numbers and alphabets"
-            } else {
-                error4.style.display = "none"
-                error4.innerHTML = ""
+
+        function passValidateChecking() {
+            const passval = passwordid.value.trim();
+            const cpassval = confirmpassid.value.trim();
+            let message = "";
+            if (!passval) {
+                message = "Enter password";
+            } else if (passval.length < 8) {
+                message = "Min 8 characters";
+            } else if (!/[A-Z]/.test(passval)) {
+                message = "1 uppercase required";
+            } else if (!/[a-z]/.test(passval)) {
+                message = "1 lowercase required";
+            } else if (!/\d/.test(passval)) {
+                message = "1 number required";
+            } else if (!/[^A-Za-z\d]/.test(passval)) {
+                message = "1 special character required";
+            } else if (/\s/.test(passval)) {
+                message = "No spaces allowed";
             }
-            if (passval !== cpassval) {
-                error5.style.display = "block"
-                error5.innerHTML = "passwords do not match"
+            if (message) {
+                error4.style.display = "block";
+                error4.innerHTML = message;
             } else {
-                error5.style.display = "none"
-                error5.innerHTML = ""
+                error4.style.display = "none";
+                error4.innerHTML = "";
+            }
+            if (cpassval) {
+                confirmValidateChecking();
             }
         }
+
+        function confirmValidateChecking() {
+            const passval = passwordid.value.trim();
+            const cpassval = confirmpassid.value.trim();
+            if (!cpassval) {
+                error5.style.display = "none";
+                error5.innerHTML = "";
+            } else if (passval !== cpassval) {
+                error5.style.display = "block";
+                error5.innerHTML = "Passwords do not match";
+            } else {
+                error5.style.display = "none";
+                error5.innerHTML = "";
+            }
+        }
+
+        nameid.addEventListener('input', () => { if (formSubmitted) nameValidateChecking(); });
+        emailid.addEventListener('input', () => { if (formSubmitted) emailValidateChecking(); });
+        phoneid.addEventListener('input', () => { if (formSubmitted) phoneValidateChecking(); });
+        passwordid.addEventListener('input', () => { if (formSubmitted) passValidateChecking(); });
+        confirmpassid.addEventListener('input', () => { if (formSubmitted) confirmValidateChecking(); });
 
         document.addEventListener("DOMContentLoaded", function () {
-
             signform.addEventListener("submit", function (e) {
-                nameValidateChecking()
-                emailValidateChecking()
-                phoneValidateChecking()
-                passValidateChecking()
-
-                if (
-                    !nameid ||
-                    !phoneid ||
-                    !emailid ||
-                    !passwordid ||
-                    !error1 ||
-                    !error2 ||
-                    !error3 ||
-                    !error4 ||
-                    !error5 ||
-                    !signform
-                ) {
-                    console.error('one or more elements not found')
+                formSubmitted = true;
+                nameValidateChecking();
+                emailValidateChecking();
+                phoneValidateChecking();
+                passValidateChecking();
+                confirmValidateChecking();
+                const hasError =
+                    error1.innerHTML || error2.innerHTML ||
+                    error3.innerHTML || error4.innerHTML || error5.innerHTML;
+                if (hasError) {
+                    e.preventDefault();
                 }
-                if (
-                    error1.innerHTML ||
-                    error2.innerHTML ||
-                    error3.innerHTML ||
-                    error4.innerHTML ||
-                    error5.innerHTML
-                ) {
-                    e.preventDefault()
-                }
+            });
+        });
 
-            })
-
-        })
-
-        // OAuth Error Handling
         document.addEventListener('DOMContentLoaded', function () {
             const urlParams = new URLSearchParams(window.location.search);
             const error = urlParams.get('error');
-
             const errorMessages = {
                 'oauth_failed': 'Google sign-in failed. Please try again.',
                 'login_failed': 'Login failed after authentication. Please try again.',
@@ -237,20 +249,18 @@
                 'session_failed': 'Session creation failed. Please try again.',
                 'server_error': 'Server error occurred. Please try again later.'
             };
-
             if (error && errorMessages[error]) {
-                const flashMessage = document.getElementById('flash-message');
-                if (flashMessage) {
-                    flashMessage.style.color = 'red';
-                    flashMessage.textContent = errorMessages[error];
-                    flashMessage.style.display = 'block';
-
-                    setTimeout(() => {
-                        flashMessage.style.display = 'none';
-                    }, 5000);
+                const flashMsg = document.getElementById('flash-message');
+                if (flashMsg) {
+                    flashMsg.style.color = 'red';
+                    flashMsg.textContent = errorMessages[error];
+                    flashMsg.style.display = 'block';
+                    setTimeout(() => { flashMsg.style.display = 'none'; }, 5000);
                 }
-
-                const cleanUrl = window.location.pathname + window.location.search.replace(/[?&]error=[^&]+/, '').replace(/^&/, '?');
+                const cleanUrl = window.location.pathname +
+                    window.location.search
+                        .replace(/[?&]error=[^&]+/, '')
+                        .replace(/^&/, '?');
                 window.history.replaceState({}, document.title, cleanUrl || window.location.pathname);
             }
         });

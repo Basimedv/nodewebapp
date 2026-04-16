@@ -1,4 +1,3 @@
-/* Reset and base styles */
 * {
     margin: 0;
     padding: 0;
@@ -17,41 +16,6 @@ body {
     align-items: center;
     padding: 20px;
 }
-.error-message {
-    color: #d32f2f;
-    background-color: #fde7e9;
-    padding: 12px;
-    border-radius: 8px;
-    margin-top: 16px;
-    font-size: 14px;
-    text-align: center;
-    font-weight: 500;
-}
-
-
-
-
-
-.wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 60px;
-}
-
-.input {
-    width: 300px;
-    /* increase width */
-    height: 15px;
-    /* increase height */
-    font-size: 16px;
-    /* make text inside bigger */
-    padding: 10px;
-    /* add spacing inside */
-    border-radius: 8px;
-    /* optional: rounded corners */
-}
-
 
 .login-container {
     background: rgba(64, 63, 63, 0.6);
@@ -62,29 +26,6 @@ body {
     padding: 40px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.loginLeft {
-    display: none;
-    /* hides the left image */
-}
-
-
-
-.loginLeft,
-.loginRight {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#loginImage {
-    width: 250px;
-    /* smaller image */
-    height: auto;
-    display: block;
-    margin: 0 auto;
 }
 
 .logo-container {
@@ -117,59 +58,74 @@ body {
 .welcome-subtext {
     font-size: 1.1rem;
     color: rgba(255, 255, 255, 0.85);
-    margin: 0;
+    margin: 0 auto;
     font-weight: 400;
     line-height: 1.5;
     max-width: 300px;
-    margin: 0 auto;
 }
 
-.rightBody {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* center horizontally */
-    justify-content: center;
-    /* center vertically */
-    width: 100%;
-    /* take full right column */
-    gap: 15px;
-    /* space between elements */
-}
-
-
+/* ── Login Form ── */
 .login-form {
     width: 100%;
     margin-bottom: 24px;
 }
 
 .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     position: relative;
+}
+
+/* ── Floating Label ── */
+.input-group {
+    position: relative;
+}
+
+.input-group label {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.65);
+    pointer-events: none;
+    transition: top 0.2s ease, font-size 0.2s ease,
+                background 0.2s ease, color 0.2s ease;
+    background: transparent;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+/* When there's an error message below, keep label position correct */
+.input-group input:focus ~ label,
+.input-group input:valid ~ label {
+    top: 0;
+    font-size: 13px;
+    background: rgba(55, 54, 54, 0.95);
+    color: #d6d6d6;
 }
 
 .form-input {
     width: 100%;
-    padding: 14px 16px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 18px 16px 8px;
+    border: 1.2px solid rgb(220, 223, 223);
     border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.3s;
-    background-color: rgba(255, 255, 255, 0.1);
+    font-size: 15px;
+    transition: border-color 0.3s;
+    background-color: rgba(255, 255, 255, 0.08);
     color: white;
-}
-
-.form-input::placeholder {
-    color: rgba(255, 255, 255, 0.7);
 }
 
 .form-input:focus {
     outline: none;
-    border-color: #1a73e8;
-    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+    border-color: #d2d2d2;
 }
 
-/* Password Toggle Icon Styles */
+/* Hide native placeholder since label replaces it */
+.form-input::placeholder {
+    color: transparent;
+}
+
+/* ── Password Toggle ── */
 .toggle-password {
     position: absolute;
     right: 16px;
@@ -182,19 +138,74 @@ body {
 }
 
 .toggle-password:hover {
-    color: rgba(255, 255, 255, 1);
+    color: white;
 }
 
 .toggle-password i {
     font-size: 18px;
 }
 
+/* ── Error Messages ── */
+.error-message {
+    color: #d32f2f;
+    background-color: #fde7e9;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    font-size: 13px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.error-message:empty {
+    display: none !important;
+}
+
+/* ── Form Actions ── */
+.form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.forgot-password {
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-size: 13px;
+    text-align: right;
+    display: block;
+    transition: color 0.2s;
+}
+
+.forgot-password:hover {
+    color: white;
+}
+
+.login-button {
+    width: 100%;
+    padding: 13px;
+    background-color: #3e1105;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background-color: #5a1a07;
+}
+
+/* ── Divider ── */
 .divider {
     position: relative;
-    margin: 32px 0;
+    margin: 28px 0;
     text-align: center;
     color: white;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
 }
 
@@ -213,155 +224,13 @@ body {
     position: relative;
     display: inline-block;
     padding: 0 16px;
-   
+    background: rgba(64, 63, 63, 0.6);
     z-index: 2;
     text-transform: uppercase;
     letter-spacing: 1px;
-    font-size: 12px;
 }
 
-span {
-    white-space: nowrap;
-    /* keep all text on one line */
-}
-
-
-.rightHeader h1 {
-    font-size: 28px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    margin-top: 10px;
-    text-align: center;
-    color: white;
-    white-space: nowrap;
-}
-
-.rightBody {
-    width: 300px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-
-.rightBody label {
-    font-size: 14px;
-    color: white;
-    margin-bottom: 5px;
-}
-
-.rightBody input {
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.form-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    margin-top: 16px;
-}
-
-.forgot-password {
-    color: white;
-    text-decoration: none;
-    font-size: 14px;
-    text-align: right;
-    margin: 8px 0 0 0;
-    width: 100%;
-    display: block;
-}
-
-.login-button {
-    width: 100%;
-    padding: 14px;
-    background-color: #421604;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.forgot-password {
-    color: #411305;
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.login-button {
-    background-color: #3e1105;
-    color: white;
-    border: white;
-    border-radius: 8px;
-    padding: 12px 24px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.login-button:hover {
-    background-color: #4f1504;
-}
-
-.rightBody button:hover {
-    background-color: #751f1f;
-}
-
-.form-links {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.forgotLink {
-    display: inline-block;
-    color: #992828;
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.signup-link {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 14px;
-    margin-top: 16px;
-    text-align: center;
-}
-
-.signup-link a {
-    color: #4b1405;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-
-.forgotLink:hover,
-.signupLink:hover {
-    text-decoration: underline;
-}
-
-.rightBody>p {
-    width: 90%;
-    text-align: center;
-    color: rgb(228, 9, 9);
-    margin: 15px 0;
-    font-size: 14px;
-}
-
-.googleLoginButton {
-    width: 90%;
-    margin: 0 auto;
-}
-
-
+/* ── Google Sign-in ── */
 .google-signin {
     margin-bottom: 24px;
 }
@@ -372,10 +241,10 @@ span {
     justify-content: center;
     width: 100%;
     padding: 12px;
-    border: 1px solid #ddd;
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 20px;
     background: transparent;
-    color: #444;
+    color: white;
     font-size: 14px;
     font-weight: 500;
     text-decoration: none;
@@ -383,7 +252,7 @@ span {
 }
 
 .google-button:hover {
-    background-color: #f8f9fa;
+    background-color: rgba(255, 255, 255, 0.08);
 }
 
 .google-button img {
@@ -392,18 +261,24 @@ span {
     margin-right: 12px;
 }
 
+/* ── Signup Link ── */
+.signup-link {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    margin-top: 16px;
+    text-align: center;
+}
+
+.signup-link a {
+    color: #f5a97f;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.signup-link a:hover {
+    text-decoration: underline;
+}
+
 a {
     text-decoration: none;
-    /* removes underline */
-}
-
-
-
-.googleLoginButton button:hover {
-    background-color: rgba(128, 128, 128, 0.1);
-}
-
-.googleLoginButton img {
-    height: 24px;
-    width: 24px;
 }

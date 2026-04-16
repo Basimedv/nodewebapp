@@ -1,16 +1,16 @@
 const User = require('../models/userSchema');
 
-// Utility to prevent browser caching (Back Button Fix)
+
 const setNoCache = (res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
 };
 
-// 1. User Authentication (Checks session AND if user is blocked)
+// User Authentication Checks session AND if user is blocked
 const userAuth = async (req, res, next) => {
     setNoCache(res);
-    
+
     if (req.session.user) {
         try {
             const user = await User.findById(req.session.user._id);
@@ -36,7 +36,7 @@ const adminAuth = (req, res, next) => {
 };
 
 const isGuest = (req, res, next) => {
-    // If we are on a USER guest page (like /login), only check for USER session
+
     if (req.path.includes('admin')) {
         if (req.session.admin) return res.redirect('/admin/dashboard');
     } else {
