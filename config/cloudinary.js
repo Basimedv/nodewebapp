@@ -17,10 +17,20 @@ const profileStorage = new CloudinaryStorage({
         transformation: [{ width: 400, height: 400, crop: 'fill' }] 
     },
 });
+// 2. Product Storage (Larger scale for shop items)
+const productStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'shop_products',
+        allowed_formats: ['jpg', 'png', 'jpeg'],
+        transformation: [{ width: 800, height: 800, crop: 'limit' }]
+    },
+});
 
 
+const uploadProduct = multer({ storage: productStorage });
 
 const uploadProfile = multer({ storage: profileStorage });
 
 
-module.exports = { cloudinary, uploadProfile};
+module.exports = { cloudinary, uploadProfile,uploadProduct};

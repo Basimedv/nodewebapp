@@ -42,7 +42,11 @@ router.post(ROUTES.USER.EDIT_ADDRESS, userAuth, addresscontroller.postEditAddres
 router.delete(ROUTES.USER.DELETE_ADDRESS, userAuth, addresscontroller.deleteAddress);
 
 
-
+// Product routes
+router.get(ROUTES.USER.PRODUCT_LISTING, usercontroller.loadShopping);
+router.get(ROUTES.USER.SHOP,            usercontroller.loadShopping);
+router.get(ROUTES.USER.PRODUCT_DETAILS, usercontroller.getProductDetails);
+router.get(ROUTES.USER.PRODUCT_API,     usercontroller.getProductsApi);
 
 // Forgot Password Flow
 router.get(ROUTES.USER.FORGOT_PASSWORD, profileController.getForgotPage);
