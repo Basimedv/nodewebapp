@@ -2,7 +2,8 @@ const { ROUTES } = require('../../constants/routes');
 const User = require('../../models/userSchema');
 
 const customerinfo = async (req, res) => {
-    try {
+
+try {
         let { query = "", isBlocked, page = 1} = req.query;
 
         page = Math.max(parseInt(page) || 1, 1);
@@ -25,6 +26,8 @@ const customerinfo = async (req, res) => {
                 { email: { $regex: query, $options: "i" } }
             ];
         }
+    
+        
        
 
         const [customers, count] = await Promise.all([

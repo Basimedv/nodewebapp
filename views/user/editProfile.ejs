@@ -315,8 +315,9 @@
                     reader.readAsDataURL(file);
                 }
             });
+       
 
-
+ nameid.addEventListener('input', () => { if (formSubmitted) nameValidateChecking(); });
             document.getElementById('deleteImageBtn')?.addEventListener('click', function () {
                 Swal.fire({
                     title: 'Remove photo?',
