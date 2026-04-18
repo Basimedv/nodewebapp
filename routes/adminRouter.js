@@ -15,17 +15,17 @@ router.get(ROUTES.ADMIN.DASHBOARD, adminAuth, admincontroller.loadDashboard);
 router.get(ROUTES.ADMIN.CUSTOMERS, adminAuth, customercontroller.customerinfo);
 router.put(ROUTES.ADMIN.CUSTOMERS_BLOCK, adminAuth, customercontroller.userBlock);
 // Product Management
-router.get('/products/add',      adminAuth, productcontroller.getAddProductPage);
-router.get('/products',          adminAuth, productcontroller.getProducts);
-router.get('/products/edit/:id', adminAuth, productcontroller.getEditProductPage);
-router.get('/products/api/:id',  adminAuth, productcontroller.getProductById);
+router.get(ROUTES.ADMIN.PRODUCTS_ADD,        adminAuth, productcontroller.getAddProductPage);
+router.get(ROUTES.ADMIN.PRODUCTS,            adminAuth, productcontroller.getProducts);
+router.get(ROUTES.ADMIN.PRODUCTS_EDIT,       adminAuth, productcontroller.getEditProductPage);
+router.get(ROUTES.ADMIN.PRODUCTS_API,        adminAuth, productcontroller.getProductById);
 
-router.post('/products',         adminAuth, uploadProduct.array('images', 3), productcontroller.createProduct);
-router.put('/products/:id',      adminAuth, uploadProduct.array('images', 3), productcontroller.updateProduct);
-router.put('/products/:id/block',  adminAuth, productcontroller.toggleBlock);
-router.put('/products/:id/list',   adminAuth, productcontroller.toggleList);
-router.patch('/products/:id/status', adminAuth, productcontroller.toggleProductStatus);
-router.delete('/products/:id',   adminAuth, productcontroller.deleteProduct);
+router.post(ROUTES.ADMIN.PRODUCTS,           adminAuth, uploadProduct.array('images', 3), productcontroller.createProduct);
+router.put(ROUTES.ADMIN.PRODUCTS_UPDATE,     adminAuth, uploadProduct.array('images', 3), productcontroller.updateProduct);
+router.put(ROUTES.ADMIN.PRODUCTS_BLOCK,      adminAuth, productcontroller.toggleBlock);
+router.put(ROUTES.ADMIN.PRODUCTS_LIST,       adminAuth, productcontroller.toggleList);
+router.patch(ROUTES.ADMIN.PRODUCTS_STATUS,   adminAuth, productcontroller.toggleProductStatus);
+router.delete(ROUTES.ADMIN.PRODUCTS_DELETE,  adminAuth, productcontroller.deleteProduct);
 
 router.get(ROUTES.ADMIN.PAGE_ERROR, admincontroller.pageerror);
 

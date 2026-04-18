@@ -42,8 +42,7 @@ const ROUTES = {
         PRODUCT_API: "/api/products",
     },
 
-
-  ADMIN: {
+ADMIN: {
     LOGIN: "/admin/adminLogin",
     DASHBOARD: "/admin/dashboard",
     CUSTOMERS: "/admin/customers",

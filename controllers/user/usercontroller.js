@@ -1,6 +1,7 @@
 // controllers/user/userController.js
 const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema");
+const Category = require('../../models/categorySchema');
 const { generateOtp, securePassword, sendVerificationEmail } = require("../../utils/authHelper");
 const bcrypt = require('bcrypt');
 const HTTP_STATUS_CODES = require("../../constants/status_codes");
@@ -257,7 +258,7 @@ const loadShopping = async (req, res) => {
     const totalPages = Math.ceil(total / limit);
     const user = req.session?.user || null;
 
-    res.render('user/shop', {
+   res.render('user/productListing', {
       products: items,
       category: categoriesList,
       currentPage: page,
@@ -333,8 +334,6 @@ const getProductDetails = async (req, res) => {
     return res.status(500).render('user/page-404');
   }
 };
-
-// API for related products (used in productDetails page)
 const getProductsApi = async (req, res) => {
   try {
     const { category, limit = 4, exclude } = req.query;
@@ -359,7 +358,6 @@ const getProductsApi = async (req, res) => {
   }
 };
 
-
 const logout = (req, res) => {
   delete req.session.user;
   req.session.save(() => res.redirect(ROUTES.USER.HOME));
@@ -378,5 +376,5 @@ module.exports = {
   logout,
    loadShopping,
   getProductDetails,
-  getProductsApi,  // add this
+  getProductsApi,   // ← make sure this is here
 };
