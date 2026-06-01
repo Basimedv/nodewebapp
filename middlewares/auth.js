@@ -7,7 +7,7 @@ const setNoCache = (res) => {
     res.set('Expires', '0');
 };
 
-// User Authentication Checks session AND if user is blocked
+
 const userAuth = async (req, res, next) => {
     setNoCache(res);
 
@@ -17,13 +17,20 @@ const userAuth = async (req, res, next) => {
             if (user && !user.isBlocked) {
                 return next();
             }
-            // If blocked or not found, clear session and redirect
-            req.session.user = null;
+            
+            // ✅ return here so no second response is sent
+            return req.session.destroy((err) => {
+                if (err) console.error("Session destroy error", err);
+                res.redirect('/pageNotFound');
+            });
+
         } catch (error) {
             console.error("Auth Middleware Error", error);
+            return res.redirect('/pageNotFound'); // ✅ return here too
         }
     }
-    res.redirect('/login');
+
+    return res.redirect('/pageNotFound'); // ✅ return here
 };
 
 // 2. Admin Authentication
@@ -35,14 +42,43 @@ const adminAuth = (req, res, next) => {
     res.redirect('/admin/adminLogin');
 };
 
-const isGuest = (req, res, next) => {
+
+// 3. Guest Middleware — ✅ FIX: Added DB check for user isBlocked
+const isGuest = async (req, res, next) => {
+       setNoCache(res);  // ✅ This prevents browser from caching login page
 
     if (req.path.includes('admin')) {
-        if (req.session.admin) return res.redirect('/admin/dashboard');
+        if (req.session.admin) {
+            return res.redirect('/admin/dashboard');
+        }
     } else {
-        if (req.session.user) return res.redirect('/landingPage');
+        if (req.session.user) {
+            try {
+                // ✅ FIX: Verify user exists and is not blocked
+                const user = await User.findById(req.session.user._id);
+
+                if (user && !user.isBlocked) {
+                         return res.redirect('/landingPage');
+                }
+
+                
+                req.session.destroy((err) => {
+                    if (err) console.error("Session destroy error", err);
+                });
+
+            } catch (error) {
+                console.error("isGuest Middleware Error", error);
+            }
+        }
     }
+
     next();
 };
+const logoutUser = (req, res) => {
+    req.session.destroy((err) => {
+        if (err) console.error("Logout Error", err);
+        res.redirect('/pageNotFound'); // ✅ only logout moves user to home
+    });
+};
 
-module.exports = { userAuth, adminAuth, isGuest };
+module.exports = { userAuth, adminAuth, isGuest,logoutUser };

@@ -9,15 +9,15 @@ const userRouter = require('./routes/userRouter');
 const adminRouter = require('./routes/adminRouter');
 const { ROUTES } = require('./constants/routes');
 const googleRoutes = require('./routes/googleRoute');
+const { default: MongoStore } = require('connect-mongo');
 
 dotenv.config();
 
 
 db();
 
+
 const app = express();
-
-
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
@@ -32,6 +32,10 @@ app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({ 
+    mongoUrl: process.env.MONGODB_URI,
+    ttl: 14 * 24 * 60 * 60 
+  }),
     cookie: {
         secure: false,
         httpOnly: true,
@@ -60,7 +64,7 @@ app.use('/', userRouter);
 
 
 app.use((req, res) => {
-    // If the URL starts with /admin, redirect to the admin error page
+   
     if (req.originalUrl.startsWith('/admin')) {
         return res.redirect(ROUTES.ADMIN.PAGE_ERROR);
     }

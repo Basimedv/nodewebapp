@@ -241,4 +241,13 @@
             }
         }
     });
+
+    // Push multiple states to make back button harder to escape
+    history.pushState(null, '', '/landingPage');
+    history.pushState(null, '', '/landingPage');
+    history.pushState(null, '', '/landingPage');
+
+    window.addEventListener('popstate', function () {
+        history.pushState(null, '', '/landingPage');
+    });
 </script>

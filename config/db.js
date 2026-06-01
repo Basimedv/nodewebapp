@@ -4,20 +4,18 @@ const env = require('dotenv').config();
 const connectdb = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
-      // Connection timeout settings
+    
       serverSelectionTimeoutMS: 10000, // 10 seconds to select a server
       socketTimeoutMS: 45000, // 45 seconds for socket timeout
       connectTimeoutMS: 10000, // 10 seconds for initial connection
       
-      // Connection pool settings
+     
       maxPoolSize: 10,
       minPoolSize: 5,
-      
-      // Retry settings
+     
       retryWrites: true,
       retryReads: true,
-      
-      // Other recommended settings
+
       useNewUrlParser: true,
       useUnifiedTopology: true
     });

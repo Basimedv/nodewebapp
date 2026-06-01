@@ -55,13 +55,8 @@
         }
 
         @keyframes moveBorder {
-            0% {
-                left: -100%;
-            }
-
-            100% {
-                left: 100%;
-            }
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         .edit-form.active::before {
@@ -131,9 +126,7 @@
         }
 
         @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
+            .form-row { grid-template-columns: 1fr; }
         }
 
         .form-group label {
@@ -148,11 +141,35 @@
             padding: 12px 16px;
             border: 1px solid #ddd;
             border-radius: 6px;
+            width: 100%;
         }
 
         .form-control:focus {
             border-color: #198754;
             box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.1);
+            outline: none;
+        }
+
+        /* Validation states */
+        .form-control.is-invalid {
+            border-color: #dc3545;
+            box-shadow: none;
+        }
+
+        .form-control.is-valid {
+            border-color: #198754;
+            box-shadow: none;
+        }
+
+        .field-error {
+            font-size: 12px;
+            color: #dc3545;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .field-error.visible {
+            display: block;
         }
 
         .action-buttons {
@@ -171,6 +188,7 @@
             border-radius: 6px;
             font-weight: 500;
             transition: 0.2s;
+            cursor: pointer;
         }
 
         .btn-update:hover {
@@ -192,194 +210,331 @@
 <body>
     <%- include("../partials/user/header") %>
 
-        <div class="profile-container">
-            <div class="row">
-                <div class="col-md-3">
-                    <%- include('../partials/user/profileSidebar', { activePage: 'profile' , user: user }) %>
-                </div>
-                <div class="col-md-9">
-                    <h1>Update Profile</h1>
+    <div class="profile-container">
+        <div class="row">
+            <div class="col-md-3">
+                <%- include('../partials/user/profileSidebar', { activePage: 'profile', user: user }) %>
+            </div>
+            <div class="col-md-9">
+                <h1>Update Profile</h1>
 
-                    <form id="profileForm" class="edit-form" enctype="multipart/form-data">
-                        <div class="profile-image-section">
-                            <div class="profile-image-wrapper">
-                                <div id="profilePreview">
-                                    <% if (user.profileImage) { %>
-                                        <img src="<%= user.profileImage %>" class="profile-edit-avatar">
-                                        <% } else { %>
-                                            <div class="profile-edit-placeholder">
-                                                <i class="fas fa-user" style="font-size: 60px; color: white;"></i>
-                                            </div>
-                                            <% } %>
-                                </div>
-
-                                <label for="profileImageInput" class="camera-button">
-                                    <i class="fas fa-camera" style="color: white; font-size: 18px;"></i>
-                                </label>
-                                <input type="file" id="profileImageInput" name="profileImage" accept="image/*"
-                                    style="display: none;">
-                            </div>
-
-                            <% if (user.profileImage) { %>
-                                <div class="remove-photo-btn">
-                                    <button type="button" class="btn btn-sm btn-outline-danger mt-2"
-                                        id="deleteImageBtn">
-                                        <i class="fas fa-trash"></i> Remove Photo
-                                    </button>
-                                </div>
+                <form id="profileForm" class="edit-form" enctype="multipart/form-data" novalidate>
+                    <!-- Profile Image Section -->
+                    <div class="profile-image-section">
+                        <div class="profile-image-wrapper">
+                            <div id="profilePreview">
+                                <% if (user.profileImage) { %>
+                                    <img src="<%= user.profileImage %>" class="profile-edit-avatar" alt="Profile">
+                                <% } else { %>
+                                    <div class="profile-edit-placeholder">
+                                        <i class="fas fa-user" style="font-size: 60px; color: white;"></i>
+                                    </div>
                                 <% } %>
+                            </div>
+
+                            <label for="profileImageInput" class="camera-button">
+                                <i class="fas fa-camera" style="color: white; font-size: 18px;"></i>
+                            </label>
+                            <input type="file" id="profileImageInput" name="profileImage" accept="image/*"
+                                style="display: none;">
                         </div>
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>First Name</label>
-                                <input type="text" class="form-control" id="firstName" name="firstName"
-                                    value="<%= user.fullName.split(' ')[0] %>" required>
+                        <% if (user.profileImage) { %>
+                            <div class="remove-photo-btn">
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="deleteImageBtn">
+                                    <i class="fas fa-trash"></i> Remove Photo
+                                </button>
                             </div>
-                            <div class="form-group">
-                                <label>Last Name</label>
-                                <input type="text" class="form-control" id="lastName" name="lastName"
-                                    value="<%= user.fullName.split(' ').slice(1).join(' ') %>" required>
+                        <% } %>
+                    </div>
+
+                    <!-- Name Fields -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name <span style="color:red">*</span></label>
+                            <input type="text" class="form-control" id="firstName" name="firstName"
+                                value="<%= user.fullName.split(' ')[0] %>" autocomplete="given-name">
+                            <div class="field-error" id="firstNameError"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name <span style="color:red">*</span></label>
+                            <input type="text" class="form-control" id="lastName" name="lastName"
+                                value="<%= user.fullName.split(' ').slice(1).join(' ') %>" autocomplete="family-name">
+                            <div class="field-error" id="lastNameError"></div>
+                        </div>
+                    </div>
+
+                    <!-- Email & Phone -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" class="form-control" value="<%= user.email %>" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="tel" class="form-control" id="phone" name="phone"
+                                value="<%= user.phone || '' %>" maxlength="10" autocomplete="tel">
+                            <div class="field-error" id="phoneError"></div>
+                        </div>
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="form-group mb-3">
+                        <label>Gender</label>
+                        <div class="pt-2">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="gender" id="male" value="Male"
+                                    <%= user.gender === 'Male' ? 'checked' : '' %>>
+                                <label class="form-check-label" for="male">Male</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="gender" id="female" value="Female"
+                                    <%= user.gender === 'Female' ? 'checked' : '' %>>
+                                <label class="form-check-label" for="female">Female</label>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Email</label>
-                                <input type="email" class="form-control" value="<%= user.email %>" disabled>
-                            </div>
-                            <div class="form-group">
-                                <label>Phone</label>
-                                <input type="tel" class="form-control" id="phone" name="phone"
-                                    value="<%= user.phone || '' %>">
-                            </div>
-                        </div>
-
-
-
-                        <div class="form-group mb-3">
-                            <label>Gender</label>
-                            <div class="pt-2">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="gender" id="male" value="Male"
-                                        <%=user.gender==='Male' ? 'checked' : '' %>>
-                                    <label class="form-check-label" for="male">Male</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="gender" id="female"
-                                        value="Female" <%=user.gender==='Female' ? 'checked' : '' %>>
-                                    <label class="form-check-label" for="female">Female</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="action-buttons">
-                            <button type="submit" class="btn-update">Update Profile</button>
-                            <a href="/profile" class="btn-cancel">Cancel</a>
-                        </div>
-                    </form>
-                </div>
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button type="submit" class="btn-update">Update Profile</button>
+                        <a href="/profile" class="btn-cancel">Cancel</a>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        <script>
+    <script>
 
-            const form = document.querySelector('.edit-form');
-            form.querySelectorAll('input').forEach(i => {
-                i.addEventListener('focus', () => form.classList.add('active'));
-                i.addEventListener('blur', () => form.classList.remove('active'));
-            });
 
-            document.getElementById('profileImageInput').addEventListener('change', function (e) {
-                const file = e.target.files[0];
-                if (file) {
-                    if (file.size > 5 * 1024 * 1024) {
-                        Swal.fire('Too Large', 'File size must be less than 5MB', 'error');
-                        this.value = '';
-                        return;
-                    }
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        document.getElementById('profilePreview').innerHTML = `<img src="${event.target.result}" class="profile-edit-avatar">`;
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: 'Image ready to upload!',
-                            showConfirmButton: false,
-                            timer: 2500
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
+        
+        function trimVal(id) {
+            return document.getElementById(id).value.trim();
+        }
+
        
+        function showError(fieldId, errorId, message) {
+            const field = document.getElementById(fieldId);
+            const error = document.getElementById(errorId);
+            field.classList.add('is-invalid');
+            field.classList.remove('is-valid');
+            error.textContent = message;
+            error.classList.add('visible');
+        }
 
- nameid.addEventListener('input', () => { if (formSubmitted) nameValidateChecking(); });
-            document.getElementById('deleteImageBtn')?.addEventListener('click', function () {
+      
+        function clearError(fieldId, errorId) {
+            const field = document.getElementById(fieldId);
+            const error = document.getElementById(errorId);
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
+            error.textContent = '';
+            error.classList.remove('visible');
+        }
+
+      
+
+        function validateFirstName() {
+            const val = trimVal('firstName');
+            if (!val) {
+                showError('firstName', 'firstNameError', 'First name is required.');
+                return false;
+            }
+            if (val.length < 2) {
+                showError('firstName', 'firstNameError', 'First name must be at least 2 characters.');
+                return false;
+            }
+            if (val.length > 50) {
+                showError('firstName', 'firstNameError', 'First name cannot exceed 50 characters.');
+                return false;
+            }
+            if (!/^[A-Za-z\s'-]+$/.test(val)) {
+                showError('firstName', 'firstNameError', 'First name can only contain letters, spaces, hyphens, or apostrophes.');
+                return false;
+            }
+            clearError('firstName', 'firstNameError');
+            return true;
+        }
+
+        function validateLastName() {
+            const val = trimVal('lastName');
+            if (!val) {
+                showError('lastName', 'lastNameError', 'Last name is required.');
+                return false;
+            }
+            if (val.length < 1) {
+                showError('lastName', 'lastNameError', 'Last name must be at least 1 character.');
+                return false;
+            }
+            if (val.length > 50) {
+                showError('lastName', 'lastNameError', 'Last name cannot exceed 50 characters.');
+                return false;
+            }
+            if (!/^[A-Za-z\s'-]+$/.test(val)) {
+                showError('lastName', 'lastNameError', 'Last name can only contain letters, spaces, hyphens, or apostrophes.');
+                return false;
+            }
+            clearError('lastName', 'lastNameError');
+            return true;
+        }
+
+        function validatePhone() {
+            const val = trimVal('phone');
+            if (!val) {
+                // Phone is optional — just clear any previous error
+                clearError('phone', 'phoneError');
+                document.getElementById('phone').classList.remove('is-valid', 'is-invalid');
+                return true;
+            }
+            if (!/^\d{10}$/.test(val)) {
+                showError('phone', 'phoneError', 'Please enter a valid 10-digit phone number (digits only).');
+                return false;
+            }
+            clearError('phone', 'phoneError');
+            return true;
+        }
+
+     
+
+        document.getElementById('firstName').addEventListener('input', validateFirstName);
+        document.getElementById('firstName').addEventListener('blur', validateFirstName);
+
+        document.getElementById('lastName').addEventListener('input', validateLastName);
+        document.getElementById('lastName').addEventListener('blur', validateLastName);
+
+        document.getElementById('phone').addEventListener('input', function () {
+
+            this.value = this.value.replace(/\D/g, '');
+            validatePhone();
+        });
+        document.getElementById('phone').addEventListener('blur', validatePhone);
+
+        /* ─────────────────────────────────────────────
+           ANIMATED BORDER ON FOCUS
+        ───────────────────────────────────────────── */
+
+        const form = document.querySelector('.edit-form');
+        form.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', () => form.classList.add('active'));
+            input.addEventListener('blur', () => form.classList.remove('active'));
+        });
+
+ 
+
+        document.getElementById('profileImageInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+            if (!allowedTypes.includes(file.type)) {
+                Swal.fire('Invalid File', 'Only JPG, PNG, WEBP, or GIF images are allowed.', 'error');
+                this.value = '';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire('Too Large', 'Image size must be less than 5MB.', 'error');
+                this.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                document.getElementById('profilePreview').innerHTML =
+                    `<img src="${event.target.result}" class="profile-edit-avatar" alt="Preview">`;
                 Swal.fire({
-                    title: 'Remove photo?',
-                    text: "Your profile picture will be deleted.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, remove it'
-                }).then(async (result) => {
-                    if (result.isConfirmed) {
-                        try {
-                            const response = await fetch('/profile/image', { method: 'DELETE' });
-                            const data = await response.json();
-                            if (data.success) {
-                                Swal.fire('Removed!', 'Photo has been deleted.', 'success').then(() => location.reload());
-                            }
-                        } catch (err) {
-                            Swal.fire('Error', 'Could not remove photo.', 'error');
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Image ready to upload!',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+
+    
+
+        document.getElementById('deleteImageBtn')?.addEventListener('click', function () {
+            Swal.fire({
+                title: 'Remove photo?',
+                text: 'Your profile picture will be deleted.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, remove it'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch('/profile/image', { method: 'DELETE' });
+                        const data = await response.json();
+                        if (data.success) {
+                            Swal.fire('Removed!', 'Photo has been deleted.', 'success')
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', data.message || 'Could not remove photo.', 'error');
                         }
+                    } catch (err) {
+                        Swal.fire('Error', 'Could not remove photo. Please try again.', 'error');
                     }
-                });
-            });
-
-
-            document.getElementById('profileForm').addEventListener('submit', async function (e) {
-                e.preventDefault();
-
-                // Basic Validation
-                const phone = document.getElementById('phone').value;
-                if (phone && !/^\d{10}$/.test(phone.trim())) {
-                    return Swal.fire('Invalid Phone', 'Please enter a valid 10-digit number', 'warning');
-                }
-
-                Swal.fire({
-                    title: 'Saving Changes',
-                    didOpen: () => Swal.showLoading(),
-                    allowOutsideClick: false
-                });
-
-                try {
-                    const response = await fetch('/profile/update', {
-                        method: 'POST',
-                        body: new FormData(this)
-                    });
-                    const data = await response.json();
-
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Profile Updated',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => window.location.href = '/profile');
-                    } else {
-                        Swal.fire('Update Failed', data.message || 'Error occurred', 'error');
-                    }
-                } catch (err) {
-                    Swal.fire('Server Error', 'Please try again later', 'error');
                 }
             });
-        </script>
+        });
+
+      
+
+        document.getElementById('profileForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Run all validators and collect results
+            const firstNameOk = validateFirstName();
+            const lastNameOk  = validateLastName();
+            const phoneOk     = validatePhone();
+
+            if (!firstNameOk || !lastNameOk || !phoneOk) {
+                // Scroll to first error
+                const firstError = this.querySelector('.is-invalid');
+                if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            // Sanitize: write trimmed values back into the inputs before building FormData
+            document.getElementById('firstName').value = trimVal('firstName');
+            document.getElementById('lastName').value  = trimVal('lastName');
+            document.getElementById('phone').value     = trimVal('phone');
+
+            Swal.fire({
+                title: 'Saving Changes…',
+                didOpen: () => Swal.showLoading(),
+                allowOutsideClick: false
+            });
+
+            try {
+                const response = await fetch('/profile/update', {
+                    method: 'POST',
+                    body: new FormData(this)
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Profile Updated!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => window.location.href = '/profile');
+                } else {
+                    Swal.fire('Update Failed', data.message || 'An error occurred.', 'error');
+                }
+            } catch (err) {
+                Swal.fire('Server Error', 'Please try again later.', 'error');
+            }
+        });
+    </script>
 </body>
 
 </html>

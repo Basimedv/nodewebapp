@@ -4,88 +4,91 @@ const { cloudinary } = require('../../config/cloudinary');
 const mongoose = require('mongoose');
 const HTTP_STATUS_CODES = require('../../constants/status_codes');
 
+const extractPublicId = (imageUrl) => {
+  if (!imageUrl) return null;
+  const match = imageUrl.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
+  return match ? match[1] : null;
+};
+
+
 const getProducts = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 10;
-    const skip = (page - 1) * limit;
+    const limit = 5;
     const search = req.query.search || '';
 
-    const query = search
-      ? {
-          $or: [
-            { productName: { $regex: search, $options: 'i' } },
-            { description: { $regex: search, $options: 'i' } }
-          ]
-        }
-      : {};
+
+    const query = search ? {
+      $or: [
+        { productName: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ]
+    } : {};
 
     const [products, categories, total] = await Promise.all([
       Product.find(query)
         .populate('category')
         .sort({ createdAt: -1 })
-        .skip(skip)
+        .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
       Category.find({ isListed: true }).lean(),
       Product.countDocuments(query)
     ]);
 
-    const totalPages = Math.ceil(total / limit);
-
     res.render('admin/products', {
       products,
       cat: categories,
       currentPage: page,
-      totalPages,
+      totalPages: Math.ceil(total/limit),
       totalProducts: total,
       count: products.length,
       search,
       product: null
     });
   } catch (error) {
-    console.error('Error fetching products:', error);
-    return res.redirect('/admin/dashboard?error=failed_to_load_products');
+    console.error('getProducts error:', error);
+    res.redirect('/admin/dashboard?error=load_failed');
   }
 };
+
 
 const getAddProductPage = async (req, res) => {
   try {
     const categories = await Category.find({ isListed: true }).lean();
     res.render('admin/product-add', {
       cat: categories,
-      product: null,
+      product: {},
+      products: [],
       search: '',
       currentPage: 1,
       totalPages: 1,
       totalProducts: 0,
-      count: 0,
-      products: []
+      count: 0
     });
   } catch (error) {
-    console.error('Error loading add product page:', error);
-    return res.redirect('/admin/products?error=failed_to_load_form');
+    console.error('getAddProductPage error:', error);
+    res.redirect('/admin/products?error=form_error');
   }
 };
 
+
 const getEditProductPage = async (req, res) => {
   try {
-    const [product, categories] = await Promise.all([
-      Product.findById(req.params.id)
-        .populate('category')
-        .lean(),
-      Category.find({ isListed: true }).lean()
-    ]);
+    const product = await Product.findById(req.params.id)
+      .populate('category')
+      .lean();
 
-    if (!product) {
-      return res.redirect('/admin/products?error=product_not_found');
-    }
+    if (!product) return res.redirect('/admin/products?error=not_found');
+
+    const categories = await Category.find({ isListed: true }).lean();
+
 
     product.images = product.productImage || [];
 
     res.render('admin/product-edit', {
-      cat: categories,
       product,
+      cat: categories,
       search: '',
       currentPage: 1,
       totalPages: 1,
@@ -94,8 +97,8 @@ const getEditProductPage = async (req, res) => {
       products: [product]
     });
   } catch (error) {
-    console.error('Error loading edit product page:', error);
-    return res.redirect('/admin/products?error=failed_to_load_product');
+    console.error('getEditProductPage error:', error);
+    res.redirect('/admin/products?error=not_found');
   }
 };
 
@@ -110,61 +113,62 @@ const getProductById = async (req, res) => {
     }
     res.status(HTTP_STATUS_CODES.OK).json({ success: true, product });
   } catch (error) {
-    console.error('Error fetching product:', error);
-    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: 'Server error',
-      error: error.message
-    });
+    console.error('getProductById error:', error);
+    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
 const createProduct = async (req, res) => {
   try {
-    const { productName, description, category, regularPrice, status } = req.body;
+    const { productName, description, category, regularPrice, salePrice, status } = req.body;
 
     // Validate required fields
-    if (!productName || !productName.trim()) {
+    if (!productName?.trim()) {
       return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
         success: false,
         message: 'Product name is required'
       });
     }
-
     if (!category) {
       return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
         success: false,
         message: 'Category is required'
       });
     }
-
-    if (!regularPrice || parseFloat(regularPrice) <= 0) {
-      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
-        success: false,
-        message: 'Valid price is required'
-      });
-    }
-
     if (!req.files || req.files.length === 0) {
       return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
         success: false,
-        message: 'At least one product image is required'
+        message: 'At least one image is required'
       });
     }
 
-    // Check duplicate product name
-    const existing = await Product.findOne({
-      productName: { $regex: new RegExp(`^${productName.trim()}$`, 'i') }
-    }).lean();
+    const regPrice = parseFloat(regularPrice);
+    if (isNaN(regPrice) || regPrice <= 0) {
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        message: 'Valid regular price is required'
+      });
+    }
 
+    const salPrice = parseFloat(salePrice) || 0;
+    if (salPrice > 0 && salPrice >= regPrice) {
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        message: 'Sale price must be less than regular price'
+      });
+    }
+
+    // Check duplicate name
+    const existing = await Product.findOne({
+      productName: new RegExp(`^${productName.trim()}$`, 'i')
+    });
     if (existing) {
       return res.status(HTTP_STATUS_CODES.CONFLICT).json({
         success: false,
-        message: 'A product with this name already exists'
+        message: 'Product name already exists'
       });
     }
 
-    // Parse stock
     const stock = {
       S:   parseInt(req.body.stock_S)   || 0,
       M:   parseInt(req.body.stock_M)   || 0,
@@ -195,7 +199,8 @@ const createProduct = async (req, res) => {
       productName: productName.trim(),
       description: description?.trim() || '',
       category,
-      regularPrice: parseFloat(regularPrice),
+      regularPrice: regPrice,
+      salePrice: salPrice,
       stock,
       size: sizeArray,
       productImage: req.files.map(file => file.path),
@@ -207,56 +212,39 @@ const createProduct = async (req, res) => {
 
     res.status(HTTP_STATUS_CODES.CREATED).json({
       success: true,
-      message: 'Product created successfully',
-      product
+      message: 'Product created successfully'
     });
 
   } catch (error) {
-    console.error('Create product error:', error);
-
+    console.error('createProduct error:', error);
     if (error.code === 11000) {
       return res.status(HTTP_STATUS_CODES.CONFLICT).json({
         success: false,
-        message: 'A product with this name already exists'
+        message: 'Product name already exists'
       });
     }
-
-    if (error.name === 'ValidationError') {
-      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
-        success: false,
-        message: error.message
-      });
-    }
-
     res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: 'Failed to create product',
-      error: error.message
+      message: 'Failed to create product'
     });
   }
 };
 
 const updateProduct = async (req, res) => {
   try {
-    // Validate MongoDB ObjectId
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
-        success: false,
-        message: 'Invalid product ID format'
-      });
-    }
-
+    const { id } = req.params;
     const {
       productName,
       description,
       category,
       regularPrice,
+      salePrice,
       status,
-      existingImages,
-      removedImages
+      removedImages,
+      existingImages
     } = req.body;
 
-    // Validate required fields
+   
     if (!productName?.trim() || !category) {
       return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
         success: false,
@@ -268,11 +256,19 @@ const updateProduct = async (req, res) => {
     if (isNaN(regPrice) || regPrice <= 0) {
       return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
         success: false,
-        message: 'Invalid price value'
+        message: 'Valid regular price is required'
       });
     }
 
-    // Parse stock
+    const salPrice = parseFloat(salePrice) || 0;
+    if (salPrice > 0 && salPrice >= regPrice) {
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        message: 'Sale price must be less than regular price'
+      });
+    }
+
+
     const stock = {
       S:   Math.max(0, parseInt(req.body.stock_S)   || 0),
       M:   Math.max(0, parseInt(req.body.stock_M)   || 0),
@@ -281,6 +277,7 @@ const updateProduct = async (req, res) => {
       XXL: Math.max(0, parseInt(req.body.stock_XXL) || 0)
     };
 
+    // Build size array from stock
     const availableSizes = Object.entries(stock)
       .filter(([, qty]) => qty > 0)
       .map(([size]) => size);
@@ -292,62 +289,16 @@ const updateProduct = async (req, res) => {
       });
     }
 
-    // Find product
-    const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({
-        success: false,
-        message: 'Product not found'
-      });
+    const removed = removedImages ? JSON.parse(removedImages) : [];
+    for (const url of removed) {
+      const publicId = extractPublicId(url);
+      if (publicId) await cloudinary.uploader.destroy(publicId);
     }
 
-    // Check duplicate name (excluding current product)
-    const existingProduct = await Product.findOne({
-      productName: { $regex: new RegExp(`^${productName.trim()}$`, 'i') },
-      _id: { $ne: req.params.id }
-    }).lean();
-
-    if (existingProduct) {
-      return res.status(HTTP_STATUS_CODES.CONFLICT).json({
-        success: false,
-        message: 'A product with this name already exists'
-      });
-    }
-
-    // Parse image arrays
-    let existingImagesArray = [];
-    let removedImagesArray = [];
-
-    try {
-      existingImagesArray = existingImages ? JSON.parse(existingImages) : [];
-      removedImagesArray  = removedImages  ? JSON.parse(removedImages)  : [];
-    } catch (parseError) {
-      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
-        success: false,
-        message: 'Invalid image data format'
-      });
-    }
-
-    // Delete removed images from cloudinary (non-blocking)
-    if (removedImagesArray.length > 0) {
-      setImmediate(async () => {
-        for (const imageUrl of removedImagesArray) {
-          try {
-            const publicId = extractPublicId(imageUrl);
-            if (publicId) await cloudinary.uploader.destroy(publicId);
-          } catch (err) {
-            console.error('Image delete failed:', err.message);
-          }
-        }
-      });
-    }
-
-    // Build final images array
-    let finalImages = [...existingImagesArray];
-    if (req.files && req.files.length > 0) {
-      finalImages = [...finalImages, ...req.files.map(file => file.path)];
-    }
-    finalImages = finalImages.slice(0, 3);
+   
+    const currentImages = existingImages ? JSON.parse(existingImages) : [];
+    const newImages = req.files ? req.files.map(f => f.path) : [];
+    const finalImages = [...currentImages, ...newImages].slice(0, 3);
 
     if (finalImages.length === 0) {
       return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
@@ -356,70 +307,42 @@ const updateProduct = async (req, res) => {
       });
     }
 
-    // Determine final status
-    const totalStock = Object.values(stock).reduce((sum, qty) => sum + qty, 0);
-    let finalStatus;
-    if (totalStock === 0) {
-      finalStatus = 'Out of Stock';
-    } else if (status && status.trim()) {
-      finalStatus = status.trim() === 'Out of Stock' && totalStock > 0
-        ? 'Available'
-        : status.trim();
-    } else {
-      finalStatus = totalStock > 0 ? 'Available' : 'Out of Stock';
-    }
+  
+    const totalStock = Object.values(stock).reduce((a, b) => a + b, 0);
+    let finalStatus = status?.trim() || 'Available';
+    if (totalStock === 0) finalStatus = 'Out of Stock';
+    if (totalStock > 0 && finalStatus === 'Out of Stock') finalStatus = 'Available';
 
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
+    await Product.findByIdAndUpdate(
+      id,
       {
         productName: productName.trim(),
         description: description?.trim() || '',
         category,
         regularPrice: regPrice,
+        salePrice: salPrice,
         stock,
         size: availableSizes,
-        status: finalStatus,
-        productImage: finalImages
+        productImage: finalImages,
+        status: finalStatus
       },
       { new: true, runValidators: true }
-    ).populate('category');
-
-    if (!updatedProduct) {
-      return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        message: 'Failed to update product'
-      });
-    }
+    );
 
     res.status(HTTP_STATUS_CODES.OK).json({
       success: true,
-      message: 'Product updated successfully',
-      product: updatedProduct
+      message: 'Product updated successfully'
     });
 
   } catch (error) {
-    console.error('Update product error:', error);
-
-    if (error.name === 'CastError') {
-      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
-        success: false,
-        message: 'Invalid ID format'
-      });
-    }
-
-    if (error.name === 'ValidationError') {
-      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
-        success: false,
-        message: error.message
-      });
-    }
-
+    console.error('updateProduct error:', error);
     res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Failed to update product'
     });
   }
 };
+
 
 const deleteProduct = async (req, res) => {
   try {
@@ -430,43 +353,24 @@ const deleteProduct = async (req, res) => {
         message: 'Product not found'
       });
     }
-const extractPublicId = (imageUrl) => {
-    try {
-        if (!imageUrl) return null;
-        const match = imageUrl.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
-        if (match && match[1]) return match[1];
-        return null;
-    } catch (error) {
-        console.error('extractPublicId error:', error);
-        return null;
-    }
-};
-    // Delete images from cloudinary
-    for (const imageUrl of product.productImage) {
-      try {
-        const publicId = extractPublicId(imageUrl);
-        if (publicId) await cloudinary.uploader.destroy(publicId);
-      } catch (err) {
-        console.error('Error deleting image:', err);
-      }
+
+    for (const url of product.productImage) {
+      const publicId = extractPublicId(url);
+      if (publicId) await cloudinary.uploader.destroy(publicId);
     }
 
     await product.deleteOne();
-
     res.status(HTTP_STATUS_CODES.OK).json({
       success: true,
       message: 'Product deleted successfully'
     });
   } catch (error) {
-    console.error('Delete product error:', error);
-    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: 'Failed to delete product',
-      error: error.message
-    });
+    console.error('deleteProduct error:', error);
+    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
+// ─── TOGGLE BLOCK ───────────────────────────────────────────────
 const toggleBlock = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -476,23 +380,19 @@ const toggleBlock = async (req, res) => {
         message: 'Product not found'
       });
     }
-
     product.isBlocked = !product.isBlocked;
     await product.save();
-
     res.status(HTTP_STATUS_CODES.OK).json({
       success: true,
       message: `Product ${product.isBlocked ? 'blocked' : 'unblocked'} successfully`,
       isBlocked: product.isBlocked
     });
   } catch (error) {
-    console.error('Toggle block error:', error);
-    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: 'Error toggling block status'
-    });
+    console.error('toggleBlock error:', error);
+    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
+
 
 const toggleList = async (req, res) => {
   try {
@@ -503,23 +403,19 @@ const toggleList = async (req, res) => {
         message: 'Product not found'
       });
     }
-
     product.status = product.status === 'Available' ? 'Discontinued' : 'Available';
     await product.save();
-
     res.status(HTTP_STATUS_CODES.OK).json({
       success: true,
       message: `Product ${product.status === 'Available' ? 'listed' : 'unlisted'} successfully`,
       status: product.status
     });
   } catch (error) {
-    console.error('Toggle list error:', error);
-    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: 'Error toggling list status'
-    });
+    console.error('toggleList error:', error);
+    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
+
 
 const toggleProductStatus = async (req, res) => {
   try {
@@ -530,21 +426,15 @@ const toggleProductStatus = async (req, res) => {
         message: 'Product not found'
       });
     }
-
     product.isActive = !product.isActive;
     await product.save();
-
     res.status(HTTP_STATUS_CODES.OK).json({
       success: true,
-      message: `Product ${product.isActive ? 'activated' : 'deactivated'} successfully`,
       isActive: product.isActive
     });
   } catch (error) {
-    console.error('Toggle status error:', error);
-    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: 'Error toggling product status'
-    });
+    console.error('toggleProductStatus error:', error);
+    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 

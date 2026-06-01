@@ -35,7 +35,7 @@ async (req, accessToken, refreshToken, profile, done) => {
                 user.googleId = profile.id;
                 await user.save();
             }
-            console.log("✅ Existing user found:", user.email);
+            console.log(" Existing user found:", user.email);
             return done(null, user);
         } else {
             // Create new user
@@ -47,11 +47,11 @@ async (req, accessToken, refreshToken, profile, done) => {
                 isBlocked: false
             });
             await user.save();
-            console.log("✅ New user created:", user.email);
+            console.log(" New user created:", user.email);
             return done(null, user);
         }
     } catch (error) {
-        console.error("❌ Google OAuth error:", error);
+        console.error(" Google OAuth error:", error);
         return done(error, null);
     }
 }));
@@ -67,7 +67,7 @@ passport.deserializeUser(async (id, done) => {
         console.log( user?._id);
         done(null, user);
     } catch (err) {
-        console.error("❌ Deserialize error:", err);
+        console.error(" Deserialize error:", err);
         done(err, null);
     }
 });

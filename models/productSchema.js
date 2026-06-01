@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const productSchema = new Schema({
-    productName: {            
+    productName: {
         type: String,
         required: true
     },
@@ -10,25 +10,19 @@ const productSchema = new Schema({
         type: String,
         required: true
     },
- 
     category: {
         type: Schema.Types.ObjectId,
         ref: 'Category',
         required: true
     },
-    regularPrice: {           
+    regularPrice: {
         type: Number,
         required: true
     },
     salePrice: {
         type: Number,
-        required: true
+        default: null
     },
-    productOffer: {
-        type: Number,
-        default: 0
-    },
-    // Stock tracking for each size
     stock: {
         S: { type: Number, default: 0 },
         M: { type: Number, default: 0 },
@@ -36,16 +30,12 @@ const productSchema = new Schema({
         XL: { type: Number, default: 0 },
         XXL: { type: Number, default: 0 }
     },
-    // Available sizes array (auto-populated from stock)
-  size: {
+    size: {
         type: [String],
         enum: ['S', 'M', 'L', 'XL', 'XXL'],
         required: true
     },
-    // Total quantity (sum of all size stocks)
-   
-  
-    productImage: {           
+    productImage: {
         type: [String],
         required: true
     },
@@ -59,7 +49,6 @@ const productSchema = new Schema({
         default: "Available"
     }
 }, { timestamps: true });
-
 
 const Product = mongoose.model('Product', productSchema);
 module.exports = Product;

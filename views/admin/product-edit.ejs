@@ -285,16 +285,21 @@
             <div id="description-error" class="error-message"></div>
           </div>
 
-          <!-- Price Row -->
-          <div class="row g-3 mb-3">
-            <div class="col-md-4">
-              <label class="form-label" for="price">Base Price (₹) <span class="text-danger">*</span></label>
-              <input type="number" class="form-control" id="price" name="regularPrice" 
-                     value="<%= product.regularPrice %>" min="0" step="0.01" required>
-              <div id="regularPrice-error" class="error-message"></div>
-            </div>
+         <div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <label class="form-label" for="price">Regular Price (₹) <span class="text-danger">*</span></label>
+    <input type="number" class="form-control" id="price" name="regularPrice" 
+           value="<%= product.regularPrice %>" min="0" step="0.01" required>
+    <div id="regularPrice-error" class="error-message"></div>
+  </div>
 
-          </div>
+  <div class="col-md-4">
+    <label class="form-label" for="salePrice">Sale Price (₹)</label>
+    <input type="number" class="form-control" id="salePrice" name="salePrice" 
+           value="<%= product.salePrice %>" min="0" step="0.01">
+    <div id="salePrice-error" class="error-message"></div>
+  </div>
+</div>
 
           <!-- Stock by Size Section -->
           <div class="row mb-4">
@@ -870,6 +875,7 @@ document.addEventListener('DOMContentLoaded', function() {
     formData.append('description', document.getElementById('description').value.trim());
     formData.append('category', document.getElementById('category').value);
     formData.append('regularPrice', document.getElementById('price').value);
+    formData.append('salePrice', document.getElementById('salePrice').value);
     formData.append('status', document.getElementById('status').value);
 
     // Add stock data for each size

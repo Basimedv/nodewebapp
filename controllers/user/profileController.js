@@ -261,7 +261,7 @@ const getPrivacyPage = async (req, res) => {
   }
 };
 
-// EMAIL CHANGE — Step 1: Send OTP to new email
+//  Send OTP to new email
 const requestEmailChange = async (req, res) => {
   try {
     const { newEmail } = req.body;
@@ -302,7 +302,7 @@ const requestEmailChange = async (req, res) => {
   }
 };
 
-// EMAIL CHANGE — OTP page (reusing verifyOTP.ejs)
+// EMAIL CHANGE — OTP page 
 const getVerifyEmailOtpPage = (req, res) => {
   try {
     if (!req.session.pendingEmail) {
@@ -318,7 +318,7 @@ const getVerifyEmailOtpPage = (req, res) => {
   }
 };
 
-// EMAIL CHANGE — Step 2: Verify OTP → update DB
+// EMAIL CHANGE 
 const verifyEmailChangeOtp = async (req, res) => {
   try {
     const { otp } = req.body;
@@ -342,7 +342,7 @@ const verifyEmailChangeOtp = async (req, res) => {
     await User.findByIdAndUpdate(req.session.user._id, { email: req.session.pendingEmail });
     req.session.user.email = req.session.pendingEmail;
 
-    // Clear temp session data
+
     req.session.pendingEmail = null;
     req.session.emailChangeOtp = null;
     req.session.emailOtpExpiresAt = null;
@@ -417,7 +417,7 @@ const getChangePasswordPage = (req, res) => {
   }
 };
 
-// PASSWORD CHANGE — Step 2: Save new password
+
 const changePassword = async (req, res) => {
   try {
     if (!req.session.passwordVerified) {

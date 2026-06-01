@@ -40,6 +40,18 @@ const ROUTES = {
         PRODUCT_LISTING: "/productListing",
         PRODUCT_DETAILS: "/productDetails/:id",
         PRODUCT_API: "/api/products",
+
+        ADD_REVIEW: '/product/:productId/addReview',
+
+       
+        WISHLIST: "/wishlist",
+        ADD_TO_WISHLIST: "/wishlist/add",
+       REMOVE_FROM_WISHLIST: "/wishlist/remove",
+       MOVE_TO_CART: "/wishlist/move-to-cart",
+        CART:              "/cart",
+    ADD_TO_CART:       "/cart/add",
+    UPDATE_CART:       "/cart/update",
+    REMOVE_FROM_CART:  "/cart/remove",
     },
 
 ADMIN: {
@@ -50,6 +62,15 @@ ADMIN: {
     LOGOUT: "/admin/logout",
     PAGE_ERROR: "/admin/pageerror",
 
+    
+   
+    CATEGORIES: "/admin/categories",
+    CATEGORIES_ADD: "/admin/addCategory",
+    CATEGORIES_EDIT: "/admin/categories",
+    CATEGORIES_GET: "/admin/Category",
+    TOGGLE_CATEGORY_ROUTE : '/admin/categories/:id/toggle',
+
+
     PRODUCTS: "/admin/products",
     PRODUCTS_ADD: "/admin/products/add",
     PRODUCTS_EDIT: "/admin/products/edit/:id",
@@ -59,6 +80,9 @@ ADMIN: {
     PRODUCTS_STATUS: "/admin/products/:id/status",
     PRODUCTS_DELETE: "/admin/products/:id",
     PRODUCTS_UPDATE: "/admin/products/:id",
+
+
+
 }
 }
 module.exports = {

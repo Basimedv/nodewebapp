@@ -9,6 +9,39 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/login.css">
+
+    <style>
+        /* Server-side message banner — sits above the form, impossible to miss */
+        .server-message {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #fff3f3;
+            border: 1px solid #f5c2c2;
+            color: #b91c1c;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 18px;
+            font-size: 14px;
+            font-weight: 500;
+            animation: fadeInDown 0.3s ease;
+        }
+
+        .server-message i {
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0);    }
+        }
+
+        .server-message.fade-out {
+            transition: opacity 0.4s ease;
+            opacity: 0;
+        }
+    </style>
 </head>
 
 <body class="login-page">
@@ -23,6 +56,14 @@
                 <h1 class="welcome-text">Welcome Back!</h1>
                 <p class="welcome-subtext">Login to your account</p>
             </div>
+
+            <%# ── Server message (blocked / wrong password / Google OAuth error) ── %>
+            <% if (message) { %>
+                <div id="serverMessage" class="server-message">
+                    <i class="fas fa-circle-exclamation"></i>
+                    <span><%= message %></span>
+                </div>
+            <% } %>
 
             <form action="/login" method="POST" class="login-form" id="loginForm">
 
@@ -63,98 +104,83 @@
                 Don't have an account? <a href="/signup">Sign Up</a>
             </div>
 
-            <% if (message) { %>
-                <div id="flash-message" class="error-message">
-                    <%= message %>
-                </div>
-                <% } %>
-
         </div>
     </div>
 
     <script>
-
         function togglePassword() {
             const passwordInput = document.getElementById('password');
-            const toggleIcon = document.getElementById('toggleIcon');
+            const toggleIcon    = document.getElementById('toggleIcon');
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                toggleIcon.classList.remove('fa-eye-slash');
-                toggleIcon.classList.add('fa-eye');
+                toggleIcon.classList.replace('fa-eye-slash', 'fa-eye');
             } else {
                 passwordInput.type = 'password';
-                toggleIcon.classList.remove('fa-eye');
-                toggleIcon.classList.add('fa-eye-slash');
+                toggleIcon.classList.replace('fa-eye', 'fa-eye-slash');
             }
         }
 
-        const flashMessage = document.getElementById('flash-message');
-        if (flashMessage) {
+        // Auto-dismiss server message after 4 seconds
+        const serverMsg = document.getElementById('serverMessage');
+        if (serverMsg) {
             setTimeout(() => {
-                flashMessage.style.opacity = '0';
-                setTimeout(() => {
-                    flashMessage.style.display = 'none';
-                }, 300);
-            }, 3000);
+                serverMsg.classList.add('fade-out');
+                setTimeout(() => serverMsg.remove(), 400);
+            }, 4000);
         }
 
-        const emailid = document.getElementById('email');
-        const passwordid = document.getElementById('password');
-        const emailError = document.getElementById('emailError');
-        const passwordError = document.getElementById('passwordError');
-        const loginForm = document.getElementById('loginForm');
+        // ── Client-side validation (unchanged from your original) ──
+        const emailid      = document.getElementById('email');
+        const passwordid   = document.getElementById('password');
+        const emailError   = document.getElementById('emailError');
+        const passwordError= document.getElementById('passwordError');
+        const loginForm    = document.getElementById('loginForm');
 
         let formSubmitted = false;
 
         function emailValidateChecking() {
-            const emailval = emailid.value.trim();
+            const emailval     = emailid.value.trim();
             const emailpattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
             if (!emailval) {
-                emailError.style.display = "block";
-                emailError.innerHTML = "Enter email";
+                emailError.style.display = 'block';
+                emailError.innerHTML     = 'Enter email';
             } else if (!emailpattern.test(emailval)) {
-                emailError.style.display = "block";
-                emailError.innerHTML = "Invalid email format";
+                emailError.style.display = 'block';
+                emailError.innerHTML     = 'Invalid email format';
             } else {
-                emailError.style.display = "none";
-                emailError.innerHTML = "";
+                emailError.style.display = 'none';
+                emailError.innerHTML     = '';
             }
         }
 
         function passwordValidateChecking() {
             const passval = passwordid.value.trim();
             if (!passval) {
-                passwordError.style.display = "block";
-                passwordError.innerHTML = "Enter password";
+                passwordError.style.display = 'block';
+                passwordError.innerHTML     = 'Enter password';
             } else if (passval.length < 8) {
-                passwordError.style.display = "block";
-                passwordError.innerHTML = "Min 8 characters";
+                passwordError.style.display = 'block';
+                passwordError.innerHTML     = 'Min 8 characters';
             } else {
-                passwordError.style.display = "none";
-                passwordError.innerHTML = "";
+                passwordError.style.display = 'none';
+                passwordError.innerHTML     = '';
             }
         }
 
-        emailid.addEventListener('input', () => { if (formSubmitted) emailValidateChecking(); });
+        emailid.addEventListener('input',    () => { if (formSubmitted) emailValidateChecking();    });
         passwordid.addEventListener('input', () => { if (formSubmitted) passwordValidateChecking(); });
 
-        document.addEventListener("DOMContentLoaded", function () {
-            loginForm.addEventListener("submit", function (e) {
+        document.addEventListener('DOMContentLoaded', () => {
+            loginForm.addEventListener('submit', (e) => {
                 formSubmitted = true;
-
                 emailValidateChecking();
                 passwordValidateChecking();
 
-                const hasError =
-                    emailError.innerHTML ||
-                    passwordError.innerHTML;
-
-                if (hasError) {
+                if (emailError.innerHTML || passwordError.innerHTML) {
                     e.preventDefault();
                 }
             });
         });
-
     </script>
 </body>
 

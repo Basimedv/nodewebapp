@@ -64,10 +64,10 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "Cart",
     }],
-    wallet: [{
+    wallet: {
         type: Schema.Types.ObjectId,
-        ref: "Wishlist"
-    }],
+        ref: "Wallet"
+    },
 
     orderHistory: [{
         type: Schema.Types.ObjectId,
@@ -75,12 +75,13 @@ const userSchema = new Schema({
     }],
     wishlist: [{
         type: Schema.Types.ObjectId,
-        ref: "wishlist"
+        ref: "Wishlist"
     }],
     createdOn: {
         type: Date,
         default: Date.now
     },
+
     referalCode: {
         type: String,
 
