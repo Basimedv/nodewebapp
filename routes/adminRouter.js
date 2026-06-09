@@ -4,6 +4,10 @@ const admincontroller    = require('../controllers/admin/admincontroller');
 const customercontroller = require('../controllers/admin/customercontroller');
 const productcontroller  = require('../controllers/admin/productcontroller');
 const categorycontroller = require('../controllers/admin/categorycontroller');
+const orderController = require('../controllers/admin/orderController');
+
+
+const offerController = require('../controllers/admin/offerController');
 const { adminAuth, isGuest } = require('../middlewares/auth');
 const { ROUTES } = require('../constants/routes');
 const { uploadProduct } = require('../config/cloudinary');
@@ -37,6 +41,14 @@ router.put(ROUTES.ADMIN.PRODUCTS_LIST,     adminAuth, productcontroller.toggleLi
 router.patch(ROUTES.ADMIN.PRODUCTS_STATUS, adminAuth, productcontroller.toggleProductStatus);
 router.delete(ROUTES.ADMIN.PRODUCTS_DELETE,adminAuth, productcontroller.deleteProduct);
 
+router.get(ROUTES.ADMIN.ORDERS,               adminAuth, orderController.getOrders);
+router.get(ROUTES.ADMIN.ORDER_DETAIL,         adminAuth, orderController.getOrderDetail);
+router.post(ROUTES.ADMIN.ORDER_UPDATE_STATUS, adminAuth, orderController.updateOrderStatus);
+router.post(ROUTES.ADMIN.ORDER_HANDLE_RETURN, adminAuth, orderController.handleReturn);
+
+// Add these 2 routes
+router.post(ROUTES.ADMIN.OFFERS_ADD,           adminAuth, offerController.addOffer);
+router.post(ROUTES.ADMIN.OFFERS_REMOVE_TARGET, adminAuth, offerController.removeOfferByTarget);
 // Page Error
 router.get(ROUTES.ADMIN.PAGE_ERROR, admincontroller.pageerror);
 

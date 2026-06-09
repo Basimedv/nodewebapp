@@ -37,10 +37,7 @@
         padding: 15px;
     }
 
-    .search-btn {
-        background-color: var(--accent-purple);
-        color: white;
-    }
+    .search-btn { background-color: var(--accent-purple); color: white; }
 
     .product-img {
         width: 48px;
@@ -67,23 +64,45 @@
         .main-content { margin-left: 0; padding: 20px; }
     }
 
-    .price-container {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
+    .price-container { display: flex; flex-direction: column; gap: 2px; }
+    .regular-price { text-decoration: line-through; color: #999; font-size: 0.82rem; }
+    .final-price { color: #192430; font-weight: 700; font-size: 0.95rem; }
 
-    .regular-price {
-        text-decoration: line-through;
-        color: #999;
-        font-size: 0.82rem;
+    /* Offer button */
+    .btn-offer-add {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffc107;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 5px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
     }
+    .btn-offer-add:hover { background-color: #ffc107; color: #000; }
+    .btn-offer-active {
+        background-color: #d1e7dd;
+        color: #0a3622;
+        border: 1px solid #0CAF60;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 5px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+    .btn-offer-active:hover { background-color: #0CAF60; color: #fff; }
 
-    .final-price {
-        color: #192430;
-        font-weight: 700;
-        font-size: 0.95rem;
+    /* Validation */
+    .input-error {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220,53,69,.15) !important;
     }
+    .field-error { color: #dc3545; font-size: 0.8rem; margin-top: 4px; display: none; }
+    .field-error.show { display: block; }
 </style>
 
 <aside class="sidebar d-none d-lg-block">
@@ -125,6 +144,7 @@
                             <th class="ps-4">Product Details</th>
                             <th>Category</th>
                             <th>Price (₹)</th>
+                            <th>Offer</th>
                             <th>Stock</th>
                             <th>Sizes</th>
                             <th>Status</th>
@@ -140,14 +160,7 @@
                                 const dotClass = totalStock === 0
                                     ? 'text-danger'
                                     : totalStock <= 5 ? 'text-warning' : 'text-success';
-
-                                const regular = Number(p.regularPrice || 0);
-                                const sale = Number(p.salePrice || 0);
-                                const isOnSale = sale > 0 && sale < regular;
-                                const finalPrice = isOnSale ? sale : regular;
-                                const discountPct = isOnSale
-                                    ? Math.round((regular - sale) / regular * 100)
-                                    : 0;
+                                const pricing = p.pricing || {};
                             %>
                             <tr>
                                 <!-- Product Details -->
@@ -173,13 +186,46 @@
                                 <!-- Price -->
                                 <td>
                                     <div class="price-container">
-                                        <% if (isOnSale) { %>
-                                            <span class="final-price">₹<%= finalPrice.toFixed(2) %></span>
-                                            <span class="regular-price">₹<%= regular.toFixed(2) %></span>
+                                        <% if (pricing.isOnSale) { %>
+                                            <span class="final-price">₹<%= pricing.salePrice.toLocaleString('en-IN') %></span>
+                                            <span class="regular-price">₹<%= pricing.regularPrice.toLocaleString('en-IN') %></span>
                                         <% } else { %>
-                                            <span class="final-price">₹<%= regular.toFixed(2) %></span>
+                                            <span class="final-price">₹<%= (p.regularPrice || 0).toLocaleString('en-IN') %></span>
                                         <% } %>
                                     </div>
+                                </td>
+
+                                <!-- ✅ Offer column with visible button -->
+                                <td>
+                                    <% if (pricing.isOnSale) { %>
+                                        <div class="d-flex flex-column gap-1">
+                                            <span class="badge bg-warning text-dark" style="font-size:0.72rem;">
+                                                <%= pricing.discountPercentage %>% OFF
+                                            </span>
+                                            <small class="text-muted" style="font-size:0.7rem;">
+                                                <%= pricing.appliedOffer?.offerName %>
+                                            </small>
+                                            <button class="btn-offer-active btn-add-offer"
+                                                data-id="<%= p._id %>"
+                                                data-name="<%= p.productName %>"
+                                                data-has-offer="true"
+                                                data-offer-name="<%= pricing.appliedOffer ? pricing.appliedOffer.offerName : '' %>"
+                                                data-offer-discount="<%= pricing.discountPercentage || '' %>"
+                                                data-offer-id="<%= pricing.appliedOffer ? pricing.appliedOffer._id : '' %>">
+                                                <i class="bi bi-tag-fill me-1"></i>Edit / Remove
+                                            </button>
+                                        </div>
+                                    <% } else { %>
+                                        <button class="btn-offer-add btn-add-offer"
+                                            data-id="<%= p._id %>"
+                                            data-name="<%= p.productName %>"
+                                            data-has-offer="false"
+                                            data-offer-name=""
+                                            data-offer-discount=""
+                                            data-offer-id="">
+                                            <i class="bi bi-tag me-1"></i>Add Offer
+                                        </button>
+                                    <% } %>
                                 </td>
 
                                 <!-- Stock -->
@@ -229,7 +275,7 @@
                             <% }) %>
                         <% } else { %>
                             <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
+                                <td colspan="8" class="text-center py-5 text-muted">
                                     <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                     No products found.
                                 </td>
@@ -239,35 +285,25 @@
                 </table>
             </div>
 
-            <!-- ✅ Pagination - matches customers page style (hidden when only 1 page) -->
             <% if (typeof totalPages !== 'undefined' && totalPages >= 1) { %>
                 <div class="d-flex justify-content-center py-3">
                     <nav>
                         <ul class="pagination mb-0">
-
-                            <!-- Previous -->
                             <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
                                 <a class="page-link" href="?page=<%= currentPage - 1 %>&search=<%= search || '' %>">←</a>
                             </li>
-
-                            <!-- Page numbers with ellipsis -->
                             <% for (let i = 1; i <= totalPages; i++) { %>
                                 <% if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
                                     <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                        <a class="page-link" href="?page=<%= i %>&search=<%= search || '' %>">
-                                            <%= i %>
-                                        </a>
+                                        <a class="page-link" href="?page=<%= i %>&search=<%= search || '' %>"><%= i %></a>
                                     </li>
                                 <% } else if (i === currentPage - 3 || i === currentPage + 3) { %>
                                     <li class="page-item disabled"><span class="page-link">…</span></li>
                                 <% } %>
                             <% } %>
-
-                            <!-- Next -->
                             <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
                                 <a class="page-link" href="?page=<%= currentPage + 1 %>&search=<%= search || '' %>">→</a>
                             </li>
-
                         </ul>
                     </nav>
                 </div>
@@ -275,6 +311,91 @@
         </div>
     </div>
 </main>
+
+<!-- ── PRODUCT OFFER MODAL ──────────────────────────────────── -->
+<div class="modal fade" id="productOfferModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold">
+                    <i class="bi bi-tag-fill me-2 text-warning"></i>
+                    Offer — <span id="offerProductName" class="text-primary"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 pb-2">
+
+                <input type="hidden" id="offerProductId" />
+
+                <!-- Existing offer alert -->
+                <div id="existingOfferInfo"
+                    class="alert alert-success d-flex align-items-center gap-2 mb-3"
+                    style="display:none;">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span id="existingOfferText"></span>
+                    <button type="button" class="btn btn-sm btn-outline-danger ms-auto"
+                        onclick="removeProductOffer()">
+                        <i class="bi bi-trash me-1"></i>Remove
+                    </button>
+                </div>
+
+                <!-- Offer Name -->
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">
+                        Offer Name <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" id="productOfferName"
+                        class="form-control shadow-none rounded-3"
+                        placeholder="e.g. Summer Sale"
+                        maxlength="50" />
+                    <div class="field-error" id="productOfferNameError"></div>
+                </div>
+
+                <!-- Discount % -->
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">
+                        Discount % <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" id="productDiscount"
+                        class="form-control shadow-none rounded-3"
+                        min="1" max="90"
+                        placeholder="e.g. 20" />
+                    <div class="field-error" id="productDiscountError"></div>
+                </div>
+
+                <!-- Start Date -->
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">
+                        Start Date <span class="text-danger">*</span>
+                    </label>
+                    <input type="date" id="productStartDate"
+                        class="form-control shadow-none rounded-3" />
+                    <div class="field-error" id="productStartDateError"></div>
+                </div>
+
+                <!-- End Date -->
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">
+                        End Date <span class="text-danger">*</span>
+                    </label>
+                    <input type="date" id="productEndDate"
+                        class="form-control shadow-none rounded-3" />
+                    <div class="field-error" id="productEndDateError"></div>
+                </div>
+
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4">
+                <button type="button" class="btn btn-outline-secondary rounded-3"
+                    data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="productOfferSubmit"
+                    class="btn btn-warning px-4 rounded-3 fw-bold"
+                    onclick="submitProductOffer()">
+                    <i class="bi bi-tag me-1"></i>Add Offer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <%- include("../partials/admin/footer") %>
 
@@ -284,7 +405,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // Search
+    // ── Search ───────────────────────────────────────────────────
     const handleSearch = () => {
         const val = document.getElementById('searchInput').value.trim();
         window.location.href = val
@@ -296,15 +417,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (e.key === 'Enter') handleSearch();
     });
 
-    // Block / Unblock toggle
+    // ── Block / Unblock ──────────────────────────────────────────
     document.querySelectorAll('.toggle-block').forEach(btn => {
         btn.addEventListener('click', async () => {
-            const id = btn.dataset.id;
+            const id        = btn.dataset.id;
             const isBlocked = btn.dataset.blocked === 'true';
 
             const result = await Swal.fire({
                 title: isBlocked ? 'Unblock Product?' : 'Block Product?',
-                text: isBlocked
+                text:  isBlocked
                     ? 'This product will be visible to customers again.'
                     : 'Customers will not be able to see this product.',
                 icon: 'warning',
@@ -315,19 +436,174 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (result.isConfirmed) {
                 try {
-                    const res = await fetch(`/admin/products/${id}/block`, { method: 'PUT' });
+                    const res  = await fetch(`/admin/products/${id}/block`, { method: 'PUT' });
                     const data = await res.json();
                     if (data.success) {
                         location.reload();
                     } else {
                         Swal.fire('Error', data.message, 'error');
                     }
-                } catch (err) {
+                } catch {
                     Swal.fire('Error', 'Something went wrong', 'error');
                 }
             }
         });
     });
 
+    // ── Product Offer Modal ──────────────────────────────────────
+    const productOfferModal = new bootstrap.Modal(
+        document.getElementById('productOfferModal')
+    );
+
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('productStartDate').min = today;
+    document.getElementById('productEndDate').min   = today;
+
+    document.querySelectorAll('.btn-add-offer').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const id       = btn.dataset.id;
+        const name     = btn.dataset.name;
+        const hasOffer = btn.dataset.hasOffer === 'true';
+
+        document.getElementById('offerProductId').value         = id;
+        document.getElementById('offerProductName').textContent = name;
+
+        // Reset fields
+        document.getElementById('productOfferName').value  = '';
+        document.getElementById('productDiscount').value   = '';
+        document.getElementById('productStartDate').value  = '';
+        document.getElementById('productEndDate').value    = '';
+
+        // Clear errors
+        ['productOfferNameError','productDiscountError',
+         'productStartDateError','productEndDateError'].forEach(eid => {
+            const el = document.getElementById(eid);
+            el.textContent = '';
+            el.classList.remove('show');
+        });
+        ['productOfferName','productDiscount',
+         'productStartDate','productEndDate'].forEach(eid => {
+            document.getElementById(eid).classList.remove('input-error');
+        });
+
+        // ✅ Update submit button label based on whether offer exists
+        const submitBtn = document.getElementById('productOfferSubmit');
+        submitBtn.innerHTML = hasOffer
+            ? '<i class="bi bi-arrow-repeat me-1"></i>Replace Offer'
+            : '<i class="bi bi-tag me-1"></i>Add Offer';
+
+        // Show existing offer info
+        const infoBox = document.getElementById('existingOfferInfo');
+        if (hasOffer) {
+            document.getElementById('existingOfferText').textContent =
+                `Active: ${btn.dataset.offerName} — ${btn.dataset.offerDiscount}% OFF`;
+            infoBox.style.display = 'flex';
+        } else {
+            infoBox.style.display = 'none';
+        }
+
+        productOfferModal.show();
+    });
 });
+
+});
+
+// ── Submit Product Offer ─────────────────────────────────────
+async function submitProductOffer() {
+    const productId = document.getElementById('offerProductId').value;
+    const offerName = document.getElementById('productOfferName').value.trim();
+    const discount  = Number(document.getElementById('productDiscount').value);
+    const startDate = document.getElementById('productStartDate').value;
+    const endDate   = document.getElementById('productEndDate').value;
+    let valid       = true;
+
+    function se(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.classList.add('show'); }
+    function ce(id)      { const el = document.getElementById(id); el.textContent = ''; el.classList.remove('show'); }
+    function mi(id)      { document.getElementById(id).classList.add('input-error'); }
+    function mv(id)      { document.getElementById(id).classList.remove('input-error'); }
+
+    if (!offerName) { se('productOfferNameError','Offer name is required'); mi('productOfferName'); valid=false; }
+    else            { ce('productOfferNameError'); mv('productOfferName'); }
+
+    if (!discount || discount < 1 || discount > 90) { se('productDiscountError','Discount must be 1–90'); mi('productDiscount'); valid=false; }
+    else { ce('productDiscountError'); mv('productDiscount'); }
+
+    if (!startDate) { se('productStartDateError','Start date is required'); mi('productStartDate'); valid=false; }
+    else { ce('productStartDateError'); mv('productStartDate'); }
+
+    if (!endDate) { se('productEndDateError','End date is required'); mi('productEndDate'); valid=false; }
+    else if (endDate <= startDate) { se('productEndDateError','End date must be after start date'); mi('productEndDate'); valid=false; }
+    else { ce('productEndDateError'); mv('productEndDate'); }
+
+    if (!valid) return;
+
+    const btn = document.getElementById('productOfferSubmit');
+    btn.disabled    = true;
+    btn.innerHTML   = '<span class="spinner-border spinner-border-sm me-1"></span>Adding…';
+
+    try {
+        const res  = await fetch('/admin/offers/add', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                offerName,
+                offerType:          'product',
+                targetId:           productId,
+                discountPercentage: discount,
+                startDate,
+                endDate
+            })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('productOfferModal')).hide();
+            Swal.fire({ icon:'success', title:'Offer Added!', showConfirmButton:false, timer:1300 })
+                .then(() => location.reload());
+        } else {
+            Swal.fire({ icon:'error', text: data.message || 'Something went wrong' });
+        }
+    } catch {
+        Swal.fire({ icon:'error', text:'Network error. Please try again.' });
+    } finally {
+        btn.disabled  = false;
+        btn.innerHTML = '<i class="bi bi-tag me-1"></i>Add Offer';
+    }
+}
+
+// ── Remove Product Offer ─────────────────────────────────────
+async function removeProductOffer() {
+    const productId = document.getElementById('offerProductId').value;
+
+    const result = await Swal.fire({
+        title:'Remove Offer?',
+        text: 'The active offer on this product will be removed.',
+        icon: 'warning',
+        showCancelButton:   true,
+        confirmButtonColor: '#dc3545',
+        confirmButtonText:  'Yes, Remove',
+        cancelButtonText:   'Cancel'
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+        const res  = await fetch('/admin/offers/remove-by-target', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ targetId: productId, offerType: 'product' })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('productOfferModal')).hide();
+            Swal.fire({ icon:'success', text:'Offer removed', timer:1000, showConfirmButton:false })
+                .then(() => location.reload());
+        } else {
+            Swal.fire({ icon:'error', text: data.message });
+        }
+    } catch {
+        Swal.fire({ icon:'error', text:'Network error. Please try again.' });
+    }
+}
 </script>

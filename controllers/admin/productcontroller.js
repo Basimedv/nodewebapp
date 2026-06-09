@@ -1,5 +1,6 @@
 const Product = require('../../models/productSchema');
 const Category = require('../../models/categorySchema');
+const Offer = require('../../models/offerSchema');
 const { cloudinary } = require('../../config/cloudinary');
 const mongoose = require('mongoose');
 const HTTP_STATUS_CODES = require('../../constants/status_codes');
@@ -13,15 +14,15 @@ const extractPublicId = (imageUrl) => {
 
 const getProducts = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 5;
+    const page   = parseInt(req.query.page) || 1;
+    const limit  = 5;
     const search = req.query.search || '';
-
+    const now    = new Date();
 
     const query = search ? {
       $or: [
         { productName: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { description:  { $regex: search, $options: 'i' } }
       ]
     } : {};
 
@@ -36,22 +37,69 @@ const getProducts = async (req, res) => {
       Product.countDocuments(query)
     ]);
 
+    // ✅ Fetch all active offers in ONE query (not per product)
+    const activeOffers = await Offer.find({
+      isActive:  true,
+      startDate: { $lte: now },
+      endDate:   { $gte: now }
+    }).lean();
+
+    // ✅ Attach pricing directly to each product
+    const enrichedProducts = products.map(product => {
+      const productOffer  = activeOffers.find(
+        o => o.offerType === 'product' &&
+             o.targetId.toString() === product._id.toString()
+      );
+      const categoryOffer = activeOffers.find(
+        o => o.offerType === 'category' &&
+             o.targetId.toString() === (product.category?._id || product.category).toString()
+      );
+
+      // Pick best discount
+      let discount     = 0;
+      let appliedOffer = null;
+      if (productOffer?.discountPercentage > discount) {
+        discount     = productOffer.discountPercentage;
+        appliedOffer = productOffer;
+      }
+      if (categoryOffer?.discountPercentage > discount) {
+        discount     = categoryOffer.discountPercentage;
+        appliedOffer = categoryOffer;
+      }
+
+      const salePrice = discount > 0
+        ? Math.round(product.regularPrice - (product.regularPrice * discount) / 100)
+        : null;
+
+      return {
+        ...product,
+        pricing: {
+          regularPrice:       product.regularPrice,
+          salePrice,
+          discountPercentage: discount,
+          appliedOffer,
+          finalPrice:         salePrice || product.regularPrice,
+          isOnSale:           discount > 0
+        }
+      };
+    });
+
     res.render('admin/products', {
-      products,
+      products: enrichedProducts,
       cat: categories,
       currentPage: page,
-      totalPages: Math.ceil(total/limit),
+      totalPages:  Math.ceil(total / limit),
       totalProducts: total,
-      count: products.length,
+      count:  products.length,
       search,
       product: null
     });
+
   } catch (error) {
     console.error('getProducts error:', error);
     res.redirect('/admin/dashboard?error=load_failed');
   }
 };
-
 
 const getAddProductPage = async (req, res) => {
   try {
@@ -120,7 +168,7 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
-    const { productName, description, category, regularPrice, salePrice, status } = req.body;
+    const { productName, description, category, regularPrice, status } = req.body;
 
     // Validate required fields
     if (!productName?.trim()) {
@@ -150,13 +198,7 @@ const createProduct = async (req, res) => {
       });
     }
 
-    const salPrice = parseFloat(salePrice) || 0;
-    if (salPrice > 0 && salPrice >= regPrice) {
-      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
-        success: false,
-        message: 'Sale price must be less than regular price'
-      });
-    }
+
 
     // Check duplicate name
     const existing = await Product.findOne({
@@ -200,7 +242,7 @@ const createProduct = async (req, res) => {
       description: description?.trim() || '',
       category,
       regularPrice: regPrice,
-      salePrice: salPrice,
+    
       stock,
       size: sizeArray,
       productImage: req.files.map(file => file.path),
@@ -238,7 +280,7 @@ const updateProduct = async (req, res) => {
       description,
       category,
       regularPrice,
-      salePrice,
+     
       status,
       removedImages,
       existingImages
@@ -260,13 +302,7 @@ const updateProduct = async (req, res) => {
       });
     }
 
-    const salPrice = parseFloat(salePrice) || 0;
-    if (salPrice > 0 && salPrice >= regPrice) {
-      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({
-        success: false,
-        message: 'Sale price must be less than regular price'
-      });
-    }
+ 
 
 
     const stock = {
@@ -320,7 +356,7 @@ const updateProduct = async (req, res) => {
         description: description?.trim() || '',
         category,
         regularPrice: regPrice,
-        salePrice: salPrice,
+        
         stock,
         size: availableSizes,
         productImage: finalImages,

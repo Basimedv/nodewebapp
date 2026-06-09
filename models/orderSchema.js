@@ -80,7 +80,10 @@ const orderSchema = new Schema({
     couponApplied: {
         type: Boolean,
         default: false
-    }
+    },
+  
+razorpayOrderId:   { type: String, default: null },
+razorpayPaymentId: { type: String, default: null },
 })
 const Order = mongoose.model('Order', orderSchema)
 module.exports = Order

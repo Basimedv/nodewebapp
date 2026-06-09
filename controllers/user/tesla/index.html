@@ -1,0 +1,528 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tesla</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+    body {
+
+      font-family: 'Gotham SSm', 'Arial', sans-serif;
+      background: #fff;
+      color: #171a20;
+      scroll-behavior: smooth;
+    }
+ 
+
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: 56px;
+      background: transparent;
+      transition: background 0.3s;
+    }
+ 
+    nav.scrolled {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+    }
+ 
+    .nav-logo svg {
+      width: 103px;
+      height: 13px;
+      fill: #171a20;
+    }
+ 
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      list-style: none;
+    }
+ 
+    .nav-links a {
+      color: #171a20;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 6px 16px;
+      border-radius: 20px;
+      transition: background 0.2s;
+    }
+ 
+    .nav-links a:hover {
+      background: rgba(0,0,0,0.07);
+    }
+ 
+    .nav-right {
+      display: flex;
+      gap: 4px;
+    }
+ 
+    .nav-right a {
+      color: #171a20;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 6px 16px;
+      border-radius: 20px;
+      transition: background 0.2s;
+    }
+ 
+    .nav-right a:hover {
+      background: rgba(0,0,0,0.07);
+    }
+ 
+
+    .hero-section {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 100px 0 40px;
+      overflow: hidden;
+    }
+ 
+    .hero-section img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+ 
+    .hero-top {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+ 
+    .hero-top h1 {
+      font-size: 40px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #171a20;
+    }
+ 
+    .hero-top p {
+      font-size: 14px;
+      color: #393c41;
+      margin-top: 8px;
+    }
+ 
+    .hero-top p a {
+      color: #393c41;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+ 
+    .hero-white h1, .hero-white p { color: #fff; }
+    .hero-white p a { color: rgba(255,255,255,0.8); }
+ 
+    .hero-bottom {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 680px;
+      padding: 0 20px;
+    }
+ 
+    .cta-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+ 
+    .btn {
+      flex: 1;
+      max-width: 280px;
+      padding: 13px 24px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      border: none;
+      letter-spacing: 0.02em;
+      transition: opacity 0.2s;
+    }
+ 
+    .btn:hover { opacity: 0.85; }
+ 
+    .btn-dark {
+      background: rgba(23, 26, 32, 0.8);
+      color: #fff;
+    }
+ 
+    .btn-light {
+      background: rgba(255,255,255,0.65);
+      color: #393c41;
+    }
+ 
+    .btn-outline {
+      background: rgba(23, 26, 32, 0.05);
+      color: #171a20;
+      border: 1px solid rgba(23,26,32,0.2);
+    }
+ 
+
+    .scroll-hint {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 99;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      opacity: 1;
+      transition: opacity 0.4s;
+    }
+ 
+    .scroll-hint span {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: #393c41;
+      text-transform: uppercase;
+    }
+ 
+    .scroll-arrow {
+      width: 20px;
+      height: 20px;
+      border-right: 2px solid #393c41;
+      border-bottom: 2px solid #393c41;
+      transform: rotate(45deg);
+      animation: bounce 1.6s infinite;
+    }
+ 
+    @keyframes bounce {
+      0%, 100% { transform: rotate(45deg) translateY(0); }
+      50% { transform: rotate(45deg) translateY(5px); }
+    }
+ 
+    /* ── BACKGROUND COLORS ── */
+    .bg-1 { background: #f4f4f4; }
+    .bg-2 { background: #000; }
+    .bg-3 { background: #dce1e9; }
+    .bg-4 { background: #1d2124; }
+ 
+    /* ── FOOTER ── */
+    footer {
+      background: #fff;
+      padding: 40px;
+      border-top: 1px solid #d0d1d2;
+    }
+ 
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 24px;
+      max-width: 1200px;
+      margin: 0 auto 24px;
+    }
+ 
+    .footer-links a {
+      font-size: 12px;
+      color: #5c5e62;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+ 
+    .footer-links a:hover { color: #171a20; }
+ 
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+ 
+    .footer-bottom p {
+      font-size: 12px;
+      color: #5c5e62;
+    }
+ 
+    /* ── MODELS GRID ── */
+    .models-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #fff;
+    }
+ 
+    .model-card {
+      position: relative;
+      height: 50vh;
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 40px 20px 28px;
+      overflow: hidden;
+    }
+ 
+    .model-card img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+ 
+    .model-card-top {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+ 
+    .model-card-top h2 {
+      font-size: 28px;
+      font-weight: 600;
+    }
+ 
+    .model-card-top p {
+      font-size: 13px;
+      margin-top: 4px;
+      color: #5c5e62;
+    }
+ 
+    .model-card-btns {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 12px;
+    }
+ 
+    .model-card-btns .btn {
+      flex: none;
+      font-size: 13px;
+      padding: 10px 22px;
+    }
+ 
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+ 
+      .models-section { grid-template-columns: 1fr; }
+ 
+      .hero-top h1 { font-size: 28px; }
+ 
+      .cta-buttons { flex-direction: column; align-items: center; }
+ 
+      nav { padding: 0 20px; }
+ 
+      footer { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+ 
+  <!-- NAVBAR -->
+  <nav id="navbar">
+    <div class="nav-logo">
+      <!-- Tesla SVG logo -->
+      <svg viewBox="0 0 342.3 130.5" xmlns="http://www.w3.org/2000/svg">
+        <path d="M171.2 130.5L129.9 32.7c21.2 0 41.9 4.5 41.3 22.4C170.6 37.2 191.3 32.7 212.5 32.7L171.2 130.5zM0 32.7v-13C36.7 19.7 61.8 8.2 69.8 0h13c0 .3-5.7 18.7-5.7 19.7H129V32.7H0zM213.3 19.7c0-1 5.7-19.4 5.7-19.7h13c8 8.2 33.1 19.7 69.8 19.7v13h-129V19.7h40.5z"/>
+      </svg>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#">Vehicles</a></li>
+      <li><a href="#">Energy</a></li>
+      <li><a href="#">Charging</a></li>
+      <li><a href="#">Discover</a></li>
+      <li><a href="#">Shop</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="#">Support</a>
+      <a href="#">Account</a>
+    </div>
+  </nav>
+ 
+  <!-- SECTION 1: Model 3 -->
+  <section class="hero-section">
+    <img src="/image/10001.jpg" alt="">
+ 
+         onerror="this.style.display='none'; this.parentElement.style.background='#dce1e9'"
+         alt="Model 3" />
+    <div class="hero-top">
+      <h1>Model 3</h1>
+      <p>From $38,990 &nbsp;·&nbsp; <a href="#">After Federal Tax Credit</a></p>
+    </div>
+    <div class="hero-bottom">
+      <div class="cta-buttons">
+        <button class="btn btn-dark">Order Now</button>
+        <button class="btn btn-light">Learn More</button>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- SECTION 2: Model Y -->
+  <section class="hero-section">
+    
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg,#e8e8e0 0%,#c5c5bc 100%);z-index:0;"></div>
+    <img src="/image/tesla.jpg" alt="">
+    <div class="hero-top">
+      <h1>Model Y</h1>
+      <p>From $44,990 &nbsp;·&nbsp; <a href="#">After Federal Tax Credit</a></p>
+    </div>
+    <div class="hero-bottom">
+      <div class="cta-buttons">
+        <button class="btn btn-dark">Order Now</button>
+        <button class="btn btn-light">Learn More</button>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- SECTION 3: Cybertruck -->
+  <section class="hero-section">
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg,#1a1a1a 0%,#2d2d2d 100%);z-index:0;"></div>
+    <img src="/image/tesla2.jpg" alt="">
+    <div class="hero-top hero-white">
+      <h1>Cybertruck</h1>
+      <p style="color:rgba(255,255,255,0.7);">Starting at $79,990 &nbsp;·&nbsp; <a href="#" style="color:rgba(255,255,255,0.7);">Dual Motor AWD</a></p>
+    </div>
+    <div class="hero-bottom">
+      <div class="cta-buttons">
+        <button class="btn btn-dark" style="background:rgba(255,255,255,0.15);color:#fff;">Order Now</button>
+        <button class="btn btn-light" style="background:rgba(255,255,255,0.65);">Learn More</button>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- SECTION 4: Model S -->
+  <section class="hero-section">
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg,#f0f0f0 0%,#d8d8d8 100%);z-index:0;"></div>
+    <img src="/image/tesla6.jpeg" alt="">
+    <div class="hero-top">
+      <h1>Model S</h1>
+      <p>Starting at $74,990</p>
+    </div>
+    <div class="hero-bottom">
+      <div class="cta-buttons">
+        <button class="btn btn-dark">Order Now</button>
+        <button class="btn btn-light">Learn More</button>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- SECTION 5: Model X -->
+  <section class="hero-section">
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg,#e4e0d8 0%,#cbc7be 100%);z-index:0;"></div>
+    <img src="/image/tesla4.jpg" alt="">
+    <div class="hero-top">
+      <h1>Model X</h1>
+      <p>Starting at $79,990</p>
+    </div>
+    <div class="hero-bottom">
+      <div class="cta-buttons">
+        <button class="btn btn-dark">Order Now</button>
+        <button class="btn btn-light">Learn More</button>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- MODELS GRID -->
+  <div class="models-section">
+    <!-- Solar Panels -->
+    <div class="model-card" style="background:#f4f4f4;">
+        <img src="image/tesla3.jpeg" alt="">
+      <div class="model-card-top">
+        <h2>Solar Panels</h2>
+        <p>Lowest Cost Solar Panels in America</p>
+      </div>
+      <div class="model-card-btns">
+        <button class="btn btn-dark" style="font-size:13px;padding:10px 22px;">Order Now</button>
+        <button class="btn btn-outline" style="font-size:13px;padding:10px 22px;">Learn More</button>
+      </div>
+    </div>
+    <!-- Solar Roof -->
+    <div class="model-card" style="background:#dce1e9;">
+        <img src="image/tesla5.jpeg" alt="">
+      <div class="model-card-top">
+        <h2>Solar Roof</h2>
+        <p>Produce Clean Energy From Your Roof</p>
+      </div>
+      <div class="model-card-btns">
+        <button class="btn btn-dark" style="font-size:13px;padding:10px 22px;">Order Now</button>
+        <button class="btn btn-outline" style="font-size:13px;padding:10px 22px;">Learn More</button>
+      </div>
+    </div>
+    <!-- Powerwall -->
+    <div class="model-card" style="background:#171a20;">
+        <img src="image/tesla4.jpg" alt="">
+      <div class="model-card-top">
+        <h2 style="color:#fff;">Powerwall</h2>
+        <p style="color:rgba(255,255,255,0.6);">Homeowners Who Own Powerwall Love It</p>
+      </div>
+      <div class="model-card-btns">
+        <button class="btn" style="background:rgba(255,255,255,0.15);color:#fff;font-size:13px;padding:10px 22px;">Order Now</button>
+        <button class="btn" style="background:rgba(255,255,255,0.65);color:#393c41;font-size:13px;padding:10px 22px;">Learn More</button>
+      </div>
+    </div>
+    <!-- Megapack -->
+    <div class="model-card" style="background:#e9e9e5;">
+        <img src="image/tesla7.jpeg" alt="">
+      <div class="model-card-top">
+        <h2>Megapack</h2>
+        <p>Utility-Scale Energy Storage</p>
+      </div>
+      <div class="model-card-btns">
+        <button class="btn btn-dark" style="font-size:13px;padding:10px 22px;">Learn More</button>
+        <button class="btn btn-outline" style="font-size:13px;padding:10px 22px;">Request a Quote</button>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- SECTION: Accessories -->
+  <section class="hero-section" style="height: 70vh;">
+    <div style="position:absolute;inset:0;background:#f4f4f4;z-index:0;"></div>
+    <div class="hero-top">
+      <h1>Accessories</h1>
+    </div>
+    <div class="hero-bottom">
+      <div class="cta-buttons">
+        <button class="btn btn-dark" style="max-width:200px;">Shop Now</button>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-links">
+      <a href="#">Tesla © 2024</a>
+      <a href="#">Privacy & Legal</a>
+      <a href="#">Vehicle Recalls</a>
+      <a href="#">Contact</a>
+      <a href="#">News</a>
+      <a href="#">Get Updates</a>
+      <a href="#">Locations</a>
+    </div>
+    <div class="footer-bottom">
+      <p>Tesla, Inc. All rights reserved.</p>
+      <p>United States · English</p>
+    </div>
+  </footer>
+ 
+  <!-- SCROLL INDICATOR -->
+  <div class="scroll-hint" id="scrollHint">
+    <div class="scroll-arrow"></div>
+    <span>Scroll</span>
+  </div>
+ 
+  
+</body>
+</html>
+ 

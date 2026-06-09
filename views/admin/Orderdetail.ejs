@@ -1,0 +1,651 @@
+<%- include("../partials/admin/header") %>
+
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', 'Outfit', sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+  }
+
+  .main-content {
+    margin-left: 250px;
+    padding: 32px;
+    min-height: 100vh;
+    background: #f5f7fa;
+  }
+
+  /* ── TOP BAR ── */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #3e29a8;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .back-link:hover { color: #2e1e82; }
+
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+    color: #888;
+  }
+
+  .top-bar-right strong { color: #1a1a2e; }
+
+  /* ── STATUS BADGES ── */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.775rem;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .status-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.7;
+  }
+
+  .s-Pending        { background: #fef9ee; color: #d97706; }
+  .s-Processing     { background: #eff6ff; color: #2563eb; }
+  .s-Shipped        { background: #ecfeff; color: #0891b2; }
+  .s-OutForDelivery { background: #f0fdf4; color: #059669; }
+  .s-Delivered      { background: #dcfce7; color: #16a34a; }
+  .s-Cancelled      { background: #fef2f2; color: #dc2626; }
+  .s-ReturnRequest  { background: #fdf4ff; color: #9333ea; }
+  .s-Returned       { background: #faf5ff; color: #7c3aed; }
+
+  /* ── GRID ── */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+    align-items: start;
+  }
+
+  .left-col  { display: flex; flex-direction: column; gap: 20px; }
+  .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── CARD ── */
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+
+  .card-head {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-head h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .card-head h3 i { color: #3e29a8; }
+  .card-head .sub { font-size: 0.75rem; color: #aaa; }
+  .card-body { padding: 20px; }
+
+  /* ── ORDER META ── */
+  .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .meta-label { font-size: 0.72rem; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .meta-value { font-size: 0.9rem; font-weight: 600; color: #1a1a2e; }
+  .meta-value.id { font-family: 'Courier New', monospace; color: #3e29a8; }
+
+  .pay-badge { font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .pay-cod    { background: #fef3e2; color: #d97706; }
+  .pay-online { background: #e0f2fe; color: #0284c7; }
+  .pay-wallet { background: #f0fdf4; color: #16a34a; }
+
+  /* ── TIMELINE ── */
+  .timeline { display: flex; align-items: flex-start; padding: 8px 0; overflow-x: auto; }
+
+  .timeline-step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    min-width: 80px;
+  }
+
+  .timeline-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: calc(50% + 16px);
+    right: calc(-50% + 16px);
+    height: 2px;
+    background: #e4e6eb;
+    z-index: 0;
+  }
+
+  .timeline-step.done:not(:last-child)::after { background: #3e29a8; }
+
+  .step-dot {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    border: 2px solid #e4e6eb;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #bbb;
+    position: relative; z-index: 1;
+  }
+
+  .timeline-step.done    .step-dot { background: #3e29a8; border-color: #3e29a8; color: #fff; }
+  .timeline-step.current .step-dot { background: #fff; border-color: #3e29a8; color: #3e29a8; box-shadow: 0 0 0 4px rgba(62,41,168,0.12); }
+
+  .step-label { font-size: 0.68rem; font-weight: 600; color: #aaa; margin-top: 7px; text-align: center; line-height: 1.3; }
+  .timeline-step.done    .step-label,
+  .timeline-step.current .step-label { color: #3e29a8; }
+
+  /* ── ITEMS TABLE ── */
+  .items-table { width: 100%; border-collapse: collapse; }
+
+  .items-table thead th {
+    background: #3b6da1;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.825rem;
+    padding: 13px 16px;
+    text-align: left;
+    border: none;
+  }
+
+  .items-table tbody tr { border-bottom: 1px solid #f5f5f5; }
+  .items-table tbody tr:last-child { border-bottom: none; }
+  .items-table tbody tr:hover { background: #fafbff; }
+  .items-table tbody td { padding: 14px 16px; vertical-align: middle; font-size: 0.875rem; color: #555; }
+
+  .product-cell { display: flex; align-items: center; gap: 12px; }
+  .product-thumb { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 1px solid #eee; flex-shrink: 0; }
+  .product-thumb-placeholder { width: 48px; height: 48px; border-radius: 8px; background: #f5f5f5; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; color: #ccc; flex-shrink: 0; }
+  .product-name { font-weight: 700; color: #1a1a2e; font-size: 0.875rem; }
+  .product-meta { font-size: 0.75rem; color: #999; margin-top: 2px; }
+
+  .size-chip { display: inline-block; background: #f0eeff; color: #3e29a8; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+
+  /* ── PRICE SUMMARY ── */
+  .price-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; font-size: 0.875rem; border-bottom: 1px solid #f5f5f5; }
+  .price-row:last-child { border-bottom: none; }
+  .price-row .lbl { color: #666; }
+  .price-row .val { font-weight: 600; color: #1a1a2e; }
+  .price-row.total { padding-top: 14px; margin-top: 4px; border-top: 2px solid #f0f0f0; border-bottom: none; }
+  .price-row.total .lbl { font-size: 0.95rem; font-weight: 700; color: #1a1a2e; }
+  .price-row.total .val { font-size: 1.05rem; font-weight: 800; color: #3e29a8; }
+  .discount-val { color: #16a34a !important; }
+
+  /* ── ADDRESS ── */
+  .address-box { font-size: 0.875rem; line-height: 1.8; color: #444; }
+  .address-box strong { color: #1a1a2e; display: block; margin-bottom: 2px; }
+
+  /* ── CUSTOMER ── */
+  .info-row { display: flex; align-items: flex-start; gap: 10px; font-size: 0.875rem; margin-bottom: 10px; }
+  .info-row:last-child { margin-bottom: 0; }
+  .info-row i { color: #3e29a8; font-size: 0.8rem; margin-top: 3px; flex-shrink: 0; }
+  .info-row span { color: #444; }
+
+  /* ── STATUS UPDATE ── */
+  .status-select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    outline: none;
+    background: #fff;
+    margin-bottom: 12px;
+  }
+
+  .status-select:focus { border-color: #3e29a8; }
+
+  .btn-update {
+    background: #3e29a8;
+    color: #fff;
+    border: none;
+    padding: 11px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+  }
+
+  .btn-update:hover { background: #2e1e82; }
+  .btn-update:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── RETURN REQUEST ── */
+  .return-box { background: #fdf4ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 14px; }
+  .return-label { font-size: 0.72rem; font-weight: 700; color: #9333ea; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .return-reason { font-size: 0.85rem; color: #555; margin-bottom: 12px; line-height: 1.5; }
+  .return-actions { display: flex; gap: 8px; }
+  .btn-approve { flex: 1; background: #16a34a; color: #fff; border: none; padding: 9px; border-radius: 7px; font-size: 0.825rem; font-weight: 600; cursor: pointer; }
+  .btn-approve:hover { background: #15803d; }
+  .btn-reject  { flex: 1; background: #fff; color: #dc2626; border: 1px solid #fca5a5; padding: 9px; border-radius: 7px; font-size: 0.825rem; font-weight: 600; cursor: pointer; }
+  .btn-reject:hover { background: #fef2f2; }
+
+  /* ── NOTICES ── */
+  .notice { border-radius: 8px; padding: 12px 16px; font-size: 0.85rem; display: flex; align-items: flex-start; gap: 8px; }
+  .notice-red   { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+  .notice-green { background: #dcfce7; border: 1px solid #bbf7d0; color: #16a34a; }
+  .notice-purple { background: #fdf4ff; border: 1px solid #e9d5ff; color: #9333ea; font-size: 0.85rem; border-radius: 8px; padding: 10px 14px; }
+
+  @media (max-width: 1024px) {
+    .detail-grid { grid-template-columns: 1fr; }
+    .meta-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .main-content { margin-left: 0; padding: 16px; }
+  }
+</style>
+
+<aside class="sidebar d-none d-lg-block">
+  <%- include("../partials/admin/sidebar_links") %>
+</aside>
+
+<main class="main-content">
+
+  <%
+    const statusClass = order.status.replace(/\s+/g, '');
+    const payMethod   = order.paymentMethod || 'COD';
+    const payClass    = payMethod === 'COD' ? 'pay-cod' : payMethod === 'Wallet' ? 'pay-wallet' : 'pay-online';
+    const orderId     = order.orderId || order._id.toString().slice(-8).toUpperCase();
+
+    const timelineSteps = [
+      { key: 'Pending',          label: 'Pending',          icon: 'bi-clock' },
+      { key: 'Processing',       label: 'Processing',       icon: 'bi-gear' },
+      { key: 'Shipped',          label: 'Shipped',          icon: 'bi-truck' },
+      { key: 'Out for Delivery', label: 'Out for Delivery', icon: 'bi-geo-alt' },
+      { key: 'Delivered',        label: 'Delivered',        icon: 'bi-check-lg' }
+    ];
+    const statusOrder = timelineSteps.map(s => s.key);
+    const currentIdx  = statusOrder.indexOf(order.status);
+  %>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <a href="/admin/orders" class="back-link">
+      <i class="bi bi-arrow-left"></i> Back to Orders
+    </a>
+    <div class="top-bar-right">
+      Order <strong>#<%= orderId %></strong>
+      <span class="status-badge s-<%= statusClass %>"><%= order.status %></span>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+
+    <!-- ═══ LEFT COLUMN ═══ -->
+    <div class="left-col">
+
+      <!-- Order Info -->
+      <div class="card">
+        <div class="card-head">
+          <h3><i class="bi bi-info-circle"></i> Order Info</h3>
+          <span class="sub">
+            <%= new Date(order.createdOn || order.createdAt).toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) %>
+          </span>
+        </div>
+        <div class="card-body">
+          <div class="meta-grid">
+            <div>
+              <div class="meta-label">Order ID</div>
+              <div class="meta-value id">#<%= orderId %></div>
+            </div>
+            <div>
+              <div class="meta-label">Payment</div>
+              <div class="meta-value"><span class="pay-badge <%= payClass %>"><%= payMethod %></span></div>
+            </div>
+            <div>
+              <div class="meta-label">Payment Status</div>
+              <div class="meta-value" style="color:<%= order.paymentStatus === 'Paid' ? '#16a34a' : '#d97706' %>">
+                <%= order.paymentStatus || 'Pending' %>
+              </div>
+            </div>
+            <% if (order.couponCode) { %>
+            <div>
+              <div class="meta-label">Coupon</div>
+              <div class="meta-value" style="color:#9333ea;"><%= order.couponCode %></div>
+            </div>
+            <% } %>
+            <% if (order.invoiceDate) { %>
+            <div>
+              <div class="meta-label">Delivered On</div>
+              <div class="meta-value"><%= new Date(order.invoiceDate).toLocaleDateString('en-IN') %></div>
+            </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <% if (!['Cancelled','Return Request','Returned'].includes(order.status)) { %>
+      <div class="card">
+        <div class="card-head"><h3><i class="bi bi-signpost-split"></i> Order Progress</h3></div>
+        <div class="card-body">
+          <div class="timeline">
+            <% timelineSteps.forEach((step, i) => {
+              let cls = '';
+              if (currentIdx > i) cls = 'done';
+              else if (currentIdx === i) cls = 'current';
+            %>
+            <div class="timeline-step <%= cls %>">
+              <div class="step-dot"><i class="bi <%= step.icon %>"></i></div>
+              <span class="step-label"><%= step.label %></span>
+            </div>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+      <% } %>
+
+      <% if (order.status === 'Cancelled') { %>
+        <div class="notice notice-red"><i class="bi bi-x-circle"></i> This order was cancelled. Stock has been restored.</div>
+      <% } %>
+
+      <% if (order.status === 'Returned') { %>
+        <div class="notice notice-green"><i class="bi bi-arrow-counterclockwise"></i> This order was returned and stock has been restored.</div>
+      <% } %>
+
+      <!-- Ordered Items -->
+      <div class="card">
+        <div class="card-head">
+          <h3><i class="bi bi-box-seam"></i> Ordered Items</h3>
+          <span class="sub"><%= order.orderedItems ? order.orderedItems.length : 0 %> item(s)</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Size</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (order.orderedItems && order.orderedItems.length > 0) { %>
+                <% order.orderedItems.forEach(item => {
+                  const prod      = item.product || {};
+                  const imgSrc    = (prod.productImage && prod.productImage[0]) ? prod.productImage[0] : null;
+                  const itemTotal = (item.price || 0) * (item.quantity || 1);
+                %>
+                <tr>
+                  <td>
+                    <div class="product-cell">
+                      <% if (imgSrc) { %>
+                        <img src="<%= imgSrc %>" class="product-thumb" alt="">
+                      <% } else { %>
+                        <div class="product-thumb-placeholder"><i class="bi bi-image"></i></div>
+                      <% } %>
+                      <div>
+                        <div class="product-name"><%= prod.productName || '—' %></div>
+                        <div class="product-meta"><%= prod.category ? (prod.category.name || '') : '' %></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="size-chip"><%= item.size || '—' %></span></td>
+                  <td style="font-weight:600;">× <%= item.quantity || 1 %></td>
+                  <td>₹<%= (item.price || 0).toLocaleString('en-IN') %></td>
+                  <td style="font-weight:700;">₹<%= itemTotal.toLocaleString('en-IN') %></td>
+                </tr>
+                <% }) %>
+              <% } else { %>
+                <tr><td colspan="5" style="text-align:center; color:#ccc; padding:24px;">No items</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Price Summary -->
+      <div class="card">
+        <div class="card-head"><h3><i class="bi bi-receipt"></i> Price Summary</h3></div>
+        <div class="card-body">
+          <div class="price-row">
+            <span class="lbl">Subtotal</span>
+            <span class="val">₹<%= (order.totalPrice || 0).toLocaleString('en-IN') %></span>
+          </div>
+          <% if (order.discount && order.discount > 0) { %>
+          <div class="price-row">
+            <span class="lbl">Discount</span>
+            <span class="val discount-val">− ₹<%= order.discount.toLocaleString('en-IN') %></span>
+          </div>
+          <% } %>
+          <% if (order.couponDiscount && order.couponDiscount > 0) { %>
+          <div class="price-row">
+            <span class="lbl">Coupon (<%= order.couponCode || '' %>)</span>
+            <span class="val discount-val">− ₹<%= order.couponDiscount.toLocaleString('en-IN') %></span>
+          </div>
+          <% } %>
+          <div class="price-row">
+            <span class="lbl">Shipping</span>
+            <span class="val"><%= (order.shippingCharge || 0) === 0 ? 'Free' : '₹' + (order.shippingCharge || 0).toLocaleString('en-IN') %></span>
+          </div>
+          <div class="price-row total">
+            <span class="lbl">Total Paid</span>
+            <span class="val">₹<%= (order.finalAmount || order.totalPrice || 0).toLocaleString('en-IN') %></span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /left-col -->
+
+    <!-- ═══ RIGHT COLUMN ═══ -->
+    <div class="right-col">
+
+      <!-- Update Status -->
+      <div class="card">
+        <div class="card-head"><h3><i class="bi bi-pencil-square"></i> Update Status</h3></div>
+        <div class="card-body">
+          <% if (order.status === 'Cancelled') { %>
+            <div class="notice notice-red" style="margin:0;"><i class="bi bi-lock"></i> Cancelled orders cannot be updated.</div>
+          <% } else if (order.status === 'Return Request') { %>
+            <div class="notice-purple"><i class="bi bi-arrow-counterclockwise me-1"></i> A return request is pending review below.</div>
+          <% } else { %>
+            <select class="status-select" id="statusSelect">
+              <% ['Pending','Processing','Shipped','Out for Delivery','Delivered','Cancelled'].forEach(s => { %>
+                <option value="<%= s %>" <%= order.status === s ? 'selected' : '' %>><%= s %></option>
+              <% }) %>
+            </select>
+            <button class="btn-update" id="updateStatusBtn" onclick="updateStatus()">
+              <i class="bi bi-save me-1"></i> Save Status
+            </button>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Return Request -->
+      <% if (order.status === 'Return Request') { %>
+      <div class="card">
+        <div class="card-head"><h3><i class="bi bi-arrow-counterclockwise"></i> Return Request</h3></div>
+        <div class="card-body">
+          <div class="return-box">
+            <div class="return-label"><i class="bi bi-exclamation-circle"></i> Return Requested</div>
+            <div class="return-reason">
+              <strong style="color:#9333ea; font-size:0.72rem;">Reason:</strong><br>
+              <%= order.returnReason || 'No reason provided.' %>
+            </div>
+            <div class="return-actions">
+              <button class="btn-approve" onclick="handleReturn('approve')">
+                <i class="bi bi-check-lg me-1"></i> Approve
+              </button>
+              <button class="btn-reject" onclick="handleReturn('reject')">
+                <i class="bi bi-x-lg me-1"></i> Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- Customer Info -->
+      <div class="card">
+        <div class="card-head"><h3><i class="bi bi-person"></i> Customer</h3></div>
+        <div class="card-body">
+          <div class="info-row">
+            <i class="bi bi-person-circle"></i>
+            <span><strong><%= order.userId ? order.userId.fullName : '—' %></strong></span>
+          </div>
+          <% if (order.userId && order.userId.email) { %>
+          <div class="info-row">
+            <i class="bi bi-envelope"></i>
+            <span><%= order.userId.email %></span>
+          </div>
+          <% } %>
+          <% if (order.userId && order.userId.phone) { %>
+          <div class="info-row">
+            <i class="bi bi-telephone"></i>
+            <span><%= order.userId.phone %></span>
+          </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Delivery Address -->
+      <% if (order.address) { %>
+      <div class="card">
+        <div class="card-head"><h3><i class="bi bi-geo-alt"></i> Delivery Address</h3></div>
+        <div class="card-body">
+          <div class="address-box">
+            <% const addr = order.address; %>
+            <strong><%= addr.fullName || (order.userId ? order.userId.fullName : '') %></strong>
+            <% if (addr.phone) { %><span style="font-size:0.8rem; color:#888;"><%= addr.phone %></span><br><% } %>
+            <%= addr.addressLine || addr.street || addr.address || '' %><br>
+            <% if (addr.landmark) { %><%= addr.landmark %><br><% } %>
+            <%= addr.city || '' %><% if (addr.state) { %>, <%= addr.state %><% } %>
+            <% if (addr.pincode || addr.zipCode) { %> — <%= addr.pincode || addr.zipCode %><% } %>
+          </div>
+        </div>
+      </div>
+      <% } %>
+
+    </div><!-- /right-col -->
+  </div><!-- /detail-grid -->
+
+</main>
+
+<%- include("../partials/admin/footer") %>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  const ORDER_ID = '<%= order._id %>';
+
+  async function updateStatus() {
+    const select = document.getElementById('statusSelect');
+    const btn    = document.getElementById('updateStatusBtn');
+    const status = select.value;
+
+    if (status === '<%= order.status %>') {
+      Swal.fire({ icon: 'info', text: 'Status is already ' + status, timer: 1500, showConfirmButton: false });
+      return;
+    }
+
+    if (status === 'Cancelled') {
+      const confirm = await Swal.fire({
+        icon: 'warning',
+        title: 'Cancel this order?',
+        text: 'Stock will be restored. This cannot be undone.',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'Yes, cancel it'
+      });
+      if (!confirm.isConfirmed) return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Saving…';
+
+    try {
+      const res  = await fetch(`/admin/orders/${ORDER_ID}/status`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ status })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await Swal.fire({ icon: 'success', text: data.message, timer: 1500, showConfirmButton: false });
+        location.reload();
+      } else {
+        Swal.fire({ icon: 'error', text: data.message || 'Update failed' });
+      }
+    } catch (e) {
+      Swal.fire({ icon: 'error', text: 'Network error. Please try again.' });
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-save me-1"></i> Save Status';
+    }
+  }
+
+  async function handleReturn(action) {
+    const label  = action === 'approve' ? 'Approve Return' : 'Reject Return';
+    const colour = action === 'approve' ? '#16a34a' : '#dc2626';
+    const text   = action === 'approve'
+      ? 'Stock will be restored and order marked as Returned.'
+      : 'Order will revert to Delivered status.';
+
+    const result = await Swal.fire({
+      title: label + '?',
+      text,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: colour,
+      confirmButtonText: label
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      const res  = await fetch(`/admin/orders/${ORDER_ID}/return`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ action })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await Swal.fire({ icon: 'success', text: data.message, timer: 1500, showConfirmButton: false });
+        location.reload();
+      } else {
+        Swal.fire({ icon: 'error', text: data.message || 'Action failed' });
+      }
+    } catch (e) {
+      Swal.fire({ icon: 'error', text: 'Network error. Please try again.' });
+    }
+  }
+</script>

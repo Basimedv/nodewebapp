@@ -5,6 +5,7 @@ const profileController = require('../controllers/user/profileController');
 const addresscontroller = require('../controllers/user/addresscontroller');
 const { addReview } = require('../controllers/user/reviewController');
 const wishlistController = require('../controllers/user/wishlistController');
+const checkoutController = require('../controllers/user/checkoutController');
 const cartController = require('../controllers/user/cartController');
 const { userAuth, isGuest } = require('../middlewares/auth');
 const { uploadProfile } = require('../config/cloudinary');
@@ -91,6 +92,18 @@ router.get(ROUTES.USER.CART,             userAuth, cartController.getCart);
 router.post(ROUTES.USER.ADD_TO_CART,     userAuth, cartController.addToCart);
 router.post(ROUTES.USER.UPDATE_CART,     userAuth, cartController.updateQuantity);
 router.post(ROUTES.USER.REMOVE_FROM_CART, userAuth, cartController.removeFromCart);
+
+
+
+router.get(ROUTES.USER.CHECKOUT,              userAuth, checkoutController.getCheckout);
+router.post(ROUTES.USER.CHECKOUT_PLACE_ORDER, userAuth, checkoutController.placeOrder);
+router.post(ROUTES.USER.CHECKOUT_APPLY_COUPON,userAuth, checkoutController.applyCoupon);
+router.get(ROUTES.USER.ORDER_SUCCESS,         userAuth, checkoutController.getOrderSuccess);
+
+
+router.post(ROUTES.USER.CHECKOUT_RAZORPAY_ORDER, userAuth, checkoutController.createRazorpayOrder);
+router.post(ROUTES.USER.CHECKOUT_VERIFY_PAYMENT, userAuth, checkoutController.verifyRazorpayPayment);
+router.post(ROUTES.USER.CHECKOUT_PAYMENT_FAILED, userAuth, checkoutController.paymentFailed);
 
 
 router.post(ROUTES.USER.ADD_REVIEW, userAuth, addReview);

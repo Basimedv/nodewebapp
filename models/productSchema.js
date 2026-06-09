@@ -19,15 +19,12 @@ const productSchema = new Schema({
         type: Number,
         required: true
     },
-    salePrice: {
-        type: Number,
-        default: null
-    },
+    // ❌ salePrice removed — now calculated dynamically from offers
     stock: {
-        S: { type: Number, default: 0 },
-        M: { type: Number, default: 0 },
-        L: { type: Number, default: 0 },
-        XL: { type: Number, default: 0 },
+        S:   { type: Number, default: 0 },
+        M:   { type: Number, default: 0 },
+        L:   { type: Number, default: 0 },
+        XL:  { type: Number, default: 0 },
         XXL: { type: Number, default: 0 }
     },
     size: {
@@ -45,8 +42,8 @@ const productSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["Available", "Out of Stock", "Discontinued"],
-        default: "Available"
+        enum: ['Available', 'Out of Stock', 'Discontinued'],
+        default: 'Available'
     }
 }, { timestamps: true });
 

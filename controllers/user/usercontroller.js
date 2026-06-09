@@ -2,6 +2,7 @@ const User = require("../../models/userSchema");
 const Product = require("../../models/productSchema");
 const Category = require('../../models/categorySchema');
 const Review = require('../../models/reviewSchema');
+const Offer = require('../../models/offerSchema');
 const { generateOtp, securePassword, sendVerificationEmail } = require("../../utils/authHelper");
 const bcrypt = require('bcrypt');
 const HTTP_STATUS_CODES = require("../../constants/status_codes");
@@ -254,32 +255,71 @@ const loadShopping = async (req, res) => {
       ]);
     }
 
-    // ── map products ──
-    const products = itemsRaw.map(p => {
-      const regular  = Number(p.regularPrice || 0);
-      const sale     = Number(p.salePrice    || 0);
-      const isOnSale = sale > 0 && sale < regular;
-      const finalPrice = isOnSale ? sale : regular;
-      const discountPercent = isOnSale
-        ? Math.round((regular - sale) / regular * 100)
-        : 0;
+   // ── fetch all active offers in ONE query ──
+const now = new Date();
+const activeOffers = await Offer.find({
+  isActive:  true,
+  startDate: { $lte: now },
+  endDate:   { $gte: now }
+}).lean();
 
-      const totalStock = Object.values(p.stock || {})
-        .reduce((a, b) => a + (parseInt(b) || 0), 0);
+// ── map products with best offer ──
+const products = itemsRaw.map(p => {
+  const regular = Number(p.regularPrice || 0);
 
-      return {
-        ...p,
-        name:            p.productName,
-        images:          p.productImage || [],
-        regularPrice:    regular,
-        salePrice:       sale,
-        finalPrice,
-        discountPercent,
-        totalStock,
-        status: totalStock > 0 ? 'Available' : 'Out of Stock'
-      };
-    });
+  // find product-level offer
+  const productOffer = activeOffers.find(
+    o => o.offerType === 'product' &&
+         o.targetId.toString() === p._id.toString()
+  );
 
+  // find category-level offer
+  const categoryOffer = activeOffers.find(
+    o => o.offerType === 'category' &&
+         o.targetId.toString() === (
+           p.category?._id || p.category
+         ).toString()
+  );
+
+  // ✅ pick best discount — product offer wins if equal
+  let bestDiscount = 0;
+  let appliedOffer = null;
+
+  if ((productOffer?.discountPercentage || 0) >= (categoryOffer?.discountPercentage || 0)) {
+    if (productOffer) {
+      bestDiscount = productOffer.discountPercentage;
+      appliedOffer = productOffer;
+    }
+  } else {
+    bestDiscount = categoryOffer.discountPercentage;
+    appliedOffer = categoryOffer;
+  }
+
+  const salePrice = bestDiscount > 0
+    ? Math.round(regular - (regular * bestDiscount) / 100)
+    : null;
+
+  const finalPrice    = salePrice || regular;
+  const isOnSale      = bestDiscount > 0;
+  const discountPercent = bestDiscount;
+
+  const totalStock = Object.values(p.stock || {})
+    .reduce((a, b) => a + (parseInt(b) || 0), 0);
+
+  return {
+    ...p,
+    name:          p.productName,
+    images:        p.productImage || [],
+    regularPrice:  regular,
+    salePrice,
+    finalPrice,
+    isOnSale,
+    discountPercent,
+    appliedOffer,
+    totalStock,
+    status: totalStock > 0 ? 'Available' : 'Out of Stock'
+  };
+});
     const totalPages = Math.ceil(total / limit) || 1;
 
     res.render('user/productListing', {
@@ -307,25 +347,82 @@ const loadShopping = async (req, res) => {
 };
 const getProductDetails = async (req, res) => {
     try {
-        const p = await Product.findById(req.params.id).populate('category').lean();
+        const p = await Product.findById(req.params.id)
+            .populate('category')
+            .lean();
 
         if (!p || p.isBlocked || p.status === 'Discontinued' || !p.category?.isListed) {
-            return res.status(404).render('user/pageNotFound', { user: req.session.user || null });
+            return res.status(404).render('user/pageNotFound', {
+                user: req.session.user || null
+            });
         }
 
-        const { offerPercent, offerPrice } = calcOfferPrice(p.regularPrice, p.productOffer, p.category?.categoryOffer);
-        const reviews = await Review.find({ product: p._id }).sort({ createdAt: -1 }).lean();
-        const avgRating = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : 0;
+        // ✅ fetch active offers for this product and its category
+        const now = new Date();
+        const [productOffer, categoryOffer] = await Promise.all([
+            Offer.findOne({
+                offerType: 'product',
+                targetId:  p._id,
+                isActive:  true,
+                startDate: { $lte: now },
+                endDate:   { $gte: now }
+            }).lean(),
+            Offer.findOne({
+                offerType: 'category',
+                targetId:  p.category._id,
+                isActive:  true,
+                startDate: { $lte: now },
+                endDate:   { $gte: now }
+            }).lean()
+        ]);
+
+        // ✅ pick best discount — product offer wins if equal
+        let bestDiscount = 0;
+        let appliedOffer = null;
+
+        if ((productOffer?.discountPercentage || 0) >= (categoryOffer?.discountPercentage || 0)) {
+            if (productOffer) {
+                bestDiscount = productOffer.discountPercentage;
+                appliedOffer = productOffer;
+            }
+        } else {
+            bestDiscount = categoryOffer.discountPercentage;
+            appliedOffer = categoryOffer;
+        }
+
+        const regular    = Number(p.regularPrice || 0);
+        const salePrice  = bestDiscount > 0
+            ? Math.round(regular - (regular * bestDiscount) / 100)
+            : null;
+
+        const reviews = await Review.find({ product: p._id })
+            .sort({ createdAt: -1 }).lean();
+        const avgRating = reviews.length
+            ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+            : 0;
 
         res.render('user/productDetails', {
-            user: req.session.user || null,
-            product: { ...p, name: p.productName, images: p.productImage || [], offerPercent, offerPrice },
+            user:    req.session.user || null,
+            product: {
+                ...p,
+                name:           p.productName,
+                images:         p.productImage || [],
+                regularPrice:   regular,
+                salePrice,                    
+                isOnSale:       bestDiscount > 0,
+                discountPercent: bestDiscount,
+                appliedOffer                  
+            },
             reviews,
-            reviewCount: reviews.length,
+            reviewCount:   reviews.length,
             averageRating: avgRating
         });
+
     } catch (err) {
-        res.status(500).render('user/pageNotFound', { user: req.session.user || null });
+        console.error('getProductDetails error:', err);
+        res.status(500).render('user/pageNotFound', {
+            user: req.session.user || null
+        });
     }
 };
 

@@ -69,19 +69,36 @@
 
           <!-- Price -->
           <%
-            var regular = Number(product && product.regularPrice ? product.regularPrice : 0);
-            var sale    = Number(product && product.salePrice    ? product.salePrice    : 0);
-            var isOnSale = sale > 0 && sale < regular;
+         var regular       = Number(product && product.regularPrice ? product.regularPrice : 0);
+var sale          = Number(product && product.salePrice    ? product.salePrice    : 0);
+var isOnSale      = product.isOnSale || (sale > 0 && sale < regular);
+var discountPct   = product.discountPercent || 0;
+var appliedOffer  = product.appliedOffer    || null;
           %>
           <div class="price-label">Price</div>
-          <% if (isOnSale) { %>
-            <div class="price-display">
-              <span class="price-sale">Rs. <%= sale.toLocaleString('en-IN') %></span>
-              <span class="price-regular-strike">Rs. <%= regular.toLocaleString('en-IN') %></span>
-            </div>
-          <% } else { %>
-            <div class="price-display">Rs. <%= regular.toLocaleString('en-IN') %></div>
-          <% } %>
+<% if (isOnSale) { %>
+  <div class="price-display">
+    <span class="price-sale">Rs. <%= sale.toLocaleString('en-IN') %></span>
+    <span class="price-regular-strike">Rs. <%= regular.toLocaleString('en-IN') %></span>
+  </div>
+  <!-- ✅ Offer badge -->
+  <div style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+    <span style="background:#e74c3c; color:white; font-size:12px;
+                 font-weight:700; padding:4px 10px; border-radius:4px;">
+      <%= discountPct %>% OFF
+    </span>
+    <% if (appliedOffer) { %>
+      <span style="background:#fff3cd; color:#856404; font-size:12px;
+                   font-weight:600; padding:4px 10px; border-radius:4px;
+                   border:1px solid #ffc107;">
+        <i class="fas fa-tag" style="margin-right:4px;"></i>
+        <%= appliedOffer.offerName %>
+      </span>
+    <% } %>
+  </div>
+<% } else { %>
+  <div class="price-display">Rs. <%= regular.toLocaleString('en-IN') %></div>
+<% } %>
 
           <div class="divider"></div>
 

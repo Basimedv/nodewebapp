@@ -50,14 +50,9 @@
     .field-error.show { display: block; }
 
     /* Character counter */
-    .char-count {
-        font-size: 0.75rem;
-        color: #aaa;
-        text-align: right;
-        margin-top: 3px;
-    }
-    .char-count.warn { color: #e67e22; }
-    .char-count.over { color: #dc3545; }
+    .char-count { font-size:0.75rem; color:#aaa; text-align:right; margin-top:3px; }
+    .char-count.warn { color:#e67e22; }
+    .char-count.over { color:#dc3545; }
 
     @media(max-width:992px){ .main-content{ margin-left:0; padding:20px; } }
 </style>
@@ -109,6 +104,7 @@
                         <th class="ps-4">#</th>
                         <th>Category Name</th>
                         <th>Items</th>
+                        <th>Offer</th>
                         <th>Status</th>
                         <th class="text-end pe-4">Actions</th>
                     </tr>
@@ -117,25 +113,66 @@
                     <% if (cat && cat.length > 0) { %>
                         <% cat.forEach((category, i) => { %>
                         <tr>
+                            <!-- # -->
                             <td class="ps-4 text-muted small">
                                 <%= (currentPage - 1) * 10 + i + 1 %>
                             </td>
+
+                            <!-- Name -->
                             <td class="fw-bold text-dark"><%= category.name %></td>
+
+                            <!-- Items -->
                             <td class="text-muted small"><%= category.itemsCount %></td>
+
+                            <!-- Offer -->
+                            <td>
+                                <% if (category.activeOffer) { %>
+                                    <span class="badge bg-success mb-1">
+                                        <%= category.activeOffer.discountPercentage %>% OFF
+                                    </span>
+                                    <br>
+                                    <small class="text-muted" style="font-size:0.75rem;">
+                                        <%= category.activeOffer.offerName %>
+                                    </small>
+                                    <br>
+                                    <small class="text-muted" style="font-size:0.7rem;">
+                                        Ends: <%= new Date(category.activeOffer.endDate).toLocaleDateString('en-IN') %>
+                                    </small>
+                                <% } else { %>
+                                    <span class="text-muted" style="font-size:0.85rem;">—</span>
+                                <% } %>
+                            </td>
+
+                            <!-- Status -->
                             <td>
                                 <span class="badge rounded-pill px-3 py-2
                                     <%= category.isListed === false ? 'status-blocked' : 'status-active' %>">
                                     <%= category.isListed === false ? 'Blocked' : 'Active' %>
                                 </span>
                             </td>
+
+                            <!-- Actions -->
                             <td class="text-end pe-4">
                                 <div class="btn-group border rounded-3 bg-white shadow-sm overflow-hidden">
+                                    <!-- Edit -->
                                     <button class="btn btn-sm btn-white py-2 px-3 border-end btn-edit-category"
                                             title="Edit"
                                             data-name="<%= category.name %>"
                                             data-status="<%= category.isListed ? 'active' : 'inactive' %>">
                                         <i class="bi bi-pencil-square text-primary"></i>
                                     </button>
+                                    <!-- ✅ Add Offer -->
+                                    <button class="btn btn-sm btn-white py-2 px-3 border-end btn-add-cat-offer"
+                                            title="<%= category.activeOffer ? 'Edit/Remove Offer' : 'Add Offer' %>"
+                                            data-id="<%= category._id %>"
+                                            data-name="<%= category.name %>"
+                                            data-has-offer="<%= category.activeOffer ? 'true' : 'false' %>"
+                                            data-offer-name="<%= category.activeOffer ? category.activeOffer.offerName : '' %>"
+                                            data-offer-discount="<%= category.activeOffer ? category.activeOffer.discountPercentage : '' %>"
+                                            data-offer-id="<%= category.activeOffer ? category.activeOffer._id : '' %>">
+                                        <i class="bi bi-tag <%= category.activeOffer ? 'text-success' : 'text-muted' %>"></i>
+                                    </button>
+                                    <!-- Block/Unblock -->
                                     <button class="btn btn-sm btn-white py-2 px-3 toggle-block"
                                             title="<%= category.isListed ? 'Block' : 'Unblock' %>"
                                             data-name="<%= category.name %>"
@@ -150,7 +187,7 @@
                         <% }) %>
                     <% } else { %>
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">No categories found.</td>
+                            <td colspan="6" class="text-center py-5 text-muted">No categories found.</td>
                         </tr>
                     <% } %>
                 </tbody>
@@ -195,7 +232,7 @@
 </div>
 </main>
 
-<!-- ADD CATEGORY MODAL -->
+<!-- ── ADD CATEGORY MODAL ────────────────────────────────────── -->
 <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -230,7 +267,7 @@
     </div>
 </div>
 
-<!-- EDIT CATEGORY MODAL -->
+<!-- ── EDIT CATEGORY MODAL ───────────────────────────────────── -->
 <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -265,6 +302,94 @@
     </div>
 </div>
 
+<!-- ── CATEGORY OFFER MODAL ─────────────────────────────────── -->
+<div class="modal fade" id="catOfferModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="fw-bold">
+                    <i class="bi bi-tag me-2 text-primary"></i>
+                    Add Offer — <span id="catOfferCategoryName"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 pb-2">
+
+                <input type="hidden" id="catOfferTargetId" />
+
+                <!-- Existing offer alert -->
+            
+<div id="catExistingOfferInfo"
+    class="alert alert-success align-items-center gap-2 mb-3"
+    style="display:none;">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span id="catExistingOfferText"></span>
+                    <button type="button"
+                        class="btn btn-sm btn-outline-danger ms-auto"
+                        onclick="removeCatOffer()">
+                        Remove Offer
+                    </button>
+                </div>
+
+                <!-- Offer Name -->
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">
+                        Offer Name <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" id="catOfferNameInput"
+                        class="form-control shadow-none rounded-3"
+                        placeholder="e.g. Summer Sale"
+                        maxlength="50" />
+                    <div class="field-error" id="catOfferNameError"></div>
+                </div>
+
+                <!-- Discount % -->
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">
+                        Discount % <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" id="catDiscount"
+                        class="form-control shadow-none rounded-3"
+                        min="1" max="90"
+                        placeholder="e.g. 20" />
+                    <div class="field-error" id="catDiscountError"></div>
+                </div>
+
+                <!-- Start Date -->
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">
+                        Start Date <span class="text-danger">*</span>
+                    </label>
+                    <input type="date" id="catStartDate"
+                        class="form-control shadow-none rounded-3" />
+                    <div class="field-error" id="catStartDateError"></div>
+                </div>
+
+                <!-- End Date -->
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">
+                        End Date <span class="text-danger">*</span>
+                    </label>
+                    <input type="date" id="catEndDate"
+                        class="form-control shadow-none rounded-3" />
+                    <div class="field-error" id="catEndDateError"></div>
+                </div>
+
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4">
+                <button type="button"
+                    class="btn btn-outline-secondary rounded-3"
+                    data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="catOfferSubmit"
+                    class="btn btn-primary px-4 rounded-3"
+                    onclick="submitCatOffer()">
+                    Add Offer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <%- include("../partials/admin/footer") %>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -273,7 +398,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ── helpers ──────────────────────────────────────────────────
+    // ── Helpers ──────────────────────────────────────────────────
     function showErr(id, msg) {
         const el = document.getElementById(id);
         el.textContent = msg;
@@ -296,8 +421,6 @@ document.addEventListener('DOMContentLoaded', () => {
         el.textContent = `${len} / ${max}`;
         el.className = 'char-count' + (len >= max ? ' over' : len >= max * 0.8 ? ' warn' : '');
     }
-
-    // validate category name — returns error string or ''
     function validateName(value, fieldLabel = 'Name') {
         if (!value.trim()) return `${fieldLabel} is required.`;
         if (value.trim().length < 2) return `${fieldLabel} must be at least 2 characters.`;
@@ -332,7 +455,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── ADD CATEGORY ─────────────────────────────────────────────
     const addModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
 
-    // reset on open
     document.getElementById('addCategoryModal').addEventListener('show.bs.modal', () => {
         document.getElementById('addCatName').value   = '';
         document.getElementById('addCatStatus').value = 'active';
@@ -341,7 +463,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCharCount('addCatName', 'addCatNameCount', 50);
     });
 
-    // live validation + char count
     document.getElementById('addCatName').addEventListener('input', () => {
         updateCharCount('addCatName', 'addCatNameCount', 50);
         const err = validateName(document.getElementById('addCatName').value);
@@ -353,7 +474,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const name   = document.getElementById('addCatName').value.trim();
         const status = document.getElementById('addCatStatus').value;
 
-        // client-side validation
         const err = validateName(name);
         if (err) {
             showErr('addCatNameError', err);
@@ -383,7 +503,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     showConfirmButton: false, timer: 1300
                 }).then(() => location.reload());
             } else if (res.status === 409) {
-                // duplicate name — show inline
                 showErr('addCatNameError', data.error || 'Category already exists.');
                 markInvalid('addCatName');
                 document.getElementById('addCatName').focus();
@@ -413,7 +532,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // live validation + char count
     document.getElementById('editCatName').addEventListener('input', () => {
         updateCharCount('editCatName', 'editCatNameCount', 50);
         const err = validateName(document.getElementById('editCatName').value);
@@ -426,7 +544,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const editName   = document.getElementById('editCatName').value.trim();
         const editStatus = document.getElementById('editCatStatus').value;
 
-        // client-side validation
         const err = validateName(editName);
         if (err) {
             showErr('editCatNameError', err);
@@ -513,5 +630,173 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // ── CATEGORY OFFER MODAL ─────────────────────────────────────
+    const catOfferModal = new bootstrap.Modal(
+        document.getElementById('catOfferModal')
+    );
+
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('catStartDate').min = today;
+    document.getElementById('catEndDate').min   = today;
+
+    // Open modal on tag icon click
+    document.querySelectorAll('.btn-add-cat-offer').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id       = btn.dataset.id;
+            const name     = btn.dataset.name;
+            const hasOffer = btn.dataset.hasOffer === 'true';
+
+            // Set hidden fields
+            document.getElementById('catOfferTargetId').value              = id;
+            document.getElementById('catOfferCategoryName').textContent    = name;
+
+            // Reset fields
+            document.getElementById('catOfferNameInput').value = '';
+            document.getElementById('catDiscount').value       = '';
+            document.getElementById('catStartDate').value      = '';
+            document.getElementById('catEndDate').value        = '';
+
+            // Clear errors
+            ['catOfferNameError','catDiscountError',
+             'catStartDateError','catEndDateError'].forEach(errId => {
+                clearErr(errId);
+            });
+            ['catOfferNameInput','catDiscount',
+             'catStartDate','catEndDate'].forEach(fieldId => {
+                markValid(fieldId);
+            });
+
+            // Show existing offer info
+            const infoBox = document.getElementById('catExistingOfferInfo');
+            if (hasOffer) {
+                document.getElementById('catExistingOfferText').textContent =
+                    `Active: ${btn.dataset.offerName} — ${btn.dataset.offerDiscount}% OFF`;
+                infoBox.style.display = 'flex';
+            } else {
+                infoBox.style.display = 'none';
+            }
+
+            catOfferModal.show();
+        });
+    });
+
 });
+
+// ── Submit Category Offer ────────────────────────────────────
+async function submitCatOffer() {
+    const targetId  = document.getElementById('catOfferTargetId').value;
+    const offerName = document.getElementById('catOfferNameInput').value.trim();
+    const discount  = Number(document.getElementById('catDiscount').value);
+    const startDate = document.getElementById('catStartDate').value;
+    const endDate   = document.getElementById('catEndDate').value;
+    let valid       = true;
+
+    function se(id, msg) {
+        const el = document.getElementById(id);
+        el.textContent = msg; el.classList.add('show');
+    }
+    function ce(id) {
+        const el = document.getElementById(id);
+        el.textContent = ''; el.classList.remove('show');
+    }
+    function mi(id) { document.getElementById(id).classList.add('input-error'); }
+    function mv(id) { document.getElementById(id).classList.remove('input-error'); }
+
+    if (!offerName) {
+        se('catOfferNameError', 'Offer name is required'); mi('catOfferNameInput'); valid = false;
+    } else { ce('catOfferNameError'); mv('catOfferNameInput'); }
+
+    if (!discount || discount < 1 || discount > 90) {
+        se('catDiscountError', 'Discount must be between 1 and 90'); mi('catDiscount'); valid = false;
+    } else { ce('catDiscountError'); mv('catDiscount'); }
+
+    if (!startDate) {
+        se('catStartDateError', 'Start date is required'); mi('catStartDate'); valid = false;
+    } else { ce('catStartDateError'); mv('catStartDate'); }
+
+    if (!endDate) {
+        se('catEndDateError', 'End date is required'); mi('catEndDate'); valid = false;
+    } else if (endDate <= startDate) {
+        se('catEndDateError', 'End date must be after start date'); mi('catEndDate'); valid = false;
+    } else { ce('catEndDateError'); mv('catEndDate'); }
+
+    if (!valid) return;
+
+    const btn = document.getElementById('catOfferSubmit');
+    btn.disabled    = true;
+    btn.textContent = 'Adding…';
+
+    try {
+        const res  = await fetch('/admin/offers/add', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                offerName,
+                offerType:          'category',
+                targetId,
+                discountPercentage: discount,
+                startDate,
+                endDate
+            })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            bootstrap.Modal.getInstance(
+                document.getElementById('catOfferModal')
+            ).hide();
+            Swal.fire({
+                icon: 'success', title: 'Offer Added!',
+                showConfirmButton: false, timer: 1300
+            }).then(() => location.reload());
+        } else {
+            Swal.fire({ icon: 'error', text: data.message || 'Something went wrong' });
+        }
+    } catch {
+        Swal.fire({ icon: 'error', text: 'Network error. Please try again.' });
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Add Offer';
+    }
+}
+
+// ── Remove Category Offer ────────────────────────────────────
+async function removeCatOffer() {
+    const targetId = document.getElementById('catOfferTargetId').value;
+
+    const result = await Swal.fire({
+        title: 'Remove Offer?',
+        text:  'The active offer on this category will be removed.',
+        icon:  'warning',
+        showCancelButton:   true,
+        confirmButtonColor: '#dc3545',
+        confirmButtonText:  'Yes, Remove',
+        cancelButtonText:   'Cancel'
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+        const res  = await fetch('/admin/offers/remove-by-target', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ targetId, offerType: 'category' })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            bootstrap.Modal.getInstance(
+                document.getElementById('catOfferModal')
+            ).hide();
+            Swal.fire({
+                icon: 'success', text: 'Offer removed',
+                timer: 1000, showConfirmButton: false
+            }).then(() => location.reload());
+        } else {
+            Swal.fire({ icon: 'error', text: data.message });
+        }
+    } catch {
+        Swal.fire({ icon: 'error', text: 'Network error. Please try again.' });
+    }
+}
 </script>

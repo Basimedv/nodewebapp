@@ -1,0 +1,419 @@
+<%- include("../partials/user/header") %>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .success-page {
+    min-height: 80vh;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .success-container {
+    max-width: 620px;
+    width: 100%;
+  }
+
+  /* ── Top card ── */
+  .success-top-card {
+    background: white;
+    border-radius: 16px;
+    padding: 40px 32px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    margin-bottom: 20px;
+  }
+
+  /* Animated checkmark */
+  .check-circle {
+    width: 88px;
+    height: 88px;
+    background: #e8f5e9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes popIn {
+    0%   { transform: scale(0); opacity: 0; }
+    70%  { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .check-circle i {
+    font-size: 2.4rem;
+    color: #2e7d32;
+  }
+
+  .success-title {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+  }
+
+  .success-sub {
+    font-size: 0.95rem;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .order-id-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f0f4ff;
+    border: 1px solid #d0dcff;
+    border-radius: 30px;
+    padding: 8px 18px;
+    font-size: 0.88rem;
+    color: #3b5bdb;
+    font-weight: 600;
+    font-family: monospace;
+  }
+
+  .order-id-pill i { font-size: 0.8rem; }
+
+  /* ── Details card ── */
+  .details-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    margin-bottom: 20px;
+  }
+
+  .details-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #999;
+    margin-bottom: 16px;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+    font-size: 0.9rem;
+  }
+
+  .detail-row:last-child { border-bottom: none; }
+
+  .detail-label { color: #666; }
+
+  .detail-value {
+    font-weight: 600;
+    color: #1a1a1a;
+    text-align: right;
+    max-width: 60%;
+  }
+
+  .status-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .status-pending  { background: #fff3e0; color: #e65100; }
+  .status-paid     { background: #e8f5e9; color: #2e7d32; }
+
+  .amount-value {
+    font-size: 1.1rem;
+    color: #1a1a1a;
+    font-weight: 700;
+  }
+
+  .savings-value { color: #2e7d32; }
+
+  /* ── Items card ── */
+  .items-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    margin-bottom: 20px;
+  }
+
+  .order-item {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f5f5f5;
+  }
+
+  .order-item:last-child { border-bottom: none; }
+
+  .order-item-img {
+    width: 64px;
+    height: 78px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #f5f5f5;
+    flex-shrink: 0;
+  }
+
+  .order-item-info { flex: 1; }
+
+  .order-item-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+  }
+
+  .order-item-meta {
+    font-size: 0.78rem;
+    color: #888;
+    margin-bottom: 4px;
+  }
+
+  .order-item-price {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  /* ── Address card ── */
+  .address-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    margin-bottom: 20px;
+  }
+
+  .address-text {
+    font-size: 0.9rem;
+    color: #444;
+    line-height: 1.7;
+  }
+
+  /* ── Buttons ── */
+  .btn-group-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn-dark-fill {
+    flex: 1;
+    min-width: 140px;
+    padding: 13px 20px;
+    background: #1a1a1a;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .btn-dark-fill:hover {
+    background: #333;
+    color: white;
+    transform: translateY(-1px);
+  }
+
+  .btn-outline-dark {
+    flex: 1;
+    min-width: 140px;
+    padding: 13px 20px;
+    background: white;
+    color: #1a1a1a;
+    border: 2px solid #1a1a1a;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .btn-outline-dark:hover {
+    background: #1a1a1a;
+    color: white;
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 480px) {
+    .success-top-card { padding: 28px 20px; }
+    .success-title    { font-size: 1.4rem; }
+    .btn-group-row    { flex-direction: column; }
+    .btn-dark-fill,
+    .btn-outline-dark { flex: none; width: 100%; }
+  }
+</style>
+
+<main>
+  <div class="success-page">
+    <div class="success-container">
+
+      <!-- ── Top: Success message ──────────────────────────────── -->
+      <div class="success-top-card">
+        <div class="check-circle">
+          <i class="fas fa-check"></i>
+        </div>
+        <h1 class="success-title">Order Placed!</h1>
+        <p class="success-sub">
+          Thank you for your purchase.<br>
+          Your order has been received and is being processed.
+        </p>
+        <div class="order-id-pill">
+          <i class="fas fa-hashtag"></i>
+          <%= order.orderId %>
+        </div>
+      </div>
+
+      <!-- ── Order Details ─────────────────────────────────────── -->
+      <div class="details-card">
+        <div class="details-title">Order Summary</div>
+
+        <div class="detail-row">
+          <span class="detail-label">Payment Method</span>
+          <span class="detail-value"><%= order.paymentMethod %></span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Payment Status</span>
+          <span class="detail-value">
+            <span class="status-pill <%= order.paymentMethod === 'COD' ? 'status-pending' : 'status-paid' %>">
+              <%= order.paymentMethod === 'COD' ? 'Pay on Delivery' : 'Paid' %>
+            </span>
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Items</span>
+          <span class="detail-value">
+            <%= order.orderedItems.length %> item<%= order.orderedItems.length !== 1 ? 's' : '' %>
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Subtotal</span>
+          <span class="detail-value">
+            ₹<%= order.totalPrice.toLocaleString('en-IN') %>
+          </span>
+        </div>
+
+        <% if (order.couponApplied && order.dicount > 0) { %>
+        <div class="detail-row">
+          <span class="detail-label">Coupon Discount</span>
+          <span class="detail-value savings-value">
+            − ₹<%= order.dicount.toLocaleString('en-IN') %>
+          </span>
+        </div>
+        <% } %>
+
+        <div class="detail-row">
+          <span class="detail-label">Delivery</span>
+          <span class="detail-value" style="color:#2e7d32;">
+            <%= order.deliveryCharge === 0 ? 'FREE' : '₹' + order.deliveryCharge %>
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Total Paid</span>
+          <span class="detail-value amount-value">
+            ₹<%= order.finalAmount.toLocaleString('en-IN') %>
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Order Status</span>
+          <span class="detail-value">
+            <span class="status-pill status-pending">
+              <%= order.status %>
+            </span>
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Order Date</span>
+          <span class="detail-value">
+            <%= new Date(order.createdOn).toLocaleDateString('en-IN', {
+              year: 'numeric', month: 'long', day: 'numeric'
+            }) %>
+          </span>
+        </div>
+
+      </div>
+
+      <!-- ── Ordered Items ─────────────────────────────────────── -->
+      <div class="items-card">
+        <div class="details-title">Items Ordered</div>
+
+        <% order.orderedItems.forEach(item => { %>
+          <div class="order-item">
+            <img class="order-item-img"
+              src="<%= item.productImage && item.productImage[0] ? item.productImage[0] : '/images/placeholder.png' %>"
+              alt="<%= item.productName %>">
+            <div class="order-item-info">
+              <div class="order-item-name"><%= item.productName %></div>
+              <div class="order-item-meta">
+                Size: <strong><%= item.size %></strong>
+                &nbsp;|&nbsp;
+                Qty: <strong><%= item.quantity %></strong>
+              </div>
+              <div class="order-item-price">
+                ₹<%= item.price.toLocaleString('en-IN') %>
+                <span style="font-size:0.75rem; color:#888; font-weight:400;">
+                  × <%= item.quantity %>
+                  = ₹<%= (item.price * item.quantity).toLocaleString('en-IN') %>
+                </span>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+
+      <!-- ── Delivery Address ──────────────────────────────────── -->
+      <div class="address-card">
+        <div class="details-title">Delivery Address</div>
+        <div class="address-text">
+          <i class="fas fa-map-marker-alt" style="color:#e53935; margin-right:6px;"></i>
+          <%= order.address %>
+        </div>
+      </div>
+
+      <!-- ── Action Buttons ────────────────────────────────────── -->
+      <div class="btn-group-row">
+        <a href="/orders" class="btn-dark-fill">
+          <i class="fas fa-box-open"></i> View My Orders
+        </a>
+        <a href="/shop" class="btn-outline-dark">
+          <i class="fas fa-shopping-bag"></i> Continue Shopping
+        </a>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<%- include("../partials/user/footer") %>

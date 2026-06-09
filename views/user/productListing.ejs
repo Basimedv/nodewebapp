@@ -609,14 +609,17 @@
 
                         <% if (products && products.length> 0) { %>
                             <% products.forEach(product=> {
-                                const regular = Number(product.regularPrice || 0);
-                                const sale = Number(product.salePrice || 0);
-                                const isOnSale = sale > 0 && sale < regular; const finalPrice=isOnSale ? sale : regular;
-                                    // ✅ FIX: use discountPercent already computed by backend const
-                                    discountPercent=product.discountPercent || 0; const totalStock=product.stock ?
-                                    (Number(product.stock.S || 0) + Number(product.stock.M || 0) +
-                                    Number(product.stock.L || 0) + Number(product.stock.XL || 0) +
-                                    Number(product.stock.XXL || 0)) : 0; %>
+                               const regular         = Number(product.regularPrice || 0);
+const finalPrice      = Number(product.finalPrice   || regular);
+const isOnSale        = product.isOnSale || false;
+const discountPercent = product.discountPercent || 0;
+const appliedOffer    = product.appliedOffer || null;
+const totalStock      = product.stock
+    ? (Number(product.stock.S   || 0) + Number(product.stock.M   || 0) +
+       Number(product.stock.L   || 0) + Number(product.stock.XL  || 0) +
+       Number(product.stock.XXL || 0))
+    : 0;
+        %>
                                     <div class="col">
                                         <div class="card product-card">
                                             <a href="/productDetails/<%= product._id %>" class="product-link">
@@ -647,16 +650,30 @@
                                                     <%= product.name %>
                                                 </h5>
 
-                                                <div class="price-section">
-                                                    <div class="price">
-                                                        ₹<%= finalPrice.toLocaleString('en-IN') %>
-                                                    </div>
-                                                    <% if (isOnSale) { %>
-                                                        <span class="original-price">
-                                                            ₹<%= regular.toLocaleString('en-IN') %>
-                                                        </span>
-                                                        <% } %>
-                                                </div>
+                                               <div class="price-section">
+    <div class="price">
+        ₹<%= finalPrice.toLocaleString('en-IN') %>
+    </div>
+    <% if (isOnSale) { %>
+        <span class="original-price">
+            ₹<%= regular.toLocaleString('en-IN') %>
+        </span>
+    <% } %>
+</div>
+
+<!-- ✅ Offer badge -->
+<% if (isOnSale && discountPercent > 0) { %>
+    <div class="offer-badges">
+        <span class="badge-discount">
+            <%= discountPercent %>% OFF
+        </span>
+        <% if (appliedOffer) { %>
+            <span style="font-size:11px; color:#666;">
+                <%= appliedOffer.offerName %>
+            </span>
+        <% } %>
+    </div>
+<% } %>
 
 
 

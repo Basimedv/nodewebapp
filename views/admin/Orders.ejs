@@ -1,0 +1,458 @@
+<%- include("../partials/admin/header") %>
+
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', 'Outfit', sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+  }
+
+  .main-content {
+    margin-left: 250px;
+    padding: 32px;
+    min-height: 100vh;
+    background: #f5f7fa;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: #1a1a2e;
+  }
+
+  /* ── FILTER CARD ── */
+  .filter-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .filter-group label {
+    font-size: 0.78rem;
+    color: #888;
+    font-weight: 500;
+  }
+
+  .filter-group select {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px 36px 10px 14px;
+    font-size: 0.875rem;
+    color: #333;
+    background: #fff;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    min-width: 180px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .search-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 280px;
+  }
+
+  .search-group label {
+    font-size: 0.78rem;
+    color: #888;
+    font-weight: 500;
+  }
+
+  .search-input-row {
+    display: flex;
+  }
+
+  .search-input-row input {
+    flex: 1;
+    border: 1px solid #e0e0e0;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    padding: 10px 16px;
+    font-size: 0.875rem;
+    outline: none;
+    color: #333;
+  }
+
+  .search-input-row input:focus { border-color: #3e29a8; }
+
+  .btn-search {
+    background: #3e29a8;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-search:hover { background: #2e1e82; }
+
+  .btn-reset {
+    background: #fff;
+    color: #333;
+    border: 1px solid #e0e0e0;
+    border-left: none;
+    padding: 10px 18px;
+    font-size: 0.875rem;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    font-weight: 500;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+  }
+
+  .btn-reset:hover { background: #f5f5f5; color: #333; }
+
+  /* ── TABLE CARD ── */
+  .table-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .data-table thead tr {
+    background: #3b6da1;
+  }
+
+  .data-table thead th {
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 16px 20px;
+    text-align: left;
+    border: none;
+  }
+
+  .data-table tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.15s;
+  }
+
+  .data-table tbody tr:last-child { border-bottom: none; }
+  .data-table tbody tr:hover { background: #fafbff; }
+
+  .data-table tbody td {
+    padding: 15px 20px;
+    font-size: 0.875rem;
+    color: #555;
+    vertical-align: middle;
+  }
+
+  /* order id */
+  .order-id {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #3e29a8;
+  }
+
+  /* customer */
+  .cust-name  { font-weight: 700; color: #1a1a2e; font-size: 0.875rem; }
+  .cust-email { font-size: 0.75rem; color: #999; margin-top: 2px; }
+
+  /* item thumbs */
+  .item-thumbs { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .item-thumb  { width: 34px; height: 34px; border-radius: 5px; object-fit: cover; border: 1px solid #eee; }
+  .item-more   { font-size: 0.75rem; color: #888; }
+
+  /* amount */
+  .amount { font-weight: 700; color: #1a1a2e; }
+
+  /* payment badges */
+  .pay-badge { font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+  .pay-cod    { background: #fef3e2; color: #d97706; }
+  .pay-online { background: #e0f2fe; color: #0284c7; }
+  .pay-wallet { background: #f0fdf4; color: #16a34a; }
+
+  /* status badges */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.775rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .status-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.7;
+  }
+
+  .s-Pending        { background: #fef9ee; color: #d97706; }
+  .s-Processing     { background: #eff6ff; color: #2563eb; }
+  .s-Shipped        { background: #ecfeff; color: #0891b2; }
+  .s-OutForDelivery { background: #f0fdf4; color: #059669; }
+  .s-Delivered      { background: #dcfce7; color: #16a34a; }
+  .s-Cancelled      { background: #fef2f2; color: #dc2626; }
+  .s-ReturnRequest  { background: #fdf4ff; color: #9333ea; }
+  .s-Returned       { background: #faf5ff; color: #7c3aed; }
+
+  /* date */
+  .date-cell { font-size: 0.8rem; color: #666; white-space: nowrap; }
+
+  /* view button */
+  .btn-view {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #f0eeff;
+    color: #3e29a8;
+    border: 1px solid #d5cefc;
+    padding: 6px 14px;
+    border-radius: 7px;
+    font-size: 0.775rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn-view:hover { background: #3e29a8; color: #fff; }
+
+  /* empty state */
+  .empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: #aaa;
+    font-size: 0.9rem;
+  }
+
+  /* ── PAGINATION ── */
+  .pagination-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .pagination-info { font-size: 0.8rem; color: #888; }
+
+  .pagination {
+    display: flex;
+    gap: 5px;
+    list-style: none;
+    margin: 0; padding: 0;
+  }
+
+  .page-btn {
+    min-width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    color: #333;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    padding: 0 10px;
+    transition: all 0.15s;
+  }
+
+  .page-btn:hover { border-color: #3e29a8; color: #3e29a8; }
+  .page-btn.active { background: #3e29a8; border-color: #3e29a8; color: #fff; }
+  .page-btn.disabled { opacity: 0.4; pointer-events: none; }
+</style>
+
+<aside class="sidebar d-none d-lg-block">
+  <%- include("../partials/admin/sidebar_links") %>
+</aside>
+
+<main class="main-content">
+
+  <h2 class="page-title">Order Management</h2>
+
+  <!-- Filter + Search -->
+  <div class="filter-card">
+    <div class="filter-group">
+      <label>Filter Status</label>
+      <form id="filterForm" action="/admin/orders" method="GET" style="display:contents;">
+        <select name="status" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+          <option value="">All Statuses</option>
+          <% ['Pending','Processing','Shipped','Out for Delivery','Delivered','Cancelled','Return Request','Returned'].forEach(s => { %>
+            <option value="<%= s %>" <%= statusFilter === s ? 'selected' : '' %>><%= s %></option>
+          <% }) %>
+        </select>
+      </form>
+    </div>
+
+    <div class="search-group">
+      <label>Search Order</label>
+      <form id="searchForm" action="/admin/orders" method="GET">
+        <input type="hidden" name="status" value="<%= statusFilter || '' %>">
+        <div class="search-input-row">
+          <input type="text" name="search" placeholder="Search by order ID or customer…" value="<%= search || '' %>">
+          <button class="btn-search" type="submit">
+            <i class="bi bi-search"></i> Search
+          </button>
+          <a href="/admin/orders" class="btn-reset">Reset</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <% if (orders && orders.length > 0) { %>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th>Items</th>
+          <th>Amount</th>
+          <th>Payment</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% orders.forEach((order, idx) => {
+          const slipClass = order.status.replace(/\s+/g, '');
+          const payMethod = order.paymentMethod || 'COD';
+          const payClass  = payMethod === 'COD' ? 'pay-cod' : payMethod === 'Wallet' ? 'pay-wallet' : 'pay-online';
+          const rowNum    = ((currentPage - 1) * 10) + idx + 1;
+        %>
+        <tr>
+          <td style="color:#bbb; font-size:0.75rem;"><%= rowNum %></td>
+
+          <td>
+            <span class="order-id">#<%= order.orderId || order._id.toString().slice(-8).toUpperCase() %></span>
+          </td>
+
+          <td>
+            <div class="cust-name"><%= order.userId ? order.userId.fullName : '—' %></div>
+            <div class="cust-email"><%= order.userId ? order.userId.email : '' %></div>
+          </td>
+
+          <td>
+            <div class="item-thumbs">
+              <% if (order.orderedItems && order.orderedItems.length > 0) { %>
+                <% order.orderedItems.slice(0, 3).forEach(item => { %>
+                  <% if (item.product && item.product.productImage && item.product.productImage[0]) { %>
+                    <img class="item-thumb" src="<%= item.product.productImage[0] %>" alt="">
+                  <% } %>
+                <% }) %>
+                <% if (order.orderedItems.length > 3) { %>
+                  <span class="item-more">+<%= order.orderedItems.length - 3 %> more</span>
+                <% } %>
+              <% } else { %>
+                <span style="color:#ccc;">—</span>
+              <% } %>
+            </div>
+          </td>
+
+          <td>
+            <span class="amount">₹<%= (order.finalAmount || order.totalPrice || 0).toLocaleString('en-IN') %></span>
+          </td>
+
+          <td>
+            <span class="pay-badge <%= payClass %>"><%= payMethod %></span>
+          </td>
+
+          <td>
+            <span class="status-badge s-<%= slipClass %>"><%= order.status %></span>
+          </td>
+
+          <td>
+            <div class="date-cell">
+              <%= new Date(order.createdOn || order.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) %>
+            </div>
+          </td>
+
+          <td>
+            <a href="/admin/orders/<%= order._id %>" class="btn-view">
+              <i class="bi bi-eye"></i> View
+            </a>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <% } else { %>
+      <div class="empty-state">
+        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+        No orders found<% if (search) { %> for "<%= search %>"<% } %>.
+      </div>
+    <% } %>
+
+    <!-- Pagination -->
+    <% if (totalPages > 1) { %>
+    <div class="pagination-wrap">
+      <div class="pagination-info">
+        Showing <%= ((currentPage - 1) * 10) + 1 %>–<%= Math.min(currentPage * 10, totalOrders) %> of <%= totalOrders %> orders
+      </div>
+      <ul class="pagination">
+        <li>
+          <a class="page-btn <%= currentPage === 1 ? 'disabled' : '' %>"
+             href="?page=<%= currentPage - 1 %>&search=<%= search || '' %>&status=<%= statusFilter || '' %>">←</a>
+        </li>
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <% if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
+            <li>
+              <a class="page-btn <%= i === currentPage ? 'active' : '' %>"
+                 href="?page=<%= i %>&search=<%= search || '' %>&status=<%= statusFilter || '' %>"><%= i %></a>
+            </li>
+          <% } else if (i === currentPage - 3 || i === currentPage + 3) { %>
+            <li><span class="page-btn disabled">…</span></li>
+          <% } %>
+        <% } %>
+        <li>
+          <a class="page-btn <%= currentPage === totalPages ? 'disabled' : '' %>"
+             href="?page=<%= currentPage + 1 %>&search=<%= search || '' %>&status=<%= statusFilter || '' %>">→</a>
+        </li>
+      </ul>
+    </div>
+    <% } %>
+  </div>
+
+</main>
+
+<%- include("../partials/admin/footer") %>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

@@ -1,5 +1,6 @@
 const Category = require('../../models/categorySchema');
 const Product = require('../../models/productSchema');
+const Offer = require('../../models/offerSchema');
 const HTTP_STATUS_CODES = require('../../constants/status_codes');
 
 const attachProductCounts = async (docs) => {
@@ -23,41 +24,71 @@ const categoryinfo = async (req, res) => {
         let { query = '', page = 1 } = req.query;
         page = Math.max(parseInt(page) || 1, 1);
         const limit = 10;
-        const skip = (page - 1) * limit;
+        const skip  = (page - 1) * limit;
+        const now   = new Date();
 
         const filter = {};
         if (query) {
             filter.$or = [
-                { name: { $regex: query, $options: 'i' } },
-                { description: { $regex: query, $options: 'i' } },
+                { name:        { $regex: query, $options: 'i' } },
+                { description: { $regex: query, $options: 'i' } }
             ];
         }
 
         const [categoryData, count] = await Promise.all([
-            Category.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-            Category.countDocuments(filter),
+            Category.find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            Category.countDocuments(filter)
         ]);
 
         const totalPages = Math.ceil(count / limit);
 
         if (page > totalPages && totalPages > 0) {
-            return res.redirect(`/admin/categories?page=${totalPages}&query=${encodeURIComponent(query)}`);
+            return res.redirect(
+                `/admin/categories?page=${totalPages}&query=${encodeURIComponent(query)}`
+            );
         }
 
+        // ✅ Fetch active category offers in ONE query
+        const categoryIds  = categoryData.map(c => c._id);
+        const activeOffers = await Offer.find({
+            offerType: 'category',
+            targetId:  { $in: categoryIds },
+            isActive:  true,
+            startDate: { $lte: now },
+            endDate:   { $gte: now }
+        }).lean();
+
+        // ✅ attach product counts
         const normalized = await attachProductCounts(categoryData);
 
-        res.render('admin/categories', {
-            cat: normalized,
-            currentPage: page,
-            totalPages: totalPages || 1,
-            totalCategories: count,
-            searchQuery: query,
+        // ✅ attach active offer to each category
+        const enriched = normalized.map(cat => {
+            const offer = activeOffers.find(
+                o => o.targetId.toString() === cat._id.toString()
+            );
+            return {
+                ...cat,
+                activeOffer: offer || null
+            };
         });
+
+        res.render('admin/categories', {
+            cat:             enriched,   // ✅ now has category.activeOffer
+            currentPage:     page,
+            totalPages:      totalPages || 1,
+            totalCategories: count,
+            searchQuery:     query
+        });
+
     } catch (error) {
+        console.error('categoryinfo error:', error);
         res.redirect('/admin/pageerror');
     }
 };
-
 const addCategory = async (req, res) => {
     try {
         const { name, status } = req.body;

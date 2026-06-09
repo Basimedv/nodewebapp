@@ -52,6 +52,13 @@ const ROUTES = {
     ADD_TO_CART:       "/cart/add",
     UPDATE_CART:       "/cart/update",
     REMOVE_FROM_CART:  "/cart/remove",
+       CHECKOUT:             "/checkout",
+    CHECKOUT_PLACE_ORDER: "/checkout/place-order",
+    CHECKOUT_APPLY_COUPON:"/checkout/apply-coupon",
+    ORDER_SUCCESS:        "/order-success/:id",
+     CHECKOUT_RAZORPAY_ORDER:  "/checkout/razorpay-order",
+    CHECKOUT_VERIFY_PAYMENT:  "/checkout/verify-payment",
+    CHECKOUT_PAYMENT_FAILED:  "/checkout/payment-failed",
     },
 
 ADMIN: {
@@ -81,7 +88,12 @@ ADMIN: {
     PRODUCTS_DELETE: "/admin/products/:id",
     PRODUCTS_UPDATE: "/admin/products/:id",
 
-
+OFFERS_ADD:           "/admin/offers/add",
+    OFFERS_REMOVE_TARGET: "/admin/offers/remove-by-target",
+      ORDERS: "/admin/orders",
+    ORDER_DETAIL: "/admin/orders/:id",
+    ORDER_UPDATE_STATUS: "/admin/orders/:id/status",
+    ORDER_HANDLE_RETURN: "/admin/orders/:id/return",
 
 }
 }
