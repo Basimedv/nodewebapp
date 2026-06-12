@@ -6,6 +6,7 @@ const Coupon  = require('../../models/couponSchema');
 const razorpay = require('../../config/razorpay');
 const crypto   = require('crypto');
 const HTTP_STATUS_CODES = require('../../constants/status_codes');
+const { getWalletBalance, debitWallet } = require('./walletController');
 
 // ── HELPER: Build address string ─────────────────────────────────
 const buildAddressString = (addr) =>
@@ -52,7 +53,8 @@ const reduceStock = async (cartItems) => {
     }
 };
 
-// ── GET CHECKOUT PAGE ────────────────────────────────────────────
+
+
 const getCheckout = async (req, res) => {
     try {
         const userId = req.session.user?._id;
@@ -79,10 +81,13 @@ const getCheckout = async (req, res) => {
             };
         });
 
-        const addressDoc = await Address.findOne({ userId });
-        const addresses  = addressDoc ? addressDoc.address : [];
-        const subtotal   = cartItems.reduce((s, i) => s + i.totalPrice, 0);
-        const delivery   = 0;
+        const addressDoc    = await Address.findOne({ userId });
+        const addresses     = addressDoc ? addressDoc.address : [];
+        const subtotal      = cartItems.reduce((s, i) => s + i.totalPrice, 0);
+        const delivery      = 0;
+
+        // ✅ Get wallet balance to show on checkout
+        const walletBalance = await getWalletBalance(userId);
 
         res.render('user/checkout', {
             user: req.session.user,
@@ -90,7 +95,8 @@ const getCheckout = async (req, res) => {
             addresses,
             subtotal,
             delivery,
-            total: subtotal + delivery
+            total:         subtotal + delivery,
+            walletBalance  // ✅ passed to EJS
         });
 
     } catch (error) {
@@ -98,7 +104,6 @@ const getCheckout = async (req, res) => {
         res.redirect('/pageNotFound');
     }
 };
-
 // ── APPLY COUPON ─────────────────────────────────────────────────
 const applyCoupon = async (req, res) => {
     try {
@@ -156,9 +161,8 @@ const applyCoupon = async (req, res) => {
     }
 };
 
-// ── PLACE ORDER (COD / Wallet) ───────────────────────────────────
 const placeOrder = async (req, res) => {
-    let savedOrder = null;  // track for rollback
+    let savedOrder = null;
 
     try {
         const userId = req.session.user?._id;
@@ -168,14 +172,16 @@ const placeOrder = async (req, res) => {
         const addressDoc = await Address.findOne({ userId });
         if (!addressDoc) {
             return res.status(400).json({
-                success: false, message: 'No address found. Please add an address.'
+                success: false,
+                message: 'No address found. Please add an address.'
             });
         }
 
         const selectedAddress = addressDoc.address.id(addressId);
         if (!selectedAddress) {
             return res.status(400).json({
-                success: false, message: 'Selected address not found'
+                success: false,
+                message: 'Selected address not found'
             });
         }
 
@@ -183,15 +189,17 @@ const placeOrder = async (req, res) => {
         const cart = await Cart.findOne({ userId }).populate('items.productId');
         if (!cart || cart.items.length === 0) {
             return res.status(400).json({
-                success: false, message: 'Your cart is empty'
+                success: false,
+                message: 'Your cart is empty'
             });
         }
 
-        // ── 3. Validate stock BEFORE doing anything ──────────────
+        // ── 3. Validate stock ────────────────────────────────────
         const stockCheck = await validateStock(cart.items);
         if (!stockCheck.valid) {
             return res.status(400).json({
-                success: false, message: stockCheck.message
+                success: false,
+                message: stockCheck.message
             });
         }
 
@@ -206,11 +214,28 @@ const placeOrder = async (req, res) => {
         }));
 
         // ── 5. Calculate totals ──────────────────────────────────
-        const totalPrice  = orderedItems.reduce((s, i) => s + i.price * i.quantity, 0);
+        const totalPrice  = orderedItems.reduce(
+            (s, i) => s + i.price * i.quantity, 0
+        );
         const discount    = Number(couponDiscount) || 0;
         const finalAmount = Math.max(totalPrice - discount, 0);
 
-        // ── 6. Validate coupon ───────────────────────────────────
+        // ── 6. Wallet payment — check balance BEFORE saving order
+        if (paymentMethod === 'Wallet') {
+            const walletBalance = await getWalletBalance(userId);
+
+            if (walletBalance < finalAmount) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Insufficient wallet balance. Available: ₹${walletBalance.toLocaleString('en-IN')}, Required: ₹${finalAmount.toLocaleString('en-IN')}`
+                });
+            }
+        }
+
+        // ── 7. Address string ────────────────────────────────────
+        const addressString = buildAddressString(selectedAddress);
+
+        // ── 8. Validate coupon ───────────────────────────────────
         if (couponCode) {
             const coupon = await Coupon.findOne({
                 name:     couponCode.toUpperCase(),
@@ -219,7 +244,8 @@ const placeOrder = async (req, res) => {
             });
             if (!coupon) {
                 return res.status(400).json({
-                    success: false, message: 'Coupon is no longer valid'
+                    success: false,
+                    message: 'Coupon is no longer valid'
                 });
             }
             if (!coupon.userId.includes(userId)) {
@@ -228,8 +254,7 @@ const placeOrder = async (req, res) => {
             }
         }
 
-        // ── 7. Save order FIRST ──────────────────────────────────
-        // ✅ Order saved before touching stock or cart
+        // ── 9. Save order FIRST ──────────────────────────────────
         const order = new Order({
             userId,
             orderedItems,
@@ -238,36 +263,66 @@ const placeOrder = async (req, res) => {
             finalAmount,
             paymentMethod,
             deliveryCharge: 0,
-            address:        buildAddressString(selectedAddress),
+            address:        addressString,
             invoiceDate:    new Date(),
             status:         'Pending',
             couponApplied:  !!couponCode
         });
 
         await order.save();
-        savedOrder = order; // track for rollback
+        savedOrder = order;
 
-        // ── 8. Reduce stock AFTER order saved ────────────────────
-        // ✅ If this fails, we delete the order (rollback)
+        // ── 10. Debit wallet AFTER order saved ───────────────────
+        // ✅ Only runs if paymentMethod is Wallet
+        if (paymentMethod === 'Wallet') {
+            try {
+                await debitWallet({
+                    userId,
+                    amount:      finalAmount,
+                    orderId:     order.orderId,
+                    description: `Payment for order #${order.orderId}`
+                });
+            } catch (walletErr) {
+                // ✅ Rollback: delete order if wallet debit fails
+                await Order.findByIdAndDelete(savedOrder._id).catch(() => {});
+                return res.status(400).json({
+                    success: false,
+                    message: walletErr.message || 'Wallet payment failed'
+                });
+            }
+        }
+
+        // ── 11. Reduce stock AFTER order saved ───────────────────
         const stockResult = await reduceStock(cart.items);
         if (!stockResult.success) {
-            // Rollback: delete the saved order
+            // ✅ Rollback order
             await Order.findByIdAndDelete(savedOrder._id).catch(() => {});
+
+            // ✅ Refund wallet if wallet was used
+            if (paymentMethod === 'Wallet') {
+                const { creditWallet } = require('./walletController');
+                await creditWallet({
+                    userId,
+                    amount:      finalAmount,
+                    orderId:     order.orderId,
+                    type:        'refund',
+                    description: `Refund for failed order #${order.orderId}`
+                }).catch(() => {});
+            }
+
             return res.status(500).json({
                 success: false,
-                message: 'Failed to update stock. Order cancelled. Please try again.'
+                message: 'Stock update failed. Order cancelled. Please try again.'
             });
         }
 
-        // ── 9. Clear cart AFTER stock reduced ────────────────────
-        // ✅ If this fails, order and stock are fine — just log it
+        // ── 12. Clear cart ───────────────────────────────────────
         try {
             await Cart.findOneAndUpdate(
                 { userId },
                 { $set: { items: [] } }
             );
         } catch (cartErr) {
-            // Non-critical — order and stock already correct
             console.error('Cart clear failed (non-critical):', cartErr);
         }
 
@@ -279,7 +334,6 @@ const placeOrder = async (req, res) => {
         });
 
     } catch (error) {
-        // ✅ If order was saved but something else failed — delete order
         if (savedOrder) {
             await Order.findByIdAndDelete(savedOrder._id).catch(() => {});
         }
@@ -531,6 +585,25 @@ const paymentFailed = async (req, res) => {
     }
 };
 
+
+// ── GET /user/coupons ─────────────────────────────────────────────
+const getUserCoupons = async (req, res) => {
+    try {
+        const userId = req.session.user?._id;
+
+        const coupons = await Coupon.find({}).sort({ expireOn: 1 }).lean();
+
+        res.render('user/coupons', {
+            user:    req.session.user,
+            coupons,
+            userId
+        });
+    } catch (err) {
+        console.error('getUserCoupons error:', err);
+        res.redirect('/pageNotFound');
+    }
+};
+
 module.exports = {
     getCheckout,
     applyCoupon,
@@ -538,5 +611,6 @@ module.exports = {
     getOrderSuccess,
     createRazorpayOrder,
     verifyRazorpayPayment,
-    paymentFailed
+    paymentFailed,
+     getUserCoupons 
 };

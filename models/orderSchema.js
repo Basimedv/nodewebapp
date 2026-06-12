@@ -65,7 +65,6 @@ const orderSchema = new Schema({
     },
     invoiceDate: {
         type: Date,
-
     },
     status: {
         type: String,
@@ -81,9 +80,22 @@ const orderSchema = new Schema({
         type: Boolean,
         default: false
     },
+
+    // ── RETURN ──────────────────────────────
+    returnReason: {
+        type: String,
+        default: ''
+    },
+    returnStatus: {
+        type: String,
+        enum: ['', 'Approved', 'Rejected'],
+        default: ''
+    },
+
   
-razorpayOrderId:   { type: String, default: null },
-razorpayPaymentId: { type: String, default: null },
+    razorpayOrderId:   { type: String, default: null },
+    razorpayPaymentId: { type: String, default: null },
 })
+
 const Order = mongoose.model('Order', orderSchema)
 module.exports = Order

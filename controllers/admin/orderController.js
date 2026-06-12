@@ -1,6 +1,7 @@
 const Order   = require('../../models/orderSchema');
 const User    = require('../../models/userSchema');
 const Product = require('../../models/productSchema');
+const { creditWallet } = require('../user/walletController');
 const HTTP_STATUS_CODES = require('../../constants/status_codes');
 
 // ── GET ALL ORDERS ───────────────────────────────────────────────
@@ -12,7 +13,6 @@ const getOrders = async (req, res) => {
         const search = req.query.search || '';
         const status = req.query.status || '';
 
-        // Build filter
         const filter = {};
         if (status) filter.status = status;
         if (search) filter.orderId = { $regex: search, $options: 'i' };
@@ -50,9 +50,7 @@ const getOrderDetail = async (req, res) => {
             .populate('orderedItems.product')
             .lean();
 
-        if (!order) {
-            return res.redirect('/admin/orders');
-        }
+        if (!order) return res.redirect('/admin/orders');
 
         res.render('admin/orderDetail', { order });
 
@@ -88,7 +86,7 @@ const updateOrderStatus = async (req, res) => {
             });
         }
 
-        // ✅ Cannot change status of cancelled order
+        // ✅ Cannot change cancelled order
         if (order.status === 'Cancelled') {
             return res.status(400).json({
                 success: false,
@@ -96,21 +94,35 @@ const updateOrderStatus = async (req, res) => {
             });
         }
 
-        // ✅ If marking as Delivered restore stock is NOT needed
-        // If marking as Cancelled — restore stock
+        // ✅ If admin cancels — restore stock + refund wallet
         if (status === 'Cancelled' && order.status !== 'Cancelled') {
+
+            // Restore stock
             for (const item of order.orderedItems) {
                 await Product.findByIdAndUpdate(
                     item.product,
                     { $inc: { [`stock.${item.size}`]: item.quantity } }
                 );
             }
+
+            // Refund wallet if not COD
+            if (order.paymentMethod !== 'COD') {
+                await creditWallet({
+                    userId:      order.userId,
+                    amount:      order.finalAmount,
+                    orderId:     order.orderId,
+                    type:        'cancel',
+                    description: `Refund for admin cancelled order #${order.orderId}`
+                });
+            }
         }
 
-        order.status = status;
+        // ✅ If marking delivered — set invoice date
         if (status === 'Delivered') {
             order.invoiceDate = new Date();
         }
+
+        order.status = status;
         await order.save();
 
         return res.status(200).json({
@@ -132,7 +144,13 @@ const handleReturn = async (req, res) => {
     try {
         const { id }             = req.params;
         const { action, reason } = req.body;
-        // action = 'approve' or 'reject'
+
+        if (!['approve', 'reject'].includes(action)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid action. Use approve or reject.'
+            });
+        }
 
         const order = await Order.findById(id);
         if (!order) {
@@ -150,35 +168,49 @@ const handleReturn = async (req, res) => {
         }
 
         if (action === 'approve') {
-            // ✅ Restore stock on return approval
+
+            // ✅ Step 1 — Restore stock
             for (const item of order.orderedItems) {
                 await Product.findByIdAndUpdate(
                     item.product,
                     { $inc: { [`stock.${item.size}`]: item.quantity } }
                 );
             }
-            order.status        = 'Returned';
-            order.returnStatus  = 'Approved';
-            order.returnReason  = reason || '';
 
-        } else if (action === 'reject') {
-            order.status        = 'Delivered';  // revert to delivered
-            order.returnStatus  = 'Rejected';
-            order.returnReason  = reason || '';
+            // ✅ Step 2 — Credit wallet (always refund on return)
+            await creditWallet({
+                userId:      order.userId,
+                amount:      order.finalAmount,
+                orderId:     order.orderId,
+                type:        'refund',
+                description: `Refund for returned order #${order.orderId}`
+            });
+
+            // ✅ Step 3 — Update order
+            order.status       = 'Returned';
+            order.returnStatus = 'Approved';
+            order.returnReason = reason || '';
+
+            await order.save();
+
+            return res.status(200).json({
+                success: true,
+                message: `Return approved. ₹${order.finalAmount.toLocaleString('en-IN')} refunded to customer wallet.`
+            });
 
         } else {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid action. Use approve or reject.'
+            // Reject return — revert to Delivered
+            order.status       = 'Delivered';
+            order.returnStatus = 'Rejected';
+            order.returnReason = reason || '';
+
+            await order.save();
+
+            return res.status(200).json({
+                success: true,
+                message: 'Return request rejected.'
             });
         }
-
-        await order.save();
-
-        return res.status(200).json({
-            success: true,
-            message: `Return ${action}d successfully`
-        });
 
     } catch (error) {
         console.error('handleReturn error:', error);
@@ -194,4 +226,4 @@ module.exports = {
     getOrderDetail,
     updateOrderStatus,
     handleReturn
-}
+};

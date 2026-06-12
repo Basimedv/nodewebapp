@@ -70,7 +70,9 @@ const signup = async (req, res) => {
     } catch (error) {
         res.redirect(ROUTES.USER.PAGE_ERROR);
     }
+
 };
+
 
 const verifyOtp = async (req, res) => {
     try {
@@ -99,8 +101,8 @@ const resendOtp = async (req, res) => {
         const otp = generateOtp();
         req.session.userOtp = otp;
         req.session.otpExpiresAt = Date.now() + 60000;
-
         await sendVerificationEmail(email, otp);
+       
         res.json({ success: true, message: "OTP resent" });
     } catch (error) {
         res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to resend OTP" });

@@ -7,6 +7,8 @@ const { addReview } = require('../controllers/user/reviewController');
 const wishlistController = require('../controllers/user/wishlistController');
 const checkoutController = require('../controllers/user/checkoutController');
 const cartController = require('../controllers/user/cartController');
+const walletController   = require('../controllers/user/walletController');
+const orderController = require("../controllers/user/orderController");
 const { userAuth, isGuest } = require('../middlewares/auth');
 const { uploadProfile } = require('../config/cloudinary');
 
@@ -97,6 +99,8 @@ router.post(ROUTES.USER.REMOVE_FROM_CART, userAuth, cartController.removeFromCar
 
 router.get(ROUTES.USER.CHECKOUT,              userAuth, checkoutController.getCheckout);
 router.post(ROUTES.USER.CHECKOUT_PLACE_ORDER, userAuth, checkoutController.placeOrder);
+
+router.get(ROUTES.USER.CHECKOUT_COUPONS, userAuth, checkoutController.getUserCoupons);
 router.post(ROUTES.USER.CHECKOUT_APPLY_COUPON,userAuth, checkoutController.applyCoupon);
 router.get(ROUTES.USER.ORDER_SUCCESS,         userAuth, checkoutController.getOrderSuccess);
 
@@ -104,6 +108,35 @@ router.get(ROUTES.USER.ORDER_SUCCESS,         userAuth, checkoutController.getOr
 router.post(ROUTES.USER.CHECKOUT_RAZORPAY_ORDER, userAuth, checkoutController.createRazorpayOrder);
 router.post(ROUTES.USER.CHECKOUT_VERIFY_PAYMENT, userAuth, checkoutController.verifyRazorpayPayment);
 router.post(ROUTES.USER.CHECKOUT_PAYMENT_FAILED, userAuth, checkoutController.paymentFailed);
+
+router.get( ROUTES.USER.ORDERS,
+    userAuth,
+    orderController.getOrders
+);
+   
+
+router.post(
+    ROUTES.USER.ORDER_CANCEL,
+    userAuth,
+    orderController.cancelOrder
+);
+
+router.post(
+    ROUTES.USER.ORDER_RETURN,
+    userAuth,
+    orderController.requestReturn
+);
+router.get(
+    ROUTES.USER.ORDER_DETAILS,
+    userAuth,
+    orderController.getOrderDetail
+);
+router.get(ROUTES.USER.WALLET, userAuth, walletController.getWallet);
+router.get(
+    ROUTES.USER.CHECKOUT_COUPONS,
+    userAuth,
+    checkoutController.getUserCoupons
+);
 
 
 router.post(ROUTES.USER.ADD_REVIEW, userAuth, addReview);

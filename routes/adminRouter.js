@@ -4,6 +4,7 @@ const admincontroller    = require('../controllers/admin/admincontroller');
 const customercontroller = require('../controllers/admin/customercontroller');
 const productcontroller  = require('../controllers/admin/productcontroller');
 const categorycontroller = require('../controllers/admin/categorycontroller');
+const couponController = require('../controllers/admin/couponController');
 const orderController = require('../controllers/admin/orderController');
 
 
@@ -49,6 +50,13 @@ router.post(ROUTES.ADMIN.ORDER_HANDLE_RETURN, adminAuth, orderController.handleR
 // Add these 2 routes
 router.post(ROUTES.ADMIN.OFFERS_ADD,           adminAuth, offerController.addOffer);
 router.post(ROUTES.ADMIN.OFFERS_REMOVE_TARGET, adminAuth, offerController.removeOfferByTarget);
+
+
+
+router.get(ROUTES.ADMIN.COUPONS,        adminAuth, couponController.getCoupons);
+router.post(ROUTES.ADMIN.COUPONS_ADD,   adminAuth, couponController.postAddCoupon);
+router.put(ROUTES.ADMIN.COUPONS_TOGGLE, adminAuth, couponController.toggleCoupon);
+router.delete(ROUTES.ADMIN.COUPONS_DELETE, adminAuth, couponController.deleteCoupon);
 // Page Error
 router.get(ROUTES.ADMIN.PAGE_ERROR, admincontroller.pageerror);
 

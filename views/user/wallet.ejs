@@ -1,0 +1,422 @@
+<%- include("../partials/user/header") %>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<style>
+  * { box-sizing: border-box; }
+
+  .wallet-wrapper {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+
+  /* Header */
+  .wallet-header {
+    margin-bottom: 28px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+  }
+
+  .wallet-header h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+  }
+
+  /* Balance card */
+  .balance-card {
+    background: linear-gradient(135deg, #1a1a1a 0%, #3a3a3a 100%);
+    border-radius: 16px;
+    padding: 32px;
+    color: white;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .balance-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+
+  .balance-card::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -20px;
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 50%;
+  }
+
+  .balance-label {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .balance-amount {
+    font-size: 2.8rem;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .balance-amount span {
+    font-size: 1.6rem;
+    font-weight: 400;
+    margin-right: 4px;
+    opacity: 0.8;
+  }
+
+  .balance-stats {
+    display: flex;
+    gap: 32px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .balance-stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .balance-stat-label {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .balance-stat-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+  }
+
+  .credit-value { color: #69f0ae; }
+  .debit-value  { color: #ff5252; }
+
+  /* Transactions */
+  .txn-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .txn-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .txn-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+  }
+
+  .txn-count {
+    font-size: 0.82rem;
+    color: #888;
+    background: #f5f5f5;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* Transaction row */
+  .txn-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f8f8f8;
+    transition: background 0.15s;
+  }
+
+  .txn-row:last-child { border-bottom: none; }
+  .txn-row:hover { background: #fafafa; border-radius: 8px; padding: 14px 8px; }
+
+  /* Icon */
+  .txn-icon {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .txn-icon.credit { background: #e8f5e9; color: #2e7d32; }
+  .txn-icon.debit  { background: #fce4ec; color: #c62828; }
+
+  /* Info */
+  .txn-info { flex: 1; }
+
+  .txn-description {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 3px;
+  }
+
+  .txn-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .txn-date {
+    font-size: 0.78rem;
+    color: #888;
+  }
+
+  .txn-type-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-refund   { background: #e3f2fd; color: #1565c0; }
+  .badge-cancel   { background: #fff3e0; color: #e65100; }
+  .badge-purchase { background: #f3e5f5; color: #6a1b9a; }
+  .badge-add      { background: #e8f5e9; color: #2e7d32; }
+
+  .txn-order-id {
+    font-size: 0.72rem;
+    color: #aaa;
+    font-family: monospace;
+  }
+
+  /* Amount */
+  .txn-amount {
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .txn-amount.credit { color: #2e7d32; }
+  .txn-amount.debit  { color: #c62828; }
+
+  .txn-status {
+    font-size: 0.72rem;
+    text-align: right;
+    color: #888;
+    margin-top: 2px;
+  }
+
+  /* Empty state */
+  .empty-txn {
+    text-align: center;
+    padding: 50px 20px;
+  }
+
+  .empty-txn i {
+    font-size: 3rem;
+    color: #ddd;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .empty-txn h4 { color: #888; margin-bottom: 6px; }
+  .empty-txn p  { color: #aaa; font-size: 0.88rem; }
+
+  /* Pagination */
+  .pagination-wrap {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .page-btn {
+    padding: 7px 13px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #333;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+
+  .page-btn:hover   { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+  .page-btn.active  { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+  .page-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+  @media (max-width: 600px) {
+    .balance-amount { font-size: 2rem; }
+    .balance-stats  { gap: 20px; }
+    .txn-row        { gap: 10px; }
+  }
+</style>
+
+<main>
+  <div class="wallet-wrapper">
+
+    <!-- Header -->
+    <div class="wallet-header">
+      <h2><i class="fas fa-wallet me-2" style="font-size:1.5rem;"></i>My Wallet</h2>
+    </div>
+
+    <%
+      // Calculate totals for stats
+      const totalCredited = transactions.filter(t => t.entryType === 'CREDIT')
+        .reduce((s, t) => s + t.amount, 0);
+      const totalDebited = transactions.filter(t => t.entryType === 'DEBIT')
+        .reduce((s, t) => s + t.amount, 0);
+    %>
+
+    <!-- Balance Card -->
+    <div class="balance-card">
+      <div class="balance-label">
+        <i class="fas fa-wallet"></i>
+        Available Balance
+      </div>
+      <div class="balance-amount">
+        <span>₹</span><%= balance.toLocaleString('en-IN') %>
+      </div>
+      <div class="balance-stats">
+        <div class="balance-stat-item">
+          <span class="balance-stat-label">Total Credited</span>
+          <span class="balance-stat-value credit-value">
+            + ₹<%= totalCredited.toLocaleString('en-IN') %>
+          </span>
+        </div>
+        <div class="balance-stat-item">
+          <span class="balance-stat-label">Total Debited</span>
+          <span class="balance-stat-value debit-value">
+            − ₹<%= totalDebited.toLocaleString('en-IN') %>
+          </span>
+        </div>
+        <div class="balance-stat-item">
+          <span class="balance-stat-label">Transactions</span>
+          <span class="balance-stat-value"><%= totalTxns %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="txn-card">
+      <div class="txn-header">
+        <h3 class="txn-title">Transaction History</h3>
+        <span class="txn-count"><%= totalTxns %> transactions</span>
+      </div>
+
+      <% if (transactions && transactions.length > 0) { %>
+
+        <% transactions.forEach(txn => { %>
+          <%
+            const isCredit = txn.entryType === 'CREDIT';
+            let badgeClass = 'badge-add';
+            if (txn.type === 'refund')           badgeClass = 'badge-refund';
+            if (txn.type === 'cancel')           badgeClass = 'badge-cancel';
+            if (txn.type === 'product_purchase') badgeClass = 'badge-purchase';
+
+            let typeLabel = 'Added';
+            if (txn.type === 'refund')           typeLabel = 'Refund';
+            if (txn.type === 'cancel')           typeLabel = 'Cancelled';
+            if (txn.type === 'product_purchase') typeLabel = 'Purchase';
+            if (txn.type === 'add_money')        typeLabel = 'Added';
+          %>
+          <div class="txn-row">
+
+            <!-- Icon -->
+            <div class="txn-icon <%= isCredit ? 'credit' : 'debit' %>">
+              <i class="fas <%= isCredit ? 'fa-arrow-down' : 'fa-arrow-up' %>"></i>
+            </div>
+
+            <!-- Info -->
+            <div class="txn-info">
+              <div class="txn-description">
+                <%= txn.description || (isCredit ? 'Money Credited' : 'Money Debited') %>
+              </div>
+              <div class="txn-meta">
+                <span class="txn-date">
+                  <%= new Date(txn.createdAt).toLocaleDateString('en-IN', {
+                    day: 'numeric', month: 'short', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                  }) %>
+                </span>
+                <span class="txn-type-badge <%= badgeClass %>">
+                  <%= typeLabel %>
+                </span>
+                <% if (txn.orderId) { %>
+                  <span class="txn-order-id">#<%= txn.orderId %></span>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Amount -->
+            <div>
+              <div class="txn-amount <%= isCredit ? 'credit' : 'debit' %>">
+                <%= isCredit ? '+' : '−' %> ₹<%= txn.amount.toLocaleString('en-IN') %>
+              </div>
+              <div class="txn-status"><%= txn.status %></div>
+            </div>
+
+          </div>
+        <% }) %>
+
+      <% } else { %>
+        <div class="empty-txn">
+          <i class="fas fa-receipt"></i>
+          <h4>No transactions yet</h4>
+          <p>Your wallet transactions will appear here.</p>
+        </div>
+      <% } %>
+
+      <!-- Pagination -->
+      <% if (totalPages > 1) { %>
+        <div class="pagination-wrap">
+          <a href="?page=<%= currentPage - 1 %>"
+            class="page-btn <%= currentPage === 1 ? 'disabled' : '' %>">
+            ← Prev
+          </a>
+
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <% if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
+              <a href="?page=<%= i %>"
+                class="page-btn <%= i === currentPage ? 'active' : '' %>">
+                <%= i %>
+              </a>
+            <% } else if (i === currentPage - 3 || i === currentPage + 3) { %>
+              <span class="page-btn disabled">…</span>
+            <% } %>
+          <% } %>
+
+          <a href="?page=<%= currentPage + 1 %>"
+            class="page-btn <%= currentPage === totalPages ? 'disabled' : '' %>">
+            Next →
+          </a>
+        </div>
+      <% } %>
+
+    </div>
+  </div>
+</main>
+
+<%- include("../partials/user/footer") %>

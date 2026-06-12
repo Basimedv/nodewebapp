@@ -556,17 +556,22 @@
               </div>
             </label>
 
-            <!-- Wallet -->
-            <label class="payment-option" id="pay-Wallet">
-              <input type="radio" name="paymentMethod"
-                value="Wallet"
-                onchange="selectPayment('Wallet')">
-              <span class="payment-icon">👛</span>
-              <div class="payment-option-label">
-                <span class="payment-option-title">Wallet</span>
-                <span class="payment-option-desc">Pay using your wallet balance</span>
-              </div>
-            </label>
+         <!-- Wallet -->
+<label class="payment-option" id="pay-Wallet">
+    <input type="radio" name="paymentMethod"
+        value="Wallet"
+        onchange="selectPayment('Wallet')">
+    <span class="payment-icon">👛</span>
+    <div class="payment-option-label">
+        <span class="payment-option-title">Wallet</span>
+        <span class="payment-option-desc">
+            Available Balance:
+            <strong style="color:#2e7d32;">
+                ₹<%= walletBalance ? walletBalance.toLocaleString('en-IN') : '0' %>
+            </strong>
+        </span>
+    </div>
+</label>
 
           </div>
         </div>
