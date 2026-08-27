@@ -123,7 +123,6 @@
     background: #1a1a1a;
     color: white;
     border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
     font-size: 0.7rem; font-weight: 700;
     display: grid; place-items: center;
   }
@@ -255,7 +254,7 @@
 
   .payment-icon { font-size: 1.4rem; width: 28px; text-align: center; }
 
-  /* Coupon */
+  /* Coupon input row */
   .coupon-row {
     display: flex;
     gap: 10px;
@@ -289,6 +288,7 @@
   }
 
   .btn-apply-coupon:hover { background: #333; }
+  .btn-apply-coupon:disabled { background: #aaa; cursor: not-allowed; }
 
   .coupon-success {
     display: none;
@@ -312,6 +312,67 @@
     margin-left: auto;
     font-weight: 600;
   }
+
+  /* ── Coupon suggestion cards ── */
+  .coupon-suggestions-wrap {
+    margin-top: 16px;
+  }
+
+  .coupon-suggestions-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+
+  .coupon-tag {
+    border: 1.5px dashed #e0e0e0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .coupon-tag:hover { border-color: #1a1a1a; background: #fafafa; }
+
+  .coupon-tag-code {
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    background: #f0f0f0;
+    color: #1a1a1a;
+    padding: 3px 10px;
+    border-radius: 5px;
+    letter-spacing: 1px;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+
+  .coupon-tag-desc   { font-size: 0.78rem; color: #666; line-height: 1.4; }
+  .coupon-tag-save   { font-size: 0.75rem; color: #2e7d32; font-weight: 600; margin-top: 3px; }
+  .coupon-tag-expiry { font-size: 0.72rem; color: #aaa; margin-top: 2px; }
+
+  .btn-use-coupon {
+    padding: 6px 16px;
+    background: #1a1a1a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+
+  .btn-use-coupon:hover { background: #333; }
 
   /* Order summary sidebar */
   .order-summary-box {
@@ -499,12 +560,14 @@
             Apply Coupon
           </div>
 
+          <!-- Input row -->
           <div class="coupon-row">
             <input type="text" id="couponInput"
               class="coupon-input"
               placeholder="Enter coupon code"
-              maxlength="20" />
-            <button class="btn-apply-coupon" onclick="applyCoupon()">
+              maxlength="20"
+              oninput="this.value = this.value.toUpperCase()" />
+            <button class="btn-apply-coupon" id="applyBtn" onclick="applyCoupon()">
               Apply
             </button>
           </div>
@@ -513,13 +576,20 @@
           <div class="coupon-success" id="couponSuccess">
             <i class="fas fa-check-circle"></i>
             <span id="couponMsg"></span>
-            <button class="btn-remove-coupon" onclick="removeCoupon()">
-              Remove
-            </button>
+            <button class="btn-remove-coupon" onclick="removeCoupon()">Remove</button>
           </div>
 
+          <!-- Error message -->
           <div id="couponError"
             style="display:none; font-size:0.82rem; color:#e53935; margin-top:6px;">
+          </div>
+
+          <!-- ── Coupon Suggestions ── -->
+          <div class="coupon-suggestions-wrap" id="couponSuggestions">
+            <div class="coupon-suggestions-label">Available for you</div>
+            <div id="couponList">
+              <div style="font-size:0.82rem; color:#bbb;">Loading coupons...</div>
+            </div>
           </div>
         </div>
 
@@ -556,22 +626,22 @@
               </div>
             </label>
 
-         <!-- Wallet -->
-<label class="payment-option" id="pay-Wallet">
-    <input type="radio" name="paymentMethod"
-        value="Wallet"
-        onchange="selectPayment('Wallet')">
-    <span class="payment-icon">👛</span>
-    <div class="payment-option-label">
-        <span class="payment-option-title">Wallet</span>
-        <span class="payment-option-desc">
-            Available Balance:
-            <strong style="color:#2e7d32;">
-                ₹<%= walletBalance ? walletBalance.toLocaleString('en-IN') : '0' %>
-            </strong>
-        </span>
-    </div>
-</label>
+            <!-- Wallet -->
+            <label class="payment-option" id="pay-Wallet">
+              <input type="radio" name="paymentMethod"
+                value="Wallet"
+                onchange="selectPayment('Wallet')">
+              <span class="payment-icon">👛</span>
+              <div class="payment-option-label">
+                <span class="payment-option-title">Wallet</span>
+                <span class="payment-option-desc">
+                  Available Balance:
+                  <strong style="color:#2e7d32;">
+                    ₹<%= walletBalance ? walletBalance.toLocaleString('en-IN') : '0' %>
+                  </strong>
+                </span>
+              </div>
+            </label>
 
           </div>
         </div>
@@ -589,7 +659,7 @@
 
         <div class="summary-row" id="coupon-row" style="display:none;">
           <span>Coupon Discount</span>
-          <span class="discount" id="summary-discount">— ₹0</span>
+          <span class="discount" id="summary-discount">− ₹0</span>
         </div>
 
         <div class="summary-row">
@@ -630,17 +700,29 @@
 <%- include("../partials/user/footer") %>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<!-- Razorpay SDK — must be before your script -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
+<script type="application/json" id="checkoutData">
+{
+    "subtotal":       <%- JSON.stringify(subtotal) %>,
+    "firstAddressId": "<%- addresses && addresses.length > 0 ? String(addresses[0]._id) : '' %>",
+    "userName":       "<%- user && user.name  ? user.name  : '' %>",
+    "userEmail":      "<%- user && user.email ? user.email : '' %>"
+}
+</script>
+
 <script>
+  // ── Read server data safely ───────────────────────────────────
+  var _cd             = JSON.parse(document.getElementById('checkoutData').textContent);
+  const subtotal      = _cd.subtotal;
+  const userName      = _cd.userName;
+  const userEmail     = _cd.userEmail;
+
   // ── State ─────────────────────────────────────────────────────
-  let selectedAddressId = '<%= addresses && addresses.length > 0 ? addresses[0]._id : "" %>';
+  let selectedAddressId = _cd.firstAddressId;
   let selectedPayment   = 'COD';
   let appliedCoupon     = null;
   let couponDiscount    = 0;
-  const subtotal        = <%= subtotal %>;
 
   // ── Select Address ────────────────────────────────────────────
   function selectAddress(el, id) {
@@ -655,8 +737,7 @@
     selectedPayment = method;
     document.querySelectorAll('.payment-option')
       .forEach(el => el.classList.remove('selected'));
-    document.getElementById(`pay-${method}`)
-      ?.classList.add('selected');
+    document.getElementById('pay-' + method)?.classList.add('selected');
   }
 
   // ── Apply Coupon ──────────────────────────────────────────────
@@ -684,20 +765,20 @@
         appliedCoupon  = data.couponCode;
         couponDiscount = data.discount;
 
-        // Show success
-        document.getElementById('couponMsg').textContent        = data.message;
-        document.getElementById('couponSuccess').style.display  = 'flex';
-        document.getElementById('couponInput').disabled         = true;
-        document.querySelector('.btn-apply-coupon').disabled     = true;
+        document.getElementById('couponMsg').textContent       = data.message;
+        document.getElementById('couponSuccess').style.display = 'flex';
+        document.getElementById('couponInput').disabled        = true;
+        document.getElementById('applyBtn').disabled           = true;
 
-        // Update summary
-        document.getElementById('coupon-row').style.display     = 'flex';
+        document.getElementById('coupon-row').style.display    = 'flex';
         document.getElementById('summary-discount').textContent =
-          `− ₹${couponDiscount.toLocaleString('en-IN')}`;
-        document.getElementById('summary-total').textContent    =
-          `₹${data.finalTotal.toLocaleString('en-IN')}`;
+          '− ₹' + couponDiscount.toLocaleString('en-IN');
+        document.getElementById('summary-total').textContent   =
+          '₹' + data.finalTotal.toLocaleString('en-IN');
 
         errEl.style.display = 'none';
+        document.getElementById('couponSuggestions').style.display = 'none';
+
       } else {
         errEl.textContent   = data.message;
         errEl.style.display = 'block';
@@ -713,17 +794,73 @@
     appliedCoupon  = null;
     couponDiscount = 0;
 
-    document.getElementById('couponInput').value             = '';
-    document.getElementById('couponInput').disabled          = false;
-    document.querySelector('.btn-apply-coupon').disabled     = false;
-    document.getElementById('couponSuccess').style.display   = 'none';
-    document.getElementById('coupon-row').style.display      = 'none';
-    document.getElementById('summary-total').textContent     =
-      `₹${subtotal.toLocaleString('en-IN')}`;
-    document.getElementById('couponError').style.display     = 'none';
+    document.getElementById('couponInput').value           = '';
+    document.getElementById('couponInput').disabled        = false;
+    document.getElementById('applyBtn').disabled           = false;
+    document.getElementById('couponSuccess').style.display = 'none';
+    document.getElementById('coupon-row').style.display    = 'none';
+    document.getElementById('summary-total').textContent   =
+      '₹' + subtotal.toLocaleString('en-IN');
+    document.getElementById('couponError').style.display   = 'none';
+
+    document.getElementById('couponSuggestions').style.display = 'block';
+    loadAvailableCoupons();
   }
 
-  // ── Reset button ──────────────────────────────────────────────
+  // ── Load coupon suggestions ───────────────────────────────────
+  async function loadAvailableCoupons() {
+    const list = document.getElementById('couponList');
+    list.innerHTML = '<div style="font-size:0.82rem;color:#bbb;">Loading coupons...</div>';
+
+    try {
+      const res  = await fetch('/checkout/available-coupons?subtotal=' + subtotal);
+      const data = await res.json();
+
+      if (!data.success || !data.coupons.length) {
+        list.innerHTML =
+          '<div style="font-size:0.82rem;color:#bbb;">No coupons available right now.</div>';
+        return;
+      }
+
+      list.innerHTML = data.coupons.map(function(c) {
+        const saving = 'Flat ₹' + Number(c.value).toLocaleString('en-IN') + ' off';
+
+        let desc = '₹' + Number(c.value).toLocaleString('en-IN') + ' off';
+        if (c.minOrderAmount > 0)
+          desc += ' · Min ₹' + Number(c.minOrderAmount).toLocaleString('en-IN');
+        if (c.description)
+          desc += ' · ' + c.description;
+
+        const expiry = new Date(c.endDate).toLocaleDateString('en-IN', {
+          day: 'numeric', month: 'short', year: 'numeric'
+        });
+
+        return '<div class="coupon-tag">' +
+          '<div style="flex:1;">' +
+            '<div class="coupon-tag-code">' + c.code + '</div>' +
+            '<div class="coupon-tag-desc">' + desc + '</div>' +
+            '<div class="coupon-tag-save">🎉 ' + saving + '</div>' +
+            '<div class="coupon-tag-expiry">Expires ' + expiry + '</div>' +
+          '</div>' +
+          '<button class="btn-use-coupon" onclick="useCoupon(\'' + c.code + '\')">Use</button>' +
+        '</div>';
+      }).join('');
+
+    } catch {
+      list.innerHTML =
+        '<div style="font-size:0.82rem;color:#bbb;">Could not load coupons.</div>';
+    }
+  }
+
+  // ── Click "Use" on a suggestion ───────────────────────────────
+  function useCoupon(code) {
+    document.getElementById('couponInput').value = code;
+    document.getElementById('couponInput')
+      .scrollIntoView({ behavior: 'smooth', block: 'center' });
+    applyCoupon();
+  }
+
+  // ── Reset place order button ──────────────────────────────────
   function resetBtn() {
     const btn     = document.getElementById('placeOrderBtn');
     btn.disabled  = false;
@@ -732,14 +869,9 @@
 
   // ── Place Order ───────────────────────────────────────────────
   async function placeOrder() {
-
-    // Validate address
     if (!selectedAddressId) {
-      Swal.fire({
-        icon:  'warning',
-        title: 'Select Address',
-        text:  'Please select a delivery address to continue.'
-      });
+      Swal.fire({ icon: 'warning', title: 'Select Address',
+        text: 'Please select a delivery address to continue.' });
       return;
     }
 
@@ -756,61 +888,48 @@
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({
-            addressId:      selectedAddressId,
-            paymentMethod:  'COD',
-            couponCode:     appliedCoupon,
-            couponDiscount
+            addressId: selectedAddressId, paymentMethod: 'COD',
+            couponCode: appliedCoupon, couponDiscount
           })
         });
         const data = await res.json();
-
         if (data.success) {
-          window.location.href = `/order-success/${data._id}`;
+          window.location.href = '/order-success/' + data._id;
         } else {
-          Swal.fire({
-            icon:  'error',
-            title: 'Order Failed',
-            text:  data.message || 'Something went wrong.'
-          });
+          Swal.fire({ icon: 'error', title: 'Order Failed',
+            text: data.message || 'Something went wrong.' });
           resetBtn();
         }
       } catch {
-        Swal.fire({
-          icon:  'error',
-          title: 'Network Error',
-          text:  'Please check your connection and try again.'
-        });
+        Swal.fire({ icon: 'error', title: 'Network Error',
+          text: 'Please check your connection and try again.' });
         resetBtn();
       }
       return;
     }
 
-    // ── ONLINE (Razorpay) ────────────────────────────────────────
+    // ── ONLINE (Razorpay) ─────────────────────────────────────────
     if (selectedPayment === 'Online') {
       try {
-
-        // Step 1 — Create Razorpay order on server
         const res  = await fetch('/checkout/razorpay-order', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({
-            addressId:      selectedAddressId,
-            couponCode:     appliedCoupon,
+            addressId:  selectedAddressId,
+            couponCode: appliedCoupon,
             couponDiscount
           })
         });
         const data = await res.json();
 
         if (!data.success) {
-          Swal.fire({
-            icon: 'error',
-            text: data.message || 'Failed to initiate payment.'
-          });
+          Swal.fire({ icon: 'error', text: data.message || 'Failed to initiate payment.' });
           resetBtn();
           return;
         }
 
-        // Step 2 — Open Razorpay popup
+        const orderDocId = data.orderDocId;
+
         const options = {
           key:         data.keyId,
           amount:      data.amount,
@@ -819,12 +938,11 @@
           name:        'COLINGUEST',
           description: 'Order Payment',
           prefill: {
-            name:  '<%= user?.name || "" %>',
-            email: '<%= user?.email || "" %>'
+            name:  userName,
+            email: userEmail
           },
           theme: { color: '#1a1a1a' },
 
-          // Step 3 — Payment success handler
           handler: async function (response) {
             try {
               const verifyRes  = await fetch('/checkout/verify-payment', {
@@ -839,71 +957,49 @@
               const verifyData = await verifyRes.json();
 
               if (verifyData.success) {
-                window.location.href = `/order-success/${verifyData._id}`;
+                window.location.href = '/order-success/' + verifyData._id;
               } else {
-                Swal.fire({
-                  icon:  'error',
-                  title: 'Payment Failed',
-                  text:  verifyData.message ||
-                         'Verification failed. Please contact support.'
-                });
-                resetBtn();
+                window.location.href = '/order-failure/' + (verifyData.orderDocId || orderDocId);
               }
             } catch {
-              Swal.fire({
-                icon:  'error',
-                title: 'Error',
-                text:  'Something went wrong during verification.'
-              });
-              resetBtn();
+              window.location.href = '/order-failure/' + orderDocId;
             }
           },
 
-          // User closed Razorpay modal
           modal: {
             ondismiss: async function () {
               try {
-                await fetch('/checkout/payment-failed', {
-                  method:  'POST',
-                  headers: { 'Content-Type': 'application/json' }
+                const failRes  = await fetch('/checkout/payment-failed', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' }
                 });
-              } catch {}
-              Swal.fire({
-                icon:  'info',
-                title: 'Payment Cancelled',
-                text:  'Your order was not placed.'
-              });
-              resetBtn();
+                const failData = await failRes.json();
+                window.location.href = '/order-failure/' + (failData.orderDocId || orderDocId);
+              } catch {
+                window.location.href = '/order-failure/' + orderDocId;
+              }
             }
           }
         };
 
         const rzp = new Razorpay(options);
 
-        // Razorpay error handler
-        rzp.on('payment.failed', async function (response) {
+        rzp.on('payment.failed', async function () {
           try {
-            await fetch('/checkout/payment-failed', {
-              method:  'POST',
-              headers: { 'Content-Type': 'application/json' }
+            const failRes  = await fetch('/checkout/payment-failed', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' }
             });
-          } catch {}
-          Swal.fire({
-            icon:  'error',
-            title: 'Payment Failed',
-            text:  response.error?.description || 'Payment could not be processed.'
-          });
-          resetBtn();
+            const failData = await failRes.json();
+            window.location.href = '/order-failure/' + (failData.orderDocId || orderDocId);
+          } catch {
+            window.location.href = '/order-failure/' + orderDocId;
+          }
         });
 
         rzp.open();
 
       } catch {
-        Swal.fire({
-          icon:  'error',
-          title: 'Error',
-          text:  'Failed to initiate Razorpay payment.'
-        });
+        Swal.fire({ icon: 'error', title: 'Error',
+          text: 'Failed to initiate Razorpay payment.' });
         resetBtn();
       }
       return;
@@ -916,39 +1012,33 @@
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({
-            addressId:      selectedAddressId,
-            paymentMethod:  'Wallet',
-            couponCode:     appliedCoupon,
-            couponDiscount
+            addressId: selectedAddressId, paymentMethod: 'Wallet',
+            couponCode: appliedCoupon, couponDiscount
           })
         });
         const data = await res.json();
-
         if (data.success) {
-          window.location.href = `/order-success/${data._id}`;
+          window.location.href = '/order-success/' + data._id;
         } else {
-          Swal.fire({
-            icon:  'error',
-            title: 'Order Failed',
-            text:  data.message || 'Something went wrong.'
-          });
+          Swal.fire({ icon: 'error', title: 'Order Failed',
+            text: data.message || 'Something went wrong.' });
           resetBtn();
         }
       } catch {
-        Swal.fire({
-          icon:  'error',
-          title: 'Network Error',
-          text:  'Please check your connection and try again.'
-        });
+        Swal.fire({ icon: 'error', title: 'Network Error',
+          text: 'Please check your connection and try again.' });
         resetBtn();
       }
       return;
     }
   }
 
-  // ── Coupon input — Enter key support ──────────────────────────
+  // ── Enter key on coupon input ─────────────────────────────────
   document.getElementById('couponInput')
-    ?.addEventListener('keypress', (e) => {
+    ?.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') applyCoupon();
     });
+
+  // ── Load suggestions on page ready ───────────────────────────
+  document.addEventListener('DOMContentLoaded', loadAvailableCoupons);
 </script>

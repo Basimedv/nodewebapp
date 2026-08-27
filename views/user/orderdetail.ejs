@@ -264,6 +264,8 @@
       .sidebar-container { width: 100%; }
       .content-wrapper { padding: 24px 16px; }
     }
+    .pay-status-paid    { color: #16a34a; }
+.pay-status-pending { color: #b45309; }
     @media (max-width: 576px) {
       .meta-grid { grid-template-columns: 1fr 1fr; }
     }
@@ -395,7 +397,7 @@
                 </div>
                 <div class="meta-item">
                   <div class="meta-lbl">Payment Status</div>
-                  <div class="meta-val" style="color:<%= order.paymentStatus === 'Paid' ? '#16a34a' : '#b45309' %>">
+             <div class="meta-val <%= order.paymentStatus === 'Paid' ? 'pay-status-paid' : 'pay-status-pending' %>">
                     <%= order.paymentStatus || 'Pending' %>
                   </div>
                 </div>

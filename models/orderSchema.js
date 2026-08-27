@@ -1,6 +1,10 @@
 const mongoose = require('mongoose')
 const { Schema } = mongoose;
-const { v4: uuidv4 } = require('uuid')
+
+const generateOrderId = () => {
+    const hex = require('crypto').randomBytes(4).toString('hex').toUpperCase();
+    return `ORD-${hex}`;
+};
 
 const orderSchema = new Schema({
     userId: {
@@ -9,9 +13,9 @@ const orderSchema = new Schema({
         required: true
     },
     orderId: {
-        type: String,
-        default: () => uuidv4(),
-        unique: true
+        type:    String,
+        default: generateOrderId,
+        unique:  true
     },
     orderedItems: [{
         product: {
@@ -43,7 +47,7 @@ const orderSchema = new Schema({
         type: Number,
         required: true,
     },
-    dicount: {
+    discount: {
         type: Number,
         default: 0
     },
@@ -69,7 +73,12 @@ const orderSchema = new Schema({
     status: {
         type: String,
         required: true,
-        enum: ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Return Request', 'Returned']
+        enum: ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Return Request', 'Returned', 'Payment Pending', 'Failed']
+    },
+    paymentStatus: {
+        type:    String,
+        enum:    ['Pending', 'Paid', 'Failed', 'Refunded'],
+        default: 'Pending'
     },
     createdOn: {
         type: Date,
@@ -80,8 +89,6 @@ const orderSchema = new Schema({
         type: Boolean,
         default: false
     },
-
-    // ── RETURN ──────────────────────────────
     returnReason: {
         type: String,
         default: ''
@@ -91,11 +98,9 @@ const orderSchema = new Schema({
         enum: ['', 'Approved', 'Rejected'],
         default: ''
     },
-
-  
     razorpayOrderId:   { type: String, default: null },
     razorpayPaymentId: { type: String, default: null },
-})
+});
 
-const Order = mongoose.model('Order', orderSchema)
-module.exports = Order
+const Order = mongoose.model('Order', orderSchema);
+module.exports = Order;

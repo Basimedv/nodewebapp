@@ -3,548 +3,442 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
 <style>
-    * { box-sizing: border-box; }
+  * { box-sizing: border-box; }
 
-    .coupons-wrapper {
-        max-width: 900px;
-        margin: 40px auto;
-        padding: 0 20px;
-    }
+  body {
+    background-color: #f5f5f5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
 
-    .page-header {
-        margin-bottom: 28px;
-        padding-bottom: 16px;
-        border-bottom: 2px solid #f0f0f0;
-    }
+  /* ── Layout ── */
+  .page-wrapper { display: flex; min-height: 100vh; }
+  .sidebar-container { width: 280px; flex-shrink: 0; }
+  .content-wrapper { flex: 1; padding: 40px 50px; min-width: 0; }
 
-    .page-header h2 {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin: 0 0 4px;
-    }
+  @media (max-width: 768px) {
+    .page-wrapper { flex-direction: column; }
+    .sidebar-container { width: 100%; }
+    .content-wrapper { padding: 24px 16px; }
+  }
 
-    .page-header p {
-        color: #888;
-        font-size: 0.88rem;
-        margin: 0;
-    }
+  /* ── Page header ── */
+  .page-header { margin-bottom: 28px; padding-bottom: 16px; border-bottom: 2px solid #f0f0f0; }
+  .page-header h2 { font-size: 1.75rem; font-weight: 700; color: #1a1a1a; margin: 0 0 4px; }
+  .page-header p { color: #888; font-size: 0.88rem; margin: 0; }
 
-    /* Filter tabs */
-    .filter-tabs {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 24px;
-        flex-wrap: wrap;
-    }
+  /* ── Stats bar ── */
+  .stats-bar { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .stat-pill {
+    background: white; border-radius: 12px;
+    padding: 14px 18px; box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    display: flex; align-items: center; gap: 12px;
+    flex: 1; min-width: 130px;
+  }
+  .stat-pill-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+  }
+  .stat-pill-info .stat-num  { font-size: 1.4rem; font-weight: 700; color: #1a1a1a; line-height: 1; }
+  .stat-pill-info .stat-label { font-size: 0.75rem; color: #888; font-weight: 500; margin-top: 2px; }
 
-    .filter-tab {
-        padding: 7px 18px;
-        border-radius: 20px;
-        border: 1.5px solid #e0e0e0;
-        background: white;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #666;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
+  /* ── Filter tabs ── */
+  .filter-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .filter-tab {
+    padding: 7px 18px; border-radius: 20px;
+    border: 1.5px solid #e0e0e0; background: white;
+    font-size: 0.85rem; font-weight: 600; color: #666;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .filter-tab:hover, .filter-tab.active { background: #1a1a1a; color: white; border-color: #1a1a1a; }
 
-    .filter-tab:hover, .filter-tab.active {
-        background: #1a1a1a;
-        color: white;
-        border-color: #1a1a1a;
-    }
+  /* ── Coupons grid ── */
+  .coupons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+  }
+  @media (max-width: 600px) { .coupons-grid { grid-template-columns: 1fr; } }
 
-    /* Coupon Card Grid */
-    .coupons-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-        gap: 18px;
-    }
+  /* ── Coupon card ── */
+  .coupon-card {
+    background: white;
+    border: 1px solid #ebebeb;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    position: relative;
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .coupon-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.09); }
+  .coupon-card.dimmed { opacity: 0.55; filter: grayscale(0.5); }
 
-    @media (max-width: 600px) {
-        .coupons-grid { grid-template-columns: 1fr; }
-    }
+  /* Left stripe */
+  .cp-stripe { width: 6px; flex-shrink: 0; background: #1a1a1a; }
+  .cp-stripe.stripe-expired  { background: #E24B4A; }
+  .cp-stripe.stripe-used     { background: #c8c8c8; }
+  .cp-stripe.stripe-upcoming { background: #3b82f6; }
 
-    /* Coupon Card */
-    .coupon-card {
-        background: white;
-        border-radius: 14px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-        overflow: hidden;
-        display: flex;
-        transition: transform 0.2s, box-shadow 0.2s;
-        position: relative;
-    }
+  /* Notch cut-outs on stripe edge */
+  .cp-notch-top, .cp-notch-bot {
+    position: absolute;
+    width: 20px; height: 20px;
+    background: #f5f5f5;
+    border-radius: 50%;
+    left: -4px;
+    z-index: 2;
+  }
+  .cp-notch-top { top: -10px; }
+  .cp-notch-bot { bottom: -10px; }
 
-    .coupon-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-    }
+  /* Inner layout */
+  .cp-inner {
+    display: flex; align-items: center;
+    flex: 1; padding: 18px 20px; gap: 0;
+  }
 
-    .coupon-card.expired {
-        opacity: 0.6;
-        filter: grayscale(0.4);
-    }
+  /* Discount amount section */
+  .cp-amt-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-width: 86px; padding-right: 18px; margin-right: 18px;
+    border-right: 1.5px dashed #e0e0e0;
+    flex-shrink: 0;
+  }
+  .cp-amt {
+    font-size: 2rem; font-weight: 700;
+    color: #1a1a1a; line-height: 1;
+  }
+  .cp-amt sup { font-size: 0.9rem; vertical-align: super; font-weight: 600; }
+  .cp-amt-label {
+    font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.8px; color: #aaa; margin-top: 5px;
+    font-weight: 600;
+  }
 
-    /* Left accent strip */
-    .coupon-accent {
-        width: 10px;
-        background: #1a1a1a;
-        flex-shrink: 0;
-        position: relative;
-    }
+  /* Info section */
+  .cp-info { flex: 1; min-width: 0; }
 
-    .coupon-accent::before,
-    .coupon-accent::after {
-        content: '';
-        position: absolute;
-        left: -8px;
-        width: 16px;
-        height: 16px;
-        background: #f5f7fa;
-        border-radius: 50%;
-        z-index: 1;
-    }
+  .cp-code-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
 
-    .coupon-accent::before { top: 44%; }
-    .coupon-accent::after  { bottom: 44%; }
+  .cp-code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.92rem; font-weight: 700;
+    background: #f4f4f4;
+    color: #1a1a1a;
+    border: 1px solid #e5e5e5;
+    padding: 4px 10px; border-radius: 6px;
+    letter-spacing: 1.5px;
+  }
 
-    .coupon-body {
-        flex: 1;
-        padding: 18px 20px;
-        display: flex;
-        gap: 16px;
-        align-items: center;
-    }
+  .cp-badge {
+    font-size: 0.68rem; font-weight: 700; padding: 3px 10px;
+    border-radius: 99px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-available { background: #e8faf0; color: #1a7a42; border: 1px solid #a5d6a7; }
+  .badge-used      { background: #f3f3f3; color: #888;    border: 1px solid #ddd; }
+  .badge-expired   { background: #fdecea; color: #c0392b; border: 1px solid #f5a6a6; }
+  .badge-upcoming  { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
 
-    .coupon-discount-box {
-        text-align: center;
-        min-width: 90px;
-        padding-right: 16px;
-        border-right: 2px dashed #eee;
-    }
+  .cp-meta { display: flex; flex-direction: column; gap: 4px; }
+  .cp-meta-row {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.78rem; color: #777;
+  }
+  .cp-meta-row i { font-size: 0.78rem; color: #bbb; width: 13px; text-align: center; }
+  .cp-saving { font-size: 0.78rem; font-weight: 600; color: #1a7a42; margin-top: 7px; }
+  .cp-urgency { color: #c0392b; font-weight: 700; }
 
-    .coupon-discount-amount {
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: #1a1a1a;
-        line-height: 1;
-    }
+  /* Actions */
+  .cp-actions {
+    display: flex; flex-direction: column;
+    align-items: flex-end; gap: 8px; padding-left: 14px; flex-shrink: 0;
+  }
 
-    .coupon-discount-amount span {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: #555;
-    }
+  .btn-copy-coupon {
+    padding: 7px 14px; background: #1a1a1a; color: white;
+    border: none; border-radius: 7px; font-size: 0.78rem;
+    font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+    white-space: nowrap; display: flex; align-items: center; gap: 5px;
+  }
+  .btn-copy-coupon:hover { opacity: 0.8; }
+  .btn-copy-coupon.copied { background: #1a7a42; }
 
-    .coupon-discount-label {
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #888;
-        margin-top: 4px;
-    }
+  .btn-use-now {
+    padding: 7px 14px; background: white; color: #1a1a1a;
+    border: 1.5px solid #1a1a1a; border-radius: 7px;
+    font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    text-decoration: none; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: background 0.15s;
+  }
+  .btn-use-now:hover { background: #f5f5f5; }
 
-    .coupon-info { flex: 1; }
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center; padding: 60px 20px;
+    background: white; border-radius: 14px;
+    border: 1px solid #ebebeb;
+  }
+  .empty-state i { font-size: 3rem; color: #ddd; display: block; margin-bottom: 14px; }
+  .empty-state h5 { font-weight: 700; color: #1a1a1a; margin-bottom: 6px; }
+  .empty-state p  { color: #888; font-size: 0.88rem; }
 
-    .coupon-code-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-family: 'Courier New', monospace;
-        font-weight: 800;
-        font-size: 1rem;
-        color: #1a1a1a;
-        background: #f0f0f0;
-        padding: 4px 12px;
-        border-radius: 6px;
-        letter-spacing: 1px;
-        margin-bottom: 8px;
-    }
-
-    .coupon-meta {
-        font-size: 0.8rem;
-        color: #666;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-    }
-
-    .coupon-meta i {
-        width: 14px;
-        color: #999;
-    }
-
-    .coupon-actions {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 8px;
-        padding-left: 12px;
-    }
-
-    .btn-copy-coupon {
-        padding: 7px 14px;
-        background: #1a1a1a;
-        color: white;
-        border: none;
-        border-radius: 7px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s;
-        white-space: nowrap;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .btn-copy-coupon:hover { background: #333; }
-
-    .btn-copy-coupon.copied {
-        background: #2e7d32;
-    }
-
-    .btn-use-now {
-        padding: 7px 14px;
-        background: white;
-        color: #1a1a1a;
-        border: 1.5px solid #1a1a1a;
-        border-radius: 7px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        cursor: pointer;
-        text-decoration: none;
-        white-space: nowrap;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        transition: all 0.2s;
-    }
-
-    .btn-use-now:hover {
-        background: #f5f5f5;
-        color: #1a1a1a;
-    }
-
-    /* Expired tag */
-    .expired-tag {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background: #f9d3d3;
-        color: #FD6A6A;
-        border: 1px solid #FD6A6A;
-        font-size: 0.7rem;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 4px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    /* Used tag */
-    .used-tag {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background: #f0f0f0;
-        color: #888;
-        border: 1px solid #ccc;
-        font-size: 0.7rem;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 4px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    /* Empty state */
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        background: white;
-        border-radius: 14px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-
-    .empty-state i {
-        font-size: 3rem;
-        color: #ddd;
-        display: block;
-        margin-bottom: 14px;
-    }
-
-    .empty-state h5 {
-        font-weight: 700;
-        color: #1a1a1a;
-        margin-bottom: 6px;
-    }
-
-    .empty-state p {
-        color: #888;
-        font-size: 0.88rem;
-    }
-
-    .btn-shop {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: #1a1a1a;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 24px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        text-decoration: none;
-        margin-top: 10px;
-        transition: background 0.2s;
-    }
-
-    .btn-shop:hover { background: #333; color: white; }
-
-    /* Stats bar */
-    .stats-bar {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 24px;
-        flex-wrap: wrap;
-    }
-
-    .stat-pill {
-        background: white;
-        border-radius: 10px;
-        padding: 12px 18px;
-        box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex: 1;
-        min-width: 130px;
-    }
-
-    .stat-pill-icon {
-        width: 38px; height: 38px;
-        border-radius: 10px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.1rem;
-        flex-shrink: 0;
-    }
-
-    .stat-pill-info .stat-num {
-        font-size: 1.3rem;
-        font-weight: 800;
-        color: #1a1a1a;
-        line-height: 1;
-    }
-
-    .stat-pill-info .stat-label {
-        font-size: 0.75rem;
-        color: #888;
-        font-weight: 500;
-    }
+  .btn-shop {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #1a1a1a; color: white; border: none;
+    border-radius: 8px; padding: 10px 24px;
+    font-weight: 600; font-size: 0.9rem;
+    text-decoration: none; margin-top: 10px; transition: background 0.2s;
+  }
+  .btn-shop:hover { background: #333; color: white; }
 </style>
 
-<main>
-    <div class="coupons-wrapper">
+<div class="page-wrapper">
 
-        <!-- Header -->
-        <div class="page-header">
-            <h2><i class="fas fa-ticket-alt me-2" style="color:#888; font-size:1.4rem;"></i>My Coupons</h2>
-            <p>Available discount coupons you can use at checkout</p>
-        </div>
+  <!-- Sidebar -->
+  <div class="sidebar-container">
+    <%- include('../partials/user/profileSidebar', { activePage: 'coupons', user: user }) %>
+  </div>
 
-        <!-- Stats Bar -->
-        <%
-            const now = new Date();
-            const activeCoupons  = coupons.filter(c => c.isList && new Date(c.expireOn) >= now && !c.userId.map(id=>id.toString()).includes(userId?.toString()));
-            const usedCoupons    = coupons.filter(c => c.userId.map(id=>id.toString()).includes(userId?.toString()));
-            const expiredCoupons = coupons.filter(c => new Date(c.expireOn) < now);
-        %>
-        <div class="stats-bar">
-            <div class="stat-pill">
-                <div class="stat-pill-icon" style="background:#f0f7ff;">
-                    <i class="fas fa-ticket-alt" style="color:#3b6da1;"></i>
-                </div>
-                <div class="stat-pill-info">
-                    <div class="stat-num"><%= coupons.length %></div>
-                    <div class="stat-label">Total Coupons</div>
-                </div>
-            </div>
-            <div class="stat-pill">
-                <div class="stat-pill-icon" style="background:#e8faf0;">
-                    <i class="fas fa-check-circle" style="color:#0CAF60;"></i>
-                </div>
-                <div class="stat-pill-info">
-                    <div class="stat-num"><%= activeCoupons.length %></div>
-                    <div class="stat-label">Available</div>
-                </div>
-            </div>
-            <div class="stat-pill">
-                <div class="stat-pill-icon" style="background:#f9f0ff;">
-                    <i class="fas fa-history" style="color:#7c3aed;"></i>
-                </div>
-                <div class="stat-pill-info">
-                    <div class="stat-num"><%= usedCoupons.length %></div>
-                    <div class="stat-label">Used</div>
-                </div>
-            </div>
-        </div>
+  <!-- Main Content -->
+  <div class="content-wrapper">
 
-        <!-- Filter Tabs -->
-        <div class="filter-tabs">
-            <button class="filter-tab active" data-filter="all" onclick="filterCoupons('all', this)">
-                All (<%= coupons.length %>)
-            </button>
-            <button class="filter-tab" data-filter="available" onclick="filterCoupons('available', this)">
-                Available (<%= activeCoupons.length %>)
-            </button>
-            <button class="filter-tab" data-filter="used" onclick="filterCoupons('used', this)">
-                Used (<%= usedCoupons.length %>)
-            </button>
-            <button class="filter-tab" data-filter="expired" onclick="filterCoupons('expired', this)">
-                Expired (<%= expiredCoupons.length %>)
-            </button>
-        </div>
-
-        <!-- Coupons Grid -->
-        <% if (coupons && coupons.length > 0) { %>
-            <div class="coupons-grid" id="couponsGrid">
-                <% coupons.forEach(coupon => { %>
-                    <%
-                        const isExpired = new Date(coupon.expireOn) < now;
-                        const isUsed    = coupon.userId.map(id => id.toString()).includes(userId?.toString());
-                        let cardClass   = 'coupon-card';
-                        let filterTag   = 'all';
-                        if (isExpired) { cardClass += ' expired'; filterTag = 'expired'; }
-                        else if (isUsed) { cardClass += ' expired'; filterTag = 'used'; }
-                        else { filterTag = 'available'; }
-
-                        const daysLeft = Math.ceil((new Date(coupon.expireOn) - now) / (1000*60*60*24));
-                    %>
-                    <div class="<%= cardClass %>" data-filter="<%= filterTag %>">
-
-                        <% if (isExpired) { %>
-                            <span class="expired-tag">Expired</span>
-                        <% } else if (isUsed) { %>
-                            <span class="used-tag">Used</span>
-                        <% } %>
-
-                        <div class="coupon-accent"></div>
-
-                        <div class="coupon-body">
-                            <!-- Discount -->
-                            <div class="coupon-discount-box">
-                                <div class="coupon-discount-amount">
-                                    <span>₹</span><%= coupon.offerPrice.toLocaleString('en-IN') %>
-                                </div>
-                                <div class="coupon-discount-label">Flat Off</div>
-                            </div>
-
-                            <!-- Info -->
-                            <div class="coupon-info">
-                                <div class="coupon-code-badge">
-                                    <i class="fas fa-tag" style="font-size:0.8rem;"></i>
-                                    <%= coupon.name %>
-                                </div>
-                                <div class="coupon-meta">
-                                    <span>
-                                        <i class="fas fa-shopping-cart"></i>
-                                        Min order ₹<%= coupon.minimumPrice.toLocaleString('en-IN') %>
-                                    </span>
-                                    <span>
-                                        <i class="fas fa-calendar-alt"></i>
-                                        <% if (isExpired) { %>
-                                            Expired on <%= new Date(coupon.expireOn).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) %>
-                                        <% } else { %>
-                                            Expires <%= new Date(coupon.expireOn).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) %>
-                                            <% if (daysLeft <= 7 && !isUsed) { %>
-                                                <span style="color:#e53935; font-weight:700;">(<%= daysLeft %> days left!)</span>
-                                            <% } %>
-                                        <% } %>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Actions -->
-                            <% if (!isExpired && !isUsed) { %>
-                                <div class="coupon-actions">
-                                    <button class="btn-copy-coupon"
-                                        data-code="<%= coupon.name %>"
-                                        onclick="copyCoupon(this)">
-                                        <i class="fas fa-copy"></i> Copy
-                                    </button>
-                                    <a href="/checkout" class="btn-use-now">
-                                        <i class="fas fa-shopping-bag"></i> Use Now
-                                    </a>
-                                </div>
-                            <% } %>
-                        </div>
-                    </div>
-                <% }) %>
-            </div>
-        <% } else { %>
-            <div class="empty-state">
-                <i class="fas fa-ticket-alt"></i>
-                <h5>No Coupons Available</h5>
-                <p>Check back later for exciting discount offers!</p>
-                <a href="/shop" class="btn-shop">
-                    <i class="fas fa-shopping-bag"></i> Shop Now
-                </a>
-            </div>
-        <% } %>
-
+    <div class="page-header">
+      <h2><i class="fas fa-ticket-alt" style="color:#888; font-size:1.4rem; margin-right:8px;"></i>My Coupons</h2>
+      <p>Available discount coupons you can use at checkout</p>
     </div>
-</main>
+
+    <%
+      const now       = new Date();
+      const userId    = user?._id?.toString();
+
+      const withStatus = coupons.map(c => {
+        const isUsed     = (c.usedBy || []).map(id => id.toString()).includes(userId);
+        const isExpired  = new Date(c.endDate) < now;
+        const isUpcoming = new Date(c.startDate) > now;
+        let status = 'available';
+        if (isUsed)          status = 'used';
+        else if (isExpired)  status = 'expired';
+        else if (isUpcoming) status = 'upcoming';
+        const daysLeft = Math.ceil((new Date(c.endDate) - now) / (1000*60*60*24));
+        return { ...c, isUsed, isExpired, isUpcoming, status, daysLeft };
+      });
+
+      const totalCount    = withStatus.length;
+      const availCount    = withStatus.filter(c => c.status === 'available').length;
+      const usedCount     = withStatus.filter(c => c.status === 'used').length;
+      const expiredCount  = withStatus.filter(c => c.status === 'expired').length;
+      const upcomingCount = withStatus.filter(c => c.status === 'upcoming').length;
+    %>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-pill">
+        <div class="stat-pill-icon" style="background:#f0f7ff;">
+          <i class="fas fa-ticket-alt" style="color:#3b6da1;"></i>
+        </div>
+        <div class="stat-pill-info">
+          <div class="stat-num"><%= totalCount %></div>
+          <div class="stat-label">Total</div>
+        </div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-icon" style="background:#e8faf0;">
+          <i class="fas fa-check-circle" style="color:#1a7a42;"></i>
+        </div>
+        <div class="stat-pill-info">
+          <div class="stat-num"><%= availCount %></div>
+          <div class="stat-label">Available</div>
+        </div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-icon" style="background:#f9f0ff;">
+          <i class="fas fa-history" style="color:#7c3aed;"></i>
+        </div>
+        <div class="stat-pill-info">
+          <div class="stat-num"><%= usedCount %></div>
+          <div class="stat-label">Used</div>
+        </div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-icon" style="background:#fff7ed;">
+          <i class="fas fa-clock" style="color:#ea580c;"></i>
+        </div>
+        <div class="stat-pill-info">
+          <div class="stat-num"><%= upcomingCount %></div>
+          <div class="stat-label">Upcoming</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="filterCoupons('all', this)">All (<%= totalCount %>)</button>
+      <button class="filter-tab" onclick="filterCoupons('available', this)">Available (<%= availCount %>)</button>
+      <button class="filter-tab" onclick="filterCoupons('used', this)">Used (<%= usedCount %>)</button>
+      <button class="filter-tab" onclick="filterCoupons('expired', this)">Expired (<%= expiredCount %>)</button>
+      <% if (upcomingCount > 0) { %>
+        <button class="filter-tab" onclick="filterCoupons('upcoming', this)">Upcoming (<%= upcomingCount %>)</button>
+      <% } %>
+    </div>
+
+    <!-- Coupons Grid -->
+    <% if (withStatus.length > 0) { %>
+      <div class="coupons-grid" id="couponsGrid">
+        <% withStatus.forEach(coupon => { %>
+
+          <div class="coupon-card <%= (coupon.isUsed || coupon.isExpired) ? 'dimmed' : '' %>"
+               data-filter="<%= coupon.status %>">
+
+            <!-- Colored left stripe -->
+            <div class="cp-stripe
+              <%= coupon.isExpired  ? 'stripe-expired'  : '' %>
+              <%= coupon.isUsed     ? 'stripe-used'     : '' %>
+              <%= coupon.isUpcoming ? 'stripe-upcoming' : '' %>">
+              <div class="cp-notch-top"></div>
+              <div class="cp-notch-bot"></div>
+            </div>
+
+            <div class="cp-inner">
+
+              <!-- Discount amount -->
+              <div class="cp-amt-wrap">
+                <% if (coupon.type === 'PERCENTAGE') { %>
+                  <div class="cp-amt"><%= coupon.value %><sup>%</sup></div>
+                  <div class="cp-amt-label">Percent off</div>
+                <% } else { %>
+                  <div class="cp-amt"><sup>₹</sup><%= coupon.value.toLocaleString('en-IN') %></div>
+                  <div class="cp-amt-label">Flat off</div>
+                <% } %>
+              </div>
+
+              <!-- Info -->
+              <div class="cp-info">
+                <div class="cp-code-row">
+                  <span class="cp-code"><%= coupon.code %></span>
+                  <% if (coupon.isExpired) { %>
+                    <span class="cp-badge badge-expired">Expired</span>
+                  <% } else if (coupon.isUsed) { %>
+                    <span class="cp-badge badge-used">Used</span>
+                  <% } else if (coupon.isUpcoming) { %>
+                    <span class="cp-badge badge-upcoming">Upcoming</span>
+                  <% } else { %>
+                    <span class="cp-badge badge-available">Available</span>
+                  <% } %>
+                </div>
+
+                <div class="cp-meta">
+                  <% if (coupon.type === 'PERCENTAGE' && coupon.maxDiscount > 0) { %>
+                    <div class="cp-meta-row">
+                      <i class="fas fa-tag"></i>
+                      Max discount ₹<%= coupon.maxDiscount.toLocaleString('en-IN') %>
+                    </div>
+                  <% } %>
+                  <% if (coupon.minOrderAmount > 0) { %>
+                    <div class="cp-meta-row">
+                      <i class="fas fa-shopping-cart"></i>
+                      Min order ₹<%= coupon.minOrderAmount.toLocaleString('en-IN') %>
+                    </div>
+                  <% } %>
+                  <% if (coupon.description) { %>
+                    <div class="cp-meta-row">
+                      <i class="fas fa-info-circle"></i>
+                      <%= coupon.description %>
+                    </div>
+                  <% } %>
+                  <div class="cp-meta-row">
+                    <i class="fas fa-calendar-alt"></i>
+                    <% if (coupon.isExpired) { %>
+                      Expired <%= new Date(coupon.endDate).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) %>
+                    <% } else if (coupon.isUpcoming) { %>
+                      Starts <%= new Date(coupon.startDate).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) %>
+                    <% } else { %>
+                      Expires <%= new Date(coupon.endDate).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) %>
+                      <% if (coupon.daysLeft <= 7 && !coupon.isUsed) { %>
+                        <span class="cp-urgency">(<%= coupon.daysLeft %> days left!)</span>
+                      <% } %>
+                    <% } %>
+                  </div>
+                  <% if (coupon.firstOrderOnly) { %>
+                    <div class="cp-meta-row">
+                      <i class="fas fa-star"></i> First order only
+                    </div>
+                  <% } %>
+                </div>
+
+                <% if (!coupon.isExpired && !coupon.isUsed && !coupon.isUpcoming) { %>
+                  <div class="cp-saving">
+                    🎉 Save
+                    <% if (coupon.type === 'PERCENTAGE') { %>
+                      up to ₹<%= coupon.maxDiscount > 0 ? coupon.maxDiscount.toLocaleString('en-IN') : (coupon.value + '%') %>
+                    <% } else { %>
+                      ₹<%= coupon.value.toLocaleString('en-IN') %>
+                    <% } %>
+                  </div>
+                <% } %>
+              </div>
+
+              <!-- Actions -->
+              <% if (!coupon.isExpired && !coupon.isUsed && !coupon.isUpcoming) { %>
+                <div class="cp-actions">
+                  <button class="btn-copy-coupon"
+                    data-code="<%= coupon.code %>"
+                    onclick="copyCoupon(this)">
+                    <i class="fas fa-copy"></i> Copy
+                  </button>
+                  <a href="/checkout" class="btn-use-now">
+                    <i class="fas fa-shopping-bag"></i> Use Now
+                  </a>
+                </div>
+              <% } %>
+
+            </div>
+          </div>
+
+        <% }) %>
+      </div>
+
+    <% } else { %>
+      <div class="empty-state">
+        <i class="fas fa-ticket-alt"></i>
+        <h5>No Coupons Available</h5>
+        <p>Check back later for exciting discount offers!</p>
+        <a href="/shop" class="btn-shop">
+          <i class="fas fa-shopping-bag"></i> Shop Now
+        </a>
+      </div>
+    <% } %>
+
+  </div>
+</div>
 
 <%- include("../partials/user/footer") %>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // ── Filter coupons ────────────────────────────────────────────
-    function filterCoupons(filter, tabEl) {
-        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-        tabEl.classList.add('active');
+  function filterCoupons(filter, tabEl) {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+    document.querySelectorAll('.coupon-card').forEach(card => {
+      card.style.display = (filter === 'all' || card.dataset.filter === filter) ? '' : 'none';
+    });
+  }
 
-        document.querySelectorAll('.coupon-card').forEach(card => {
-            if (filter === 'all') {
-                card.style.display = '';
-            } else {
-                card.style.display = card.dataset.filter === filter ? '' : 'none';
-            }
-        });
-    }
-
-    // ── Copy coupon code ──────────────────────────────────────────
-    function copyCoupon(btn) {
-        const code = btn.dataset.code;
-        navigator.clipboard.writeText(code).then(() => {
-            const original = btn.innerHTML;
-            btn.innerHTML  = '<i class="fas fa-check"></i> Copied!';
-            btn.classList.add('copied');
-            setTimeout(() => {
-                btn.innerHTML = original;
-                btn.classList.remove('copied');
-            }, 2000);
-        }).catch(() => {
-            // fallback
-            const ta = document.createElement('textarea');
-            ta.value = code;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-
-            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            btn.classList.add('copied');
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fas fa-copy"></i> Copy';
-                btn.classList.remove('copied');
-            }, 2000);
-        });
-    }
+  function copyCoupon(btn) {
+    const code = btn.dataset.code;
+    navigator.clipboard.writeText(code).then(() => {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2000);
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = code; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i> Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
 </script>

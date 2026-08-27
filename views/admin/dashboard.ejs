@@ -1,958 +1,505 @@
-<link rel="stylesheet" href="/css/admindashboard.css">
+<link rel="stylesheet" href="/css/admindashboard.css" />
 <%- include("../partials/admin/header") %>
 
-    <div class="sidebar d-none d-lg-block">
-        <%- include("../partials/admin/sidebar_links") %>
+<div class="sidebar d-none d-lg-block">
+  <%- include("../partials/admin/sidebar_links") %>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<main class="main-content">
+  <div class="container-fluid">
+    <div
+      class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4"
+    >
+      <div>
+        <h2 class="dashboard-title mb-0">Dashboard</h2>
+        <p class="text-muted mb-0" style="font-size: 13px">
+          Welcome back, Admin
+        </p>
+      </div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <label
+          for="periodFilter"
+          class="text-muted mb-0"
+          style="font-size: 13px"
+          >Period</label
+        >
+        <select
+          id="periodFilter"
+          class="form-select w-auto"
+          onchange="onPeriodChange(this.value)"
+        >
+          <option value="daily">Today</option>
+          <option value="weekly">This week</option>
+          <option value="monthly" selected>This month</option>
+          <option value="yearly">This year</option>
+          <option value="custom">Custom range</option>
+        </select>
+      </div>
     </div>
 
-    <main class="main-content">
-        <div class="container-fluid">
-            <h2 class="dashboard-title">Dashboard Overview</h2>
+    <!-- Custom range bar -->
+    <div
+      id="customRangeBar"
+      class="d-none d-flex align-items-center gap-2 flex-wrap mb-4"
+      style="
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 14px 18px;
+      "
+    >
+      <span class="text-muted" style="font-size: 13px">From</span>
+      <input
+        type="date"
+        id="startDate"
+        class="form-control form-control-sm w-auto"
+      />
+      <span class="text-muted" style="font-size: 13px">To</span>
+      <input
+        type="date"
+        id="endDate"
+        class="form-control form-control-sm w-auto"
+      />
+      <button
+        class="btn btn-sm btn-outline-primary"
+        onclick="applyCustomRange()"
+      >
+        Apply
+      </button>
+      <span
+        id="rangeError"
+        class="text-danger d-none"
+        style="font-size: 12px"
+      ></span>
+    </div>
 
-            <div class="row g-4 mb-4">
-                <div class="col-md-6 col-xl-3">
-                    <div class="dashboard-card">
-                        <div class="icon-container bg-danger text-white"><i class="bi bi-people"></i></div>
-                        <p class="text-muted mb-1">Total Customers</p>
-                        <h5 id="totalCustomers">Loading...</h5>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="dashboard-card">
-                        <div class="icon-container bg-primary text-white"><i class="bi bi-wallet"></i></div>
-                        <p class="text-muted mb-1">Total Sales</p>
-                        <h5 id="totalSales">Loading...</h5>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="dashboard-card">
-                        <div class="icon-container bg-warning text-white"><i class="bi bi-cart"></i></div>
-                        <p class="text-muted mb-1">Total Orders</p>
-                        <h5 id="totalOrders">Loading...</h5>
-                    </div>
-                </div>
-                <div class="col-md-6 col-xl-3">
-                    <div class="dashboard-card">
-                        <div class="icon-container bg-success text-white"><i class="bi bi-pie-chart"></i></div>
-                        <p class="text-muted mb-1">Products Sold</p>
-                        <h5 id="productsSold">Loading...</h5>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row g-4 mb-4">
-                <div class="col-lg-6">
-                    <div class="chart-container">
-                        <h5>Sales Overview</h5>
-                        <canvas id="salesChart"></canvas>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="chart-container">
-                        <h5>Orders Overview</h5>
-                        <canvas id="ordersChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row g-4 mb-4">
-                <div class="col-md-4">
-                    <div class="chart-container">
-                        <h5>Top 10 Products</h5>
-                        <canvas id="productsChart"></canvas>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="chart-container">
-                        <h5>Top 10 Categories</h5>
-                        <canvas id="categoriesChart"></canvas>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="chart-container">
-                        <h5>Top 10 Selling Locations</h5>
-                        <canvas id="brandsChart"></canvas>
-                    </div>
-                </div>
-            </div>
+    <!-- Stat cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-6 col-xl-3">
+        <div class="dashboard-card">
+          <div class="icon-container bg-primary">
+            <i class="bi bi-people-fill"></i>
+          </div>
+          <div class="card-body">
+            <p>Total Customers</p>
+            <h5 id="totalCustomers">...</h5>
+          </div>
         </div>
-    </main>
-    <script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // Global variables for charts
-
-        let salesChart, ordersChart, productsChart, categoriesChart, brandsChart;
-
-        let currentPeriod = 'monthly';
-
-
-
-        // Store initial server data
-
-        const initialData = {
-
-            users: " <%= typeof users !== 'undefined' ? users : 0 %>",
-
-            totalSales: "<%= typeof totalSales !== 'undefined' ? totalSales : 0 %>",
-
-            totalOrders: "<%= typeof totalOrders !== 'undefined' ? totalOrders : 0 %>",
-
-            totalProducts: "<%= typeof totalProducts !== 'undefined' ? totalProducts : 0 %>"
-
-        };
-
-
-
-        // Initialize dashboard
-
-        document.addEventListener('DOMContentLoaded', function () {
-
-            // Set initial data
-
-            setInitialData();
-
-            // Initialize charts
-
-            initializeCharts();
-
-            // Load dynamic data
-
-            loadDashboardData();
-
-            loadBestSellingData();
-
-        });
-
-
-
-        // Set initial server data
-
-        function setInitialData() {
-
-            document.getElementById('totalCustomers').textContent = initialData.users.toLocaleString();
-
-            document.getElementById('totalSales').textContent = '₹' + initialData.totalSales.toLocaleString();
-
-            document.getElementById('totalOrders').textContent = initialData.totalOrders.toLocaleString();
-
-            document.getElementById('productsSold').textContent = initialData.totalProducts.toLocaleString();
-
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="dashboard-card">
+          <div class="icon-container bg-success">
+            <i class="bi bi-currency-rupee"></i>
+          </div>
+          <div class="card-body">
+            <p>Total Revenue</p>
+            <h5 id="totalSales">...</h5>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="dashboard-card">
+          <div class="icon-container bg-warning">
+            <i class="bi bi-bag-check-fill"></i>
+          </div>
+          <div class="card-body">
+            <p>Total Orders</p>
+            <h5 id="totalOrders">...</h5>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-xl-3">
+        <div class="dashboard-card">
+          <div class="icon-container bg-danger">
+            <i class="bi bi-box-seam-fill"></i>
+          </div>
+          <div class="card-body">
+            <p>Products Sold</p>
+            <h5 id="productsSold">...</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sales & Orders charts -->
+    <div class="row g-3 mb-4">
+      <div class="col-lg-7">
+        <div class="chart-container">
+          <h5>Revenue overview</h5>
+          <canvas id="salesChart"></canvas>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="chart-container">
+          <h5>Orders overview</h5>
+          <canvas id="ordersChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top 10 charts -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="chart-container">
+          <h5>Top 5products</h5>
+          <canvas id="productsChart"></canvas>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="chart-container">
+          <h5>Top 5 categories</h5>
+          <canvas id="categoriesChart"></canvas>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="chart-container">
+          <h5>Top 5locations</h5>
+          <canvas id="brandsChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  let salesChart, ordersChart, productsChart, categoriesChart, brandsChart;
+  let currentPeriod = "monthly";
+
+  const initialData = {
+    users: parseInt("<%= locals.users         || 0 %>"),
+    totalSales: parseFloat("<%= locals.totalSales  || 0 %>"),
+    totalOrders: parseInt("<%= locals.totalOrders   || 0 %>"),
+    totalProducts: parseInt("<%= locals.totalProducts || 0 %>"),
+  };
+
+  document.addEventListener("DOMContentLoaded", function () {
+    setStatCards(
+      initialData.users,
+      initialData.totalSales,
+      initialData.totalOrders,
+      initialData.totalProducts,
+    );
+    initCharts();
+    runUpdate();
+    loadBestSellingData();
+  });
+
+  function setStatCards(customers, sales, orders, products) {
+    document.getElementById("totalCustomers").textContent =
+      Number(customers).toLocaleString("en-IN");
+    document.getElementById("totalSales").textContent =
+      "₹" + Number(sales).toLocaleString("en-IN");
+    document.getElementById("totalOrders").textContent =
+      Number(orders).toLocaleString("en-IN");
+    document.getElementById("productsSold").textContent =
+      Number(products).toLocaleString("en-IN");
+  }
+
+  function setLoadingCards() {
+    ["totalCustomers", "totalSales", "totalOrders", "productsSold"].forEach(
+      (id) => (document.getElementById(id).textContent = "—"),
+    );
+  }
+
+  function onPeriodChange(val) {
+    const bar = document.getElementById("customRangeBar");
+    const err = document.getElementById("rangeError");
+    if (val === "custom") {
+      bar.classList.remove("d-none");
+      document.getElementById("endDate").value = new Date()
+        .toISOString()
+        .split("T")[0];
+    } else {
+      bar.classList.add("d-none");
+      err.classList.add("d-none");
+      currentPeriod = val;
+      runUpdate();
+    }
+  }
+
+  function applyCustomRange() {
+    const start = document.getElementById("startDate").value;
+    const end = document.getElementById("endDate").value;
+    const err = document.getElementById("rangeError");
+    if (!start || !end) {
+      err.textContent = "Please select both dates.";
+      err.classList.remove("d-none");
+      return;
+    }
+    if (new Date(start) > new Date(end)) {
+      err.textContent = "End must be after start.";
+      err.classList.remove("d-none");
+      return;
+    }
+    err.classList.add("d-none");
+    currentPeriod = "custom";
+    runUpdate(start, end);
+  }
+
+  async function runUpdate(startDate = null, endDate = null) {
+    setLoadingCards();
+    let params = `period=${currentPeriod}`;
+    if (currentPeriod === "custom" && startDate && endDate)
+      params += `&start=${startDate}&end=${endDate}`;
+    try {
+      const [statsRes, chartRes] = await Promise.all([
+        fetch(`/admin/dashboard/data?type=stats&${params}`),
+        fetch(`/admin/dashboard/data?type=chart&${params}`),
+      ]);
+      if (statsRes.ok) {
+        const { success, data } = await statsRes.json();
+        if (success)
+          setStatCards(
+            data.totalCustomers,
+            data.totalSales,
+            data.totalOrders,
+            data.productsSold,
+          );
+        else
+          setStatCards(
+            initialData.users,
+            initialData.totalSales,
+            initialData.totalOrders,
+            initialData.totalProducts,
+          );
+      }
+      if (chartRes.ok) {
+        const { success, data } = await chartRes.json();
+        if (success) updateLineBarCharts(data);
+      }
+    } catch (err) {
+      console.error("runUpdate error:", err);
+      setStatCards(
+        initialData.users,
+        initialData.totalSales,
+        initialData.totalOrders,
+        initialData.totalProducts,
+      );
+    }
+  }
+
+  const chartDefaults = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+      y: {
+        beginAtZero: true,
+        grid: { color: "#f0f4f8" },
+        ticks: { font: { size: 11 } },
+      },
+    },
+  };
+
+  function initCharts() {
+    salesChart = new Chart(document.getElementById("salesChart"), {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: "Revenue (₹)",
+            data: [],
+            borderColor: "#3b6da1",
+            backgroundColor: "rgba(59,109,161,0.07)",
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.45,
+            pointRadius: 3,
+            pointBackgroundColor: "#3b6da1",
+          },
+        ],
+      },
+      options: {
+        ...chartDefaults,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+          y: {
+            beginAtZero: true,
+            grid: { color: "#f0f4f8" },
+            ticks: {
+              font: { size: 11 },
+              callback: (v) => "₹" + Number(v).toLocaleString("en-IN"),
+            },
+          },
+        },
+      },
+    });
+
+    ordersChart = new Chart(document.getElementById("ordersChart"), {
+      type: "bar",
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: "Orders",
+            data: [],
+            backgroundColor: "rgba(22,163,74,0.15)",
+            borderColor: "#16a34a",
+            borderWidth: 1.5,
+            borderRadius: 6,
+          },
+        ],
+      },
+      options: { ...chartDefaults },
+    });
+
+    productsChart = new Chart(document.getElementById("productsChart"), {
+      type: "bar",
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: "Units sold",
+            data: [],
+            backgroundColor: "rgba(59,109,161,0.15)",
+            borderColor: "#3b6da1",
+            borderWidth: 1.5,
+            borderRadius: 4,
+          },
+        ],
+      },
+      options: {
+        ...chartDefaults,
+        indexAxis: "y",
+        scales: {
+          x: {
+            beginAtZero: true,
+            grid: { color: "#f0f4f8" },
+            ticks: { font: { size: 10 } },
+          },
+          y: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        },
+      },
+    });
+
+    categoriesChart = new Chart(document.getElementById("categoriesChart"), {
+      type: "bar",
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: "Units sold",
+            data: [],
+            backgroundColor: "rgba(217,119,6,0.15)",
+            borderColor: "#d97706",
+            borderWidth: 1.5,
+            borderRadius: 4,
+          },
+        ],
+      },
+      options: {
+        ...chartDefaults,
+        indexAxis: "y",
+        scales: {
+          x: {
+            beginAtZero: true,
+            grid: { color: "#f0f4f8" },
+            ticks: { font: { size: 10 } },
+          },
+          y: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        },
+      },
+    });
+
+    brandsChart = new Chart(document.getElementById("brandsChart"), {
+      type: "bar",
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: "Units sold",
+            data: [],
+            backgroundColor: "rgba(220,38,38,0.12)",
+            borderColor: "#dc2626",
+            borderWidth: 1.5,
+            borderRadius: 4,
+          },
+        ],
+      },
+      options: {
+        ...chartDefaults,
+        indexAxis: "y",
+        scales: {
+          x: {
+            beginAtZero: true,
+            grid: { color: "#f0f4f8" },
+            ticks: { font: { size: 10 } },
+          },
+          y: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        },
+      },
+    });
+  }
+
+  function updateLineBarCharts(data) {
+    if (!data) return;
+    if (salesChart && data.labels) {
+      salesChart.data.labels = data.labels;
+      salesChart.data.datasets[0].data = data.sales || [];
+      salesChart.update();
+    }
+    if (ordersChart && data.labels) {
+      ordersChart.data.labels = data.labels;
+      ordersChart.data.datasets[0].data = data.orders || [];
+      ordersChart.update();
+    }
+  }
+
+  async function loadBestSellingData() {
+    try {
+      const [pRes, cRes, bRes] = await Promise.all([
+        fetch("/admin/dashboard/data?type=products"),
+        fetch("/admin/dashboard/data?type=categories"),
+        fetch("/admin/dashboard/data?type=brands"),
+      ]);
+      if (pRes.ok) {
+        const { success, data } = await pRes.json();
+        if (success && data.length) {
+          productsChart.data.labels = data.map((d) =>
+            (d.name || "Unknown").substring(0, 18),
+          );
+          productsChart.data.datasets[0].data = data.map(
+            (d) => d.totalQuantity || 0,
+          );
+          productsChart.update();
         }
-
-
-
-        // Initialize empty charts
-
-        function initializeCharts() {
-
-            const salesCtx = document.getElementById('salesChart').getContext('2d');
-
-            const ordersCtx = document.getElementById('ordersChart').getContext('2d');
-
-            const productsCtx = document.getElementById('productsChart').getContext('2d');
-
-            const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
-
-            const brandsCtx = document.getElementById('brandsChart').getContext('2d');
-
-
-
-            salesChart = new Chart(salesCtx, {
-
-                type: 'line',
-
-                data: {
-
-                    labels: [],
-
-                    datasets: [{
-
-                        label: 'Sales (₹)',
-
-                        data: [],
-
-                        borderColor: '#3b6da1',
-
-                        backgroundColor: 'rgba(59, 109, 161, 0.1)',
-
-                        borderWidth: 3,
-
-                        fill: true,
-
-                        tension: 0.4
-
-                    }]
-
-                },
-
-                options: {
-
-                    responsive: true,
-
-                    maintainAspectRatio: false,
-
-                    plugins: {
-
-                        legend: {
-
-                            display: true,
-
-                            position: 'top'
-
-                        }
-
-                    },
-
-                    scales: {
-
-                        y: {
-
-                            beginAtZero: true,
-
-                            ticks: {
-
-                                callback: function (value) {
-
-                                    return '₹' + value.toLocaleString();
-
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                }
-
-            });
-
-
-
-            ordersChart = new Chart(ordersCtx, {
-
-                type: 'bar',
-
-                data: {
-
-                    labels: [],
-
-                    datasets: [{
-
-                        label: 'Orders',
-
-                        data: [],
-
-                        backgroundColor: '#28a745',
-
-                        borderColor: '#1e7e34',
-
-                        borderWidth: 1
-
-                    }]
-
-                },
-
-                options: {
-
-                    responsive: true,
-
-                    maintainAspectRatio: false,
-
-                    plugins: {
-
-                        legend: {
-
-                            display: true,
-
-                            position: 'top'
-
-                        }
-
-                    },
-
-                    scales: {
-
-                        y: {
-
-                            beginAtZero: true
-
-                        }
-
-                    }
-
-                }
-
-            });
-
-
-
-            // Products Chart
-
-            productsChart = new Chart(productsCtx, {
-
-                type: 'bar',
-
-                data: {
-
-                    labels: [],
-
-                    datasets: [{
-
-                        label: 'Units Sold',
-
-                        data: [],
-
-                        backgroundColor: '#3b6da1',
-
-                        borderColor: '#28517D',
-
-                        borderWidth: 1
-
-                    }]
-
-                },
-
-                options: {
-
-                    indexAxis: 'y',
-
-                    responsive: true,
-
-                    maintainAspectRatio: false,
-
-                    plugins: {
-
-                        legend: {
-
-                            display: true,
-
-                            position: 'top'
-
-                        }
-
-                    },
-
-                    scales: {
-
-                        x: {
-
-                            beginAtZero: true
-
-                        }
-
-                    }
-
-                }
-
-            });
-
-
-
-            // Categories Chart
-
-            categoriesChart = new Chart(categoriesCtx, {
-
-                type: 'bar',
-
-                data: {
-
-                    labels: [],
-
-                    datasets: [{
-
-                        label: 'Units Sold',
-
-                        data: [],
-
-                        backgroundColor: '#ffc107',
-
-                        borderColor: '#d39e00',
-
-                        borderWidth: 1
-
-                    }]
-
-                },
-
-                options: {
-
-                    indexAxis: 'y',
-
-                    responsive: true,
-
-                    maintainAspectRatio: false,
-
-                    plugins: {
-
-                        legend: {
-
-                            display: true,
-
-                            position: 'top'
-
-                        }
-
-                    },
-
-                    scales: {
-
-                        x: {
-
-                            beginAtZero: true
-
-                        }
-
-                    }
-
-                }
-
-            });
-
-
-
-            // Brands Chart
-
-            brandsChart = new Chart(brandsCtx, {
-
-                type: 'bar',
-
-                data: {
-
-                    labels: [],
-
-                    datasets: [{
-
-                        label: 'Units Sold',
-
-                        data: [],
-
-                        backgroundColor: '#17a2b8',
-
-                        borderColor: '#138496',
-
-                        borderWidth: 1
-
-                    }]
-
-                },
-
-                options: {
-
-                    indexAxis: 'y',
-
-                    responsive: true,
-
-                    maintainAspectRatio: false,
-
-                    plugins: {
-
-                        legend: {
-
-                            display: true,
-
-                            position: 'top'
-
-                        }
-
-                    },
-
-                    scales: {
-
-                        x: {
-
-                            beginAtZero: true
-
-                        }
-
-                    }
-
-                }
-
-            });
-
+      }
+      if (cRes.ok) {
+        const { success, data } = await cRes.json();
+        if (success && data.length) {
+          categoriesChart.data.labels = data.map((d) => d.name || "Unknown");
+          categoriesChart.data.datasets[0].data = data.map(
+            (d) => d.totalQuantity || 0,
+          );
+          categoriesChart.update();
         }
-
-
-
-        // Load dashboard statistics
-
-        async function loadDashboardData() {
-
-            try {
-
-                // Load chart data
-
-                const chartResponse = await fetch(`/admin/dashboard/data?type=chart&period=${currentPeriod}`);
-
-
-
-                if (!chartResponse.ok) {
-
-                    throw new Error(`HTTP error! status: ${chartResponse.status}`);
-
-                }
-
-
-
-                const chartResult = await chartResponse.json();
-
-
-
-                if (chartResult.success) {
-
-                    updateCharts(chartResult.data);
-
-                } else {
-
-                    console.error('Chart data error:', chartResult.error);
-
-                    // Set empty data if API fails
-
-                    updateCharts({ labels: [], sales: [], orders: [] });
-
-                }
-
-            } catch (error) {
-
-                console.error('Error loading dashboard data:', error);
-
-                // Set empty data if fetch fails
-
-                updateCharts({ labels: [], sales: [], orders: [] });
-
-            }
-
+      }
+      if (bRes.ok) {
+        const { success, data } = await bRes.json();
+        if (success && data.length) {
+          brandsChart.data.labels = data.map((d) => d.name || "Unknown");
+          brandsChart.data.datasets[0].data = data.map(
+            (d) => d.totalQuantity || 0,
+          );
+          brandsChart.update();
         }
-
-
-
-        // Update charts with new data
-
-        function updateCharts(data) {
-
-            if (!data) {
-
-                console.error('No chart data provided');
-
-                return;
-
-            }
-
-
-
-            // Update sales chart
-
-            if (salesChart && data.labels && data.sales) {
-
-                salesChart.data.labels = data.labels;
-
-                salesChart.data.datasets[0].data = data.sales;
-
-                salesChart.update();
-
-            }
-
-
-
-            // Update orders chart
-
-            if (ordersChart && data.labels && data.orders) {
-
-                ordersChart.data.labels = data.labels;
-
-                ordersChart.data.datasets[0].data = data.orders;
-
-                ordersChart.update();
-
-            }
-
-        }
-
-
-
-        // Load best selling data
-
-        async function loadBestSellingData() {
-
-            try {
-
-                // Load best selling products
-
-                const productsResponse = await fetch('/admin/dashboard/data?type=products');
-
-                if (productsResponse.ok) {
-
-                    const productsResult = await productsResponse.json();
-
-                    if (productsResult.success) {
-
-                        updateProductsChart(productsResult.data);
-
-                    }
-
-                }
-
-
-
-                // Load best selling categories
-
-                const categoriesResponse = await fetch('/admin/dashboard/data?type=categories');
-
-                if (categoriesResponse.ok) {
-
-                    const categoriesResult = await categoriesResponse.json();
-
-                    if (categoriesResult.success) {
-
-                        updateCategoriesChart(categoriesResult.data);
-
-                    }
-
-                }
-
-
-
-                // Load best selling brands
-
-                const brandsResponse = await fetch('/admin/dashboard/data?type=brands');
-
-                if (brandsResponse.ok) {
-
-                    const brandsResult = await brandsResponse.json();
-
-                    if (brandsResult.success) {
-
-                        updateBrandsChart(brandsResult.data);
-
-                    }
-
-                }
-
-            } catch (error) {
-
-                console.error('Error loading best selling data:', error);
-
-            }
-
-        }
-
-
-
-        // Update products chart
-
-        function updateProductsChart(products) {
-
-            if (!products || products.length === 0) return;
-
-
-
-            const labels = products.map(product => product.name ? product.name.substring(0, 20) + '...' : 'Unknown');
-
-            const data = products.map(product => product.totalQuantity || 0);
-
-
-
-            productsChart.data.labels = labels;
-
-            productsChart.data.datasets[0].data = data;
-
-            productsChart.update();
-
-        }
-
-
-
-        // Update categories chart
-
-        function updateCategoriesChart(categories) {
-
-            if (!categories || categories.length === 0) return;
-
-
-
-            const labels = categories.map(category => category.name || 'Unknown');
-
-            const data = categories.map(category => category.totalQuantity || 0);
-
-
-
-            categoriesChart.data.labels = labels;
-
-            categoriesChart.data.datasets[0].data = data;
-
-            categoriesChart.update();
-
-        }
-
-
-
-        // Update brands chart
-
-        function updateBrandsChart(brands) {
-
-            if (!brands || brands.length === 0) return;
-
-
-
-            const labels = brands.map(brand => brand.name || 'Unknown');
-
-            const data = brands.map(brand => brand.totalQuantity || 0);
-
-
-
-            brandsChart.data.labels = labels;
-
-            brandsChart.data.datasets[0].data = data;
-
-            brandsChart.update();
-
-        }
-
-
-
-        // Update dashboard when period changes
-
-        async function updateDashboard() {
-
-            const periodSelect = document.getElementById('periodFilter');
-
-            currentPeriod = periodSelect.value;
-
-
-
-            // Show loading state for stats
-
-            document.getElementById('totalCustomers').textContent = 'Loading...';
-
-            document.getElementById('totalSales').textContent = 'Loading...';
-
-            document.getElementById('totalOrders').textContent = 'Loading...';
-
-            document.getElementById('productsSold').textContent = 'Loading...';
-
-
-
-            try {
-
-                // Load updated stats for the selected period
-
-                const statsResponse = await fetch(`/admin/dashboard/data?type=stats&period=${currentPeriod}`);
-
-                if (statsResponse.ok) {
-
-                    const statsResult = await statsResponse.json();
-
-                    if (statsResult.success) {
-
-                        const data = statsResult.data;
-
-                        document.getElementById('totalCustomers').textContent = data.totalCustomers.toLocaleString();
-
-                        document.getElementById('totalSales').textContent = '₹' + data.totalSales.toLocaleString();
-
-                        document.getElementById('totalOrders').textContent = data.totalOrders.toLocaleString();
-
-                        document.getElementById('productsSold').textContent = data.productsSold.toLocaleString();
-
-                    }
-
-                } else {
-
-                    // Fallback to initial data if stats API fails
-
-                    setInitialData();
-
-                }
-
-
-
-                // Reload chart data
-
-                await loadDashboardData();
-
-            } catch (error) {
-
-                console.error('Error updating dashboard:', error);
-
-                // Fallback to initial data
-
-                setInitialData();
-
-            }
-
-        }
-
-
-
-        // Export data function
-
-        function exportData() {
-
-            const data = {
-
-                period: currentPeriod,
-
-                stats: {
-
-                    totalCustomers: document.getElementById('totalCustomers').textContent,
-
-                    totalSales: document.getElementById('totalSales').textContent,
-
-                    totalOrders: document.getElementById('totalOrders').textContent,
-
-                    productsSold: document.getElementById('productsSold').textContent
-
-                },
-
-                timestamp: new Date().toISOString()
-
-            };
-
-
-
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-
-            const url = URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-
-            a.href = url;
-
-            a.download = `dashboard-export-${currentPeriod}-${new Date().toISOString().split('T')[0]}.json`;
-
-            document.body.appendChild(a);
-
-            a.click();
-
-            document.body.removeChild(a);
-
-            URL.revokeObjectURL(url);
-
-
-
-            alert('Dashboard data exported successfully!');
-
-        }
-
-    </script>
-
-
-
-    <script>
-
-        // Back navigation lock for admin dashboard
-
-        (function lockBackNavigation() {
-
-            try {
-
-                console.log('Back lock script loaded for admin dashboard');
-
-                // Push multiple states to make back button ineffective
-
-                for (let i = 0; i < 20; i++) {
-
-                    history.pushState(null, '', location.href);
-
-                }
-
-
-
-                window.addEventListener('popstate', function (event) {
-
-                    console.log('Back button pressed on admin dashboard, forcing stay');
-
-                    // Immediate redirect and aggressive loop
-
-                    window.location.href = '/admin/dashboard';
-
-                    // Try to go forward
-
-                    setTimeout(() => { window.history.go(1); }, 10);
-
-                    // Continuous check to enforce stay
-
-                    const intervalId = setInterval(() => {
-
-                        if (window.location.href !== 'http://localhost:3000/admin/dashboard') {
-
-                            window.location.href = '/admin/dashboard';
-
-                            clearInterval(intervalId);
-
-                        }
-
-                    }, 1);
-
-                });
-
-
-
-                window.addEventListener('beforeunload', function (e) {
-
-                    history.pushState(null, '', location.href);
-
-                });
-
-
-
-                // Additional: Try to go forward on load
-
-                window.onload = function () {
-
-                    history.pushState(null, '', location.href);
-
-                };
-
-            } catch (e) { console.error('Error in back lock script:', e); }
-
-        })();
-
-    </script>
-
-    <%- include("../partials/admin/footer") %>
+      }
+    } catch (err) {
+      console.error("loadBestSellingData error:", err);
+    }
+  }
+
+  (function lockBackNav() {
+    for (let i = 0; i < 5; i++) history.pushState(null, "", location.href);
+    window.addEventListener("popstate", () =>
+      window.location.replace("/admin/dashboard"),
+    );
+  })();
+</script>
+
+<%- include("../partials/admin/footer") %>

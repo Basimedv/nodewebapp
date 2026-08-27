@@ -59,6 +59,7 @@ const signup = async (req, res) => {
         }
 
         const otp = generateOtp();
+        console.log("Signup OTP:", otp);
         const emailSent = await sendVerificationEmail(email, otp);
         if (!emailSent) return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).send("Email failed");
 
@@ -99,6 +100,7 @@ const resendOtp = async (req, res) => {
         if (!email) return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json({ success: false, message: "Email not found" });
 
         const otp = generateOtp();
+        console.log("Resend OTP:",otp)
         req.session.userOtp = otp;
         req.session.otpExpiresAt = Date.now() + 60000;
         await sendVerificationEmail(email, otp);
@@ -167,25 +169,7 @@ const loadShopping = async (req, res) => {
       filter.category = { $in: validCatIds };
     }
 
-    // price filter — do it in DB not in JS
-    if (minPrice !== null || maxPrice !== null) {
-      filter.$or = [
-        {
-          salePrice: {
-            ...(minPrice !== null ? { $gte: minPrice } : {}),
-            ...(maxPrice !== null ? { $lte: maxPrice } : {}),
-            $gt: 0
-          }
-        },
-        {
-          salePrice: { $in: [0, null] },
-          regularPrice: {
-            ...(minPrice !== null ? { $gte: minPrice } : {}),
-            ...(maxPrice !== null ? { $lte: maxPrice } : {})
-          }
-        }
-      ];
-    }
+
 
     // ── fetch categoriesList (always needed) ──
     const categoriesList = await Category.find({ isListed: true }).sort({ name: 1 }).lean();
@@ -219,6 +203,14 @@ const loadShopping = async (req, res) => {
             }
           }
         },
+          ...(minPrice !== null || maxPrice !== null ? [{
+    $match: {
+      computedFinalPrice: {
+        ...(minPrice !== null ? { $gte: minPrice } : {}),
+        ...(maxPrice !== null ? { $lte: maxPrice } : {})
+      }
+    }
+  }] : []),
         { $sort: { computedFinalPrice: priceDirection } },
         {
           // facet: paginated data + total count in one query
@@ -322,14 +314,26 @@ const products = itemsRaw.map(p => {
     status: totalStock > 0 ? 'Available' : 'Out of Stock'
   };
 });
-    const totalPages = Math.ceil(total / limit) || 1;
+
+// ✅ ADD HERE — right after the products map, before totalPages
+const filteredProducts = (minPrice !== null || maxPrice !== null)
+  ? products.filter(p => {
+      if (minPrice !== null && p.finalPrice < minPrice) return false;
+      if (maxPrice !== null && p.finalPrice > maxPrice) return false;
+      return true;
+    })
+  : products;
+
+const totalPages = Math.ceil(filteredProducts.length / limit) || 1;  // ✅ update this line too
+
+
 
     res.render('user/productListing', {
-      products,
+       products:      filteredProducts, 
       category:      categoriesList,
       currentPage:   page,
       totalPages,
-      totalProducts: total,
+     totalProducts: filteredProducts.length,
       sortOption:    sort,
       user:          req.session.user || null,
       appliedFilters: {

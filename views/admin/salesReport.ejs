@@ -1,0 +1,415 @@
+<%- include('../partials/admin/header') %>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    background: #f4f6f9;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #1a1a1a;
+  }
+
+  /* ── Layout ── */
+  .admin-layout {
+    display: flex;
+    min-height: 100vh;
+    padding-top: 70px; /* offset fixed navbar */
+  }
+
+  .sidebar {
+    width: 250px;
+    background: white;
+    padding: 20px 10px;
+    position: fixed;
+    top: 70px;
+    bottom: 0;
+    left: 0;
+    z-index: 999;
+    border-right: 1px solid #eee;
+    overflow-y: auto;
+  }
+
+  .sidebar a {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #555;
+    text-decoration: none;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+    gap: 10px;
+  }
+  .sidebar a.active,
+  .sidebar a:hover {
+    background: #3b6da1;
+    color: white;
+    transform: translateX(4px);
+  }
+
+  .page-content {
+    margin-left: 250px;
+    padding: 32px 36px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  @media (max-width: 991px) {
+    .sidebar      { display: none; }
+    .page-content { margin-left: 0; }
+  }
+
+  /* ── Top bar ── */
+  .sr-topbar {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px; flex-wrap: wrap; gap: 14px;
+  }
+  .sr-title { font-size: 1.6rem; font-weight: 700; color: #1a1a1a; margin: 0; }
+  .sr-export-group { display: flex; gap: 10px; }
+
+  .btn-export {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 7px;
+    font-size: 0.84rem; font-weight: 600; cursor: pointer;
+    border: none; text-decoration: none; transition: opacity 0.15s;
+  }
+  .btn-export:hover { opacity: 0.85; }
+  .btn-pdf   { background: #4361ee; color: white; }
+  .btn-excel { background: white; color: #1a7a42; border: 1.5px solid #1a7a42; }
+
+  /* ── Filter bar ── */
+  .sr-filter-bar {
+    background: white; border-radius: 12px;
+    padding: 18px 22px; display: flex;
+    align-items: center; gap: 14px;
+    margin-bottom: 24px; flex-wrap: wrap;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  }
+  .filter-select {
+    padding: 9px 14px; border: 1.5px solid #e0e0e0;
+    border-radius: 8px; font-size: 0.86rem;
+    color: #1a1a1a; background: white; cursor: pointer;
+    outline: none; transition: border-color 0.2s; min-width: 150px;
+  }
+  .filter-select:focus { border-color: #4361ee; }
+  .date-input {
+    padding: 9px 14px; border: 1.5px solid #e0e0e0;
+    border-radius: 8px; font-size: 0.86rem;
+    color: #1a1a1a; background: white; outline: none;
+    transition: border-color 0.2s;
+  }
+  .date-input:focus { border-color: #4361ee; }
+  .custom-range { display: none; align-items: center; gap: 10px; }
+  .custom-range.show { display: flex; }
+  .btn-apply {
+    padding: 9px 22px; background: #4361ee; color: white;
+    border: none; border-radius: 8px; font-size: 0.86rem;
+    font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn-apply:hover { opacity: 0.85; }
+
+  /* ── Stat cards ── */
+  .sr-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; margin-bottom: 24px;
+  }
+  @media (max-width: 900px) { .sr-stats { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 500px) { .sr-stats { grid-template-columns: 1fr; } }
+
+  .stat-card {
+    background: white; border-radius: 12px;
+    padding: 22px 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0;
+  }
+  .stat-card-label {
+    font-size: 0.72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    color: #888; margin-bottom: 10px;
+  }
+  .stat-card-value { font-size: 1.9rem; font-weight: 700; color: #1a1a1a; line-height: 1; margin-bottom: 6px; }
+  .stat-card-sub   { font-size: 0.78rem; color: #aaa; }
+
+  /* ── Charts ── */
+  .sr-charts {
+    display: grid; grid-template-columns: 1fr 340px;
+    gap: 20px; margin-bottom: 24px;
+  }
+  @media (max-width: 900px) { .sr-charts { grid-template-columns: 1fr; } }
+
+  .chart-card {
+    background: white; border-radius: 12px;
+    padding: 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0;
+  }
+  .chart-card-title { font-size: 0.95rem; font-weight: 700; color: #1a1a1a; margin-bottom: 20px; }
+
+  /* ── Table ── */
+  .orders-card {
+    background: white; border-radius: 12px;
+    padding: 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0; overflow-x: auto;
+  }
+  .orders-card-title { font-size: 0.95rem; font-weight: 700; color: #1a1a1a; margin-bottom: 20px; }
+
+  table.sr-table { width: 100%; border-collapse: collapse; }
+  table.sr-table thead tr { background: #1a1a1a; color: white; }
+  table.sr-table thead th {
+    padding: 12px 16px; text-align: left;
+    font-size: 0.75rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.6px; white-space: nowrap;
+  }
+  table.sr-table thead th:first-child { border-radius: 8px 0 0 0; }
+  table.sr-table thead th:last-child  { border-radius: 0 8px 0 0; }
+  table.sr-table tbody tr { border-bottom: 1px solid #f5f5f5; transition: background 0.12s; }
+  table.sr-table tbody tr:hover { background: #fafafa; }
+  table.sr-table tbody tr:last-child { border-bottom: none; }
+  table.sr-table tbody td { padding: 13px 16px; font-size: 0.86rem; color: #444; }
+
+  .order-id-cell { font-family: monospace; font-size: 0.82rem; color: #1a1a1a; font-weight: 600; }
+
+  .status-pill { font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; display: inline-block; white-space: nowrap; }
+  .status-Pending    { color: #b45309; background: #fef3c7; }
+  .status-Processing { color: #d97706; background: #fff7e6; }
+  .status-Shipped    { color: #0369a1; background: #e0f2fe; }
+  .status-Delivered  { color: #6d28d9; background: #f3e8ff; }
+  .status-Returned   { color: #dc2626; background: #fdecea; }
+  .status-Cancelled  { color: #888;    background: #f3f3f3; }
+
+  /* ── Pagination ── */
+  .pagination-wrap { display: flex; justify-content: center; gap: 6px; margin-top: 24px; flex-wrap: wrap; }
+  .page-btn {
+    padding: 7px 13px; border: 1px solid #ddd;
+    background: white; color: #333; border-radius: 6px;
+    text-decoration: none; font-size: 0.84rem; transition: all 0.2s;
+  }
+  .page-btn:hover  { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+  .page-btn.active { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+  .page-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+  .empty-row td { text-align: center; padding: 50px; color: #aaa; font-size: 0.9rem; }
+</style>
+
+<div class="admin-layout">
+
+    <!-- Desktop Sidebar -->
+    <div class="sidebar d-none d-lg-block">
+        <%- include('../partials/admin/sidebar_links') %>
+    </div>
+
+    <!-- Page Content -->
+    <div class="page-content">
+
+        <!-- Top bar -->
+        <div class="sr-topbar">
+            <h2 class="sr-title">Sales Report</h2>
+            <div class="sr-export-group">
+                <a href="/admin/sales-report/export-pdf?filter=<%= filter %>&startDate=<%= startDate %>&endDate=<%= endDate %>"
+                   class="btn-export btn-pdf">
+                    <i class="fas fa-download"></i> Export PDF
+                </a>
+                <a href="/admin/sales-report/export-excel?filter=<%= filter %>&startDate=<%= startDate %>&endDate=<%= endDate %>"
+                   class="btn-export btn-excel">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="sr-filter-bar">
+            <form method="GET" action="/admin/sales-report" id="filterForm"
+                  style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; width:100%;">
+                <select name="filter" class="filter-select" id="filterSelect" onchange="toggleCustomRange(this.value)">
+                    <option value="today"   <%= filter === 'today'   ? 'selected' : '' %>>Today</option>
+                    <option value="weekly"  <%= filter === 'weekly'  ? 'selected' : '' %>>This Week</option>
+                    <option value="monthly" <%= filter === 'monthly' ? 'selected' : '' %>>This Month</option>
+                    <option value="yearly"  <%= filter === 'yearly'  ? 'selected' : '' %>>This Year</option>
+                    <option value="custom"  <%= filter === 'custom'  ? 'selected' : '' %>>Custom Range</option>
+                </select>
+                <div class="custom-range <%= filter === 'custom' ? 'show' : '' %>" id="customRange">
+                    <input type="date" name="startDate" class="date-input" value="<%= startDate %>" placeholder="Start date">
+                    <span style="color:#aaa; font-size:0.85rem;">to</span>
+                    <input type="date" name="endDate" class="date-input" value="<%= endDate %>" placeholder="End date">
+                </div>
+                <button type="submit" class="btn-apply">Apply Filter</button>
+            </form>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="sr-stats">
+            <div class="stat-card">
+                <div class="stat-card-label">Overall Sales Count</div>
+                <div class="stat-card-value"><%= salesCount.toLocaleString('en-IN') %></div>
+                <div class="stat-card-sub">orders</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Overall Order Amount</div>
+                <div class="stat-card-value">₹<%= totalAmount.toLocaleString('en-IN', { minimumFractionDigits:2, maximumFractionDigits:2 }) %></div>
+                <div class="stat-card-sub">revenue</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Overall Discount</div>
+                <div class="stat-card-value">₹<%= totalDiscount.toLocaleString('en-IN', { minimumFractionDigits:2, maximumFractionDigits:2 }) %></div>
+                <div class="stat-card-sub">order-level discounts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Coupon Deductions</div>
+                <div class="stat-card-value">₹<%= couponDeductions.toLocaleString('en-IN', { minimumFractionDigits:2, maximumFractionDigits:2 }) %></div>
+                <div class="stat-card-sub">product-level coupons</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="sr-charts">
+            <div class="chart-card">
+                <div class="chart-card-title">Revenue Overview</div>
+                <canvas id="revenueChart" height="260"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-card-title">Orders by Status</div>
+                <canvas id="statusChart" height="260"></canvas>
+            </div>
+        </div>
+
+        <!-- Orders table -->
+        <div class="orders-card">
+            <div class="orders-card-title">Order Details</div>
+            <table class="sr-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>Payment</th>
+                        <th>Coupon</th>
+                        <th>Discount</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (orders && orders.length > 0) { %>
+                        <% orders.forEach(order => { %>
+                            <tr>
+                                <td class="order-id-cell"><%= order.orderId %></td>
+                                <td><%= new Date(order.createdOn).toLocaleDateString('en-IN', { day:'numeric', month:'numeric', year:'numeric' }) %></td>
+                                <td><%= order.paymentMethod %></td>
+                                <td style="color:#aaa;"><%= order.couponApplied ? (order.couponCode || '—') : '—' %></td>
+                                <td>₹<%= (order.dicount || 0).toFixed(2) %></td>
+                                <td style="font-weight:600;">₹<%= (order.finalAmount || 0).toFixed(2) %></td>
+                                <td><span class="status-pill status-<%= order.status %>"><%= order.status %></span></td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr class="empty-row"><td colspan="7">No orders found for the selected period.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+
+            <% if (totalPages > 1) { %>
+                <div class="pagination-wrap">
+                    <a href="?filter=<%= filter %>&startDate=<%= startDate %>&endDate=<%= endDate %>&page=<%= currentPage - 1 %>"
+                       class="page-btn <%= currentPage === 1 ? 'disabled' : '' %>">← Prev</a>
+                    <% for (let i = 1; i <= totalPages; i++) { %>
+                        <% if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
+                            <a href="?filter=<%= filter %>&startDate=<%= startDate %>&endDate=<%= endDate %>&page=<%= i %>"
+                               class="page-btn <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+                        <% } else if (i === currentPage - 3 || i === currentPage + 3) { %>
+                            <span class="page-btn disabled">…</span>
+                        <% } %>
+                    <% } %>
+                    <a href="?filter=<%= filter %>&startDate=<%= startDate %>&endDate=<%= endDate %>&page=<%= currentPage + 1 %>"
+                       class="page-btn <%= currentPage === totalPages ? 'disabled' : '' %>">Next →</a>
+                </div>
+            <% } %>
+        </div>
+
+    </div><!-- /page-content -->
+</div><!-- /admin-layout -->
+
+<%- include('../partials/admin/footer') %>
+
+<%# Data tag - only JSON data goes here %>
+<script type="application/json" id="chartData">
+    {
+        "chartLabels": <%- JSON.stringify(chartLabels) %>,
+        "chartSales":  <%- JSON.stringify(chartSales)  %>,
+        "statusMap":   <%- JSON.stringify(statusMap)   %>
+    }
+</script>
+
+<%# JavaScript tag - no EJS here %>
+<script>
+    function toggleCustomRange(val) {
+        document.getElementById('customRange').classList.toggle('show', val === 'custom');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        var raw         = document.getElementById('chartData').textContent;
+        var data        = JSON.parse(raw);
+        var chartLabels = data.chartLabels;
+        var chartSales  = data.chartSales;
+        var statusMap   = data.statusMap;
+
+        new Chart(document.getElementById('revenueChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Revenue (₹)',
+                    data: chartSales,
+                    backgroundColor: 'rgba(99,120,255,0.7)',
+                    borderColor: 'rgba(99,120,255,1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { maxRotation: 45, font: { size: 11 } } },
+                    y: { grid: { color: '#f0f0f0' }, ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+
+        var statusLabels = Object.keys(statusMap);
+        var statusColors = {
+            Placed:     '#4361ee',
+            Paid:       '#2ec4b6',
+            Processing: '#f4a261',
+            Returned:   '#e63946',
+            Delivered:  '#7b5ea7',
+            Shipped:    '#0369a1',
+            Pending:    '#f59e0b',
+            Cancelled:  '#aaa'
+        };
+
+        new Chart(document.getElementById('statusChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: Object.values(statusMap),
+                    backgroundColor: statusLabels.map(function(l) {
+                        return statusColors[l] || '#ccc';
+                    }),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { font: { size: 12 }, padding: 14, boxWidth: 14 }
+                    }
+                }
+            }
+        });
+    });
+</script>

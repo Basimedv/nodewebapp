@@ -157,6 +157,8 @@
       .meta-grid { grid-template-columns: repeat(2, 1fr); }
       .page-header { padding: 14px 16px; flex-direction: column; gap: 10px; align-items: flex-start; }
     }
+    .text-paid    { color: #16a34a; }
+.text-pending { color: #d97706; }
   </style>
 
   <aside class="sidebar d-none d-lg-block">
@@ -217,7 +219,7 @@
               </div>
               <div class="meta-item">
                 <div class="meta-label">Payment Status</div>
-                <div class="meta-value" style="color:<%= order.paymentStatus === 'Paid' ? '#16a34a' : '#d97706' %>">
+                <div class="meta-value <%= order.paymentStatus === 'Paid' ? 'text-paid' : 'text-pending' %>">
                   <%= order.paymentStatus || 'Pending' %>
                 </div>
               </div>
@@ -243,11 +245,16 @@
           <div class="card-head"><h3><i class="fas fa-route"></i> Order Progress</h3></div>
           <div class="card-body">
             <div class="timeline">
-              <% timelineSteps.forEach((step, i) => {
-                let cls = '';
-                if (currentIdx > i) cls = 'done';
-                else if (currentIdx === i) cls = 'current';
-              %>
+     <% timelineSteps.forEach((step, i) => {
+  let cls = '';
+  if (order.status === 'Delivered') {
+    cls = 'done';
+  } else if (i < currentIdx) {
+    cls = 'done';
+  } else if (i === currentIdx) {
+    cls = 'current';
+  }
+%>
               <div class="timeline-step <%= cls %>">
                 <div class="step-dot"><i class="fas <%= step.icon %>"></i></div>
                 <span class="step-label"><%= step.label %></span>

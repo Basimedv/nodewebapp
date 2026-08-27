@@ -34,7 +34,6 @@
     border-radius: 20px;
   }
 
-  /* Layout */
   .cart-layout {
     display: grid;
     grid-template-columns: 1fr 340px;
@@ -46,7 +45,6 @@
     .cart-layout { grid-template-columns: 1fr; }
   }
 
-  /* Cart Items */
   .cart-items { display: flex; flex-direction: column; gap: 16px; }
 
   .cart-card {
@@ -110,7 +108,6 @@
     margin-bottom: 10px;
   }
 
-  /* Quantity control */
   .qty-control {
     display: flex;
     align-items: center;
@@ -151,7 +148,6 @@
     background: white;
   }
 
-  /* Item total */
   .cart-card-right {
     display: flex;
     flex-direction: column;
@@ -177,7 +173,6 @@
 
   .btn-remove-item:hover { color: #e53935; }
 
-  /* Order Summary */
   .order-summary {
     background: white;
     border-radius: 12px;
@@ -251,7 +246,6 @@
 
   .btn-continue:hover { color: #1a1a1a; }
 
-  /* Empty cart */
   .empty-cart {
     text-align: center;
     padding: 80px 20px;
@@ -282,9 +276,7 @@
   .btn-shop:hover { background: #333; color: white; }
 
   @media (max-width: 600px) {
-    .cart-card {
-      grid-template-columns: 80px 1fr;
-    }
+    .cart-card { grid-template-columns: 80px 1fr; }
     .cart-card-right {
       grid-column: 1 / -1;
       flex-direction: row;
@@ -334,16 +326,22 @@
 
               <!-- Quantity -->
               <div class="qty-control">
-                <button class="qty-btn"
-                  onclick="updateQty('<%= item._id %>', <%= item.quantity - 1 %>, <%= item.stock %>)"
-                  <%= item.quantity <= 1 ? 'disabled' : '' %>>−</button>
-                <input class="qty-value" type="text"
+                <button
+                  class="qty-btn qty-minus"
+                  data-id="<%= item._id %>"
+                  data-stock="<%= item.stock %>"
+                  <% if (item.quantity <= 1) { %>disabled<% } %>>−</button>
+                <input
+                  class="qty-value"
+                  type="text"
                   value="<%= item.quantity %>"
                   id="qty-<%= item._id %>"
                   readonly>
-                <button class="qty-btn"
-                  onclick="updateQty('<%= item._id %>', <%= item.quantity + 1 %>, <%= item.stock %>)"
-                  <%= item.quantity >= 10 || item.quantity >= item.stock ? 'disabled' : '' %>>+</button>
+                <button
+                  class="qty-btn qty-plus"
+                  data-id="<%= item._id %>"
+                  data-stock="<%= item.stock %>"
+                  <% if (item.quantity >= 10 || item.quantity >= item.stock) { %>disabled<% } %>>+</button>
               </div>
             </div>
 
@@ -352,7 +350,7 @@
               <div class="item-total" id="item-total-<%= item._id %>">
                 ₹<%= (item.price * item.quantity).toLocaleString('en-IN') %>
               </div>
-              <button class="btn-remove-item" onclick="removeItem('<%= item._id %>')" title="Remove">
+              <button class="btn-remove-item" data-item-id="<%= item._id %>" title="Remove">
                 <i class="fas fa-trash-alt"></i>
               </button>
             </div>
@@ -367,8 +365,8 @@
 
         <%
           const totalMRP     = cartItems.reduce((s, i) => s + i.price * i.quantity, 0);
-          const totalSavings = 0; // add coupon/discount logic later
-          const delivery     = 0; // free delivery
+          const totalSavings = 0;
+          const delivery     = 0;
           const finalTotal   = totalMRP - totalSavings + delivery;
         %>
 
@@ -405,7 +403,6 @@
     </div>
 
     <% } else { %>
-      <!-- Empty Cart -->
       <div class="empty-cart">
         <i class="fas fa-shopping-cart"></i>
         <h3>Your cart is empty</h3>
@@ -420,115 +417,137 @@
 <%- include("../partials/user/footer") %>
 
 <script>
-  // ── UPDATE QUANTITY ──────────────────────────────────────────
-  async function updateQty(itemId, newQty, stock) {
-    if (newQty < 1 || newQty > 10 || newQty > stock) return;
+document.addEventListener('DOMContentLoaded', function () {
 
-    try {
-      const res  = await fetch('/cart/update', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ itemId, quantity: newQty })
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        // Update qty display
-        document.getElementById(`qty-${itemId}`).value = newQty;
-
-        // Update item total
-        const itemTotalEl = document.getElementById(`item-total-${itemId}`);
-        if (itemTotalEl) {
-          itemTotalEl.textContent = '₹' + data.itemTotal.toLocaleString('en-IN');
-        }
-
-        // Update summary
-        document.getElementById('summary-subtotal').textContent =
-          '₹' + data.cartSubtotal.toLocaleString('en-IN');
-        document.getElementById('summary-total').textContent =
-          '₹' + data.cartSubtotal.toLocaleString('en-IN');
-
-        // Reload to refresh button states cleanly
-        location.reload();
-      } else {
-        Swal.fire({ icon: 'warning', text: data.message, timer: 1500, showConfirmButton: false });
-      }
-    } catch (err) {
-      console.error('updateQty error:', err);
-      Swal.fire({ icon: 'error', text: 'Network error. Please try again.', timer: 1500, showConfirmButton: false });
-    }
-  }
-
-  // ── REMOVE ITEM ──────────────────────────────────────────────
-  async function removeItem(itemId) {
-    const result = await Swal.fire({
-      title: 'Remove item?',
-      text:  'This item will be removed from your cart.',
-      icon:  'question',
-      showCancelButton:     true,
-      confirmButtonColor:   '#1a1a1a',
-      cancelButtonColor:    '#aaa',
-      confirmButtonText:    'Yes, Remove',
-      cancelButtonText:     'Cancel'
+  // ── QUANTITY BUTTONS ───────────────────────────────────────
+  document.querySelectorAll('.qty-minus').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const itemId = this.getAttribute('data-id');
+      const stock  = parseInt(this.getAttribute('data-stock')) || 0;
+      const curQty = parseInt(document.getElementById('qty-' + itemId).value) || 1;
+      updateQty(itemId, curQty - 1, stock);
     });
+  });
 
-    if (!result.isConfirmed) return;
+  document.querySelectorAll('.qty-plus').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const itemId = this.getAttribute('data-id');
+      const stock  = parseInt(this.getAttribute('data-stock')) || 0;
+      const curQty = parseInt(document.getElementById('qty-' + itemId).value) || 1;
+      updateQty(itemId, curQty + 1, stock);
+    });
+  });
 
-    try {
-      const res  = await fetch('/cart/remove', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ itemId })
-      });
-      const data = await res.json();
+  // ── REMOVE BUTTONS ─────────────────────────────────────────
+  document.querySelectorAll('.btn-remove-item').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const itemId = this.getAttribute('data-item-id');
+      removeItem(itemId);
+    });
+  });
 
-      if (data.success) {
-        // Animate out
-        const card = document.getElementById(`cart-item-${itemId}`);
-        if (card) {
-          card.style.transition = 'opacity 0.3s, transform 0.3s';
-          card.style.opacity    = '0';
-          card.style.transform  = 'translateX(20px)';
-          setTimeout(() => {
-            card.remove();
-            updateSummaryUI(data.cartSubtotal);
-          }, 300);
-        }
+});
 
-        Swal.fire({ icon: 'success', text: 'Item removed', timer: 1000, showConfirmButton: false });
-      } else {
-        Swal.fire({ icon: 'error', text: data.message, timer: 1500, showConfirmButton: false });
+// ── UPDATE QUANTITY ─────────────────────────────────────────
+async function updateQty(itemId, newQty, stock) {
+  if (newQty < 1 || newQty > 10 || newQty > stock) return;
+
+  try {
+    const res  = await fetch('/cart/update', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ itemId, quantity: newQty })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('qty-' + itemId).value = newQty;
+
+      const itemTotalEl = document.getElementById('item-total-' + itemId);
+      if (itemTotalEl) {
+        itemTotalEl.textContent = '₹' + data.itemTotal.toLocaleString('en-IN');
       }
-    } catch (err) {
-      Swal.fire({ icon: 'error', text: 'Network error. Please try again.', timer: 1500, showConfirmButton: false });
+
+      const subtotalEl = document.getElementById('summary-subtotal');
+      const totalEl    = document.getElementById('summary-total');
+      if (subtotalEl) subtotalEl.textContent = '₹' + data.cartSubtotal.toLocaleString('en-IN');
+      if (totalEl)    totalEl.textContent    = '₹' + data.cartSubtotal.toLocaleString('en-IN');
+
+      location.reload();
+    } else {
+      Swal.fire({ icon: 'warning', text: data.message, timer: 1500, showConfirmButton: false });
     }
+  } catch (err) {
+    console.error('updateQty error:', err);
+    Swal.fire({ icon: 'error', text: 'Network error. Please try again.', timer: 1500, showConfirmButton: false });
+  }
+}
+
+// ── REMOVE ITEM ─────────────────────────────────────────────
+async function removeItem(itemId) {
+  const result = await Swal.fire({
+    title: 'Remove item?',
+    text:  'This item will be removed from your cart.',
+    icon:  'question',
+    showCancelButton:   true,
+    confirmButtonColor: '#1a1a1a',
+    cancelButtonColor:  '#aaa',
+    confirmButtonText:  'Yes, Remove',
+    cancelButtonText:   'Cancel'
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    const res  = await fetch('/cart/remove', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ itemId })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      const card = document.getElementById('cart-item-' + itemId);
+      if (card) {
+        card.style.transition = 'opacity 0.3s, transform 0.3s';
+        card.style.opacity    = '0';
+        card.style.transform  = 'translateX(20px)';
+        setTimeout(function() {
+          card.remove();
+          updateSummaryUI(data.cartSubtotal);
+        }, 300);
+      }
+      Swal.fire({ icon: 'success', text: 'Item removed', timer: 1000, showConfirmButton: false });
+    } else {
+      Swal.fire({ icon: 'error', text: data.message, timer: 1500, showConfirmButton: false });
+    }
+  } catch (err) {
+    Swal.fire({ icon: 'error', text: 'Network error. Please try again.', timer: 1500, showConfirmButton: false });
+  }
+}
+
+// ── UPDATE SUMMARY UI ───────────────────────────────────────
+function updateSummaryUI(subtotal) {
+  const remaining = document.querySelectorAll('.cart-card').length;
+
+  const countEl = document.getElementById('cart-count');
+  if (countEl) {
+    countEl.textContent = remaining + ' item' + (remaining !== 1 ? 's' : '');
   }
 
-  // ── UPDATE SUMMARY UI ────────────────────────────────────────
-  function updateSummaryUI(subtotal) {
-    const remaining = document.querySelectorAll('.cart-card').length;
+  const subtotalEl = document.getElementById('summary-subtotal');
+  const totalEl    = document.getElementById('summary-total');
+  if (subtotalEl) subtotalEl.textContent = '₹' + subtotal.toLocaleString('en-IN');
+  if (totalEl)    totalEl.textContent    = '₹' + subtotal.toLocaleString('en-IN');
 
-    // Update count
-    const countEl = document.getElementById('cart-count');
-    if (countEl) {
-      countEl.textContent = `${remaining} item${remaining !== 1 ? 's' : ''}`;
-    }
-
-    // Update totals
-    const subtotalEl = document.getElementById('summary-subtotal');
-    const totalEl    = document.getElementById('summary-total');
-    if (subtotalEl) subtotalEl.textContent = '₹' + subtotal.toLocaleString('en-IN');
-    if (totalEl)    totalEl.textContent    = '₹' + subtotal.toLocaleString('en-IN');
-
-    // Show empty state
-    if (remaining === 0) {
-      document.querySelector('.cart-layout').innerHTML = `
-        <div class="empty-cart" style="grid-column:1/-1">
-          <i class="fas fa-shopping-cart"></i>
-          <h3>Your cart is empty</h3>
-          <p>Looks like you haven't added anything yet.</p>
-          <a href="/shop" class="btn-shop">Start Shopping</a>
-        </div>`;
-    }
+  if (remaining === 0) {
+    document.querySelector('.cart-layout').innerHTML = `
+      <div class="empty-cart" style="grid-column:1/-1">
+        <i class="fas fa-shopping-cart"></i>
+        <h3>Your cart is empty</h3>
+        <p>Looks like you haven't added anything yet.</p>
+        <a href="/shop" class="btn-shop">Start Shopping</a>
+      </div>`;
   }
+}
 </script>

@@ -114,12 +114,16 @@ const updateOrderStatus = async (req, res) => {
                     type:        'cancel',
                     description: `Refund for admin cancelled order #${order.orderId}`
                 });
+                order.paymentStatus = 'Refunded'; // ✅ Online/Wallet
+            } else {
+                order.paymentStatus = 'Failed';   // ✅ COD
             }
         }
 
-        // ✅ If marking delivered — set invoice date
+        // ✅ If marking delivered — set invoice date + payment status
         if (status === 'Delivered') {
-            order.invoiceDate = new Date();
+            order.invoiceDate   = new Date();
+            order.paymentStatus = 'Paid'; // ✅ Always paid on delivery
         }
 
         order.status = status;
@@ -187,9 +191,10 @@ const handleReturn = async (req, res) => {
             });
 
             // ✅ Step 3 — Update order
-            order.status       = 'Returned';
-            order.returnStatus = 'Approved';
-            order.returnReason = reason || '';
+            order.status         = 'Returned';
+            order.returnStatus   = 'Approved';
+            order.returnReason   = reason || '';
+            order.paymentStatus  = 'Refunded'; // ✅ mark as refunded
 
             await order.save();
 

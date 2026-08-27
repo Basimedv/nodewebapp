@@ -9,7 +9,6 @@
   <body>
     <main>
 
-   
       <div class="breadcrumb-bar">
         <div style="max-width:1160px; margin:0 auto; padding:0 24px;">
           <a href="/">Home</a>
@@ -20,7 +19,6 @@
         </div>
       </div>
 
-
       <div id="user-data" style="display:none;"
         data-user="<%= typeof user !== 'undefined' && user && user._id ? user._id : '' %>"
         data-images="<%= JSON.stringify(product?.productImage || []) %>"
@@ -29,10 +27,8 @@
         data-category-id="<%= product && product.category ? product.category._id : '' %>">
       </div>
 
-
       <div class="pd-layout">
 
-      
         <div class="image-panel">
           <div class="main-image-wrap" id="mainImageContainer">
             <button class="nav-arrow nav-arrow-left" id="prevImage">
@@ -55,7 +51,6 @@
           </div>
         </div>
 
- 
         <div class="info-panel">
           <div class="category-pill">
             <%= product.category ? product.category.name : '' %>
@@ -69,36 +64,35 @@
 
           <!-- Price -->
           <%
-         var regular       = Number(product && product.regularPrice ? product.regularPrice : 0);
-var sale          = Number(product && product.salePrice    ? product.salePrice    : 0);
-var isOnSale      = product.isOnSale || (sale > 0 && sale < regular);
-var discountPct   = product.discountPercent || 0;
-var appliedOffer  = product.appliedOffer    || null;
+            var regular      = Number(product && product.regularPrice ? product.regularPrice : 0);
+            var sale         = Number(product && product.salePrice    ? product.salePrice    : 0);
+            var isOnSale     = product.isOnSale || (sale > 0 && sale < regular);
+            var discountPct  = product.discountPercent || 0;
+            var appliedOffer = product.appliedOffer    || null;
           %>
           <div class="price-label">Price</div>
-<% if (isOnSale) { %>
-  <div class="price-display">
-    <span class="price-sale">Rs. <%= sale.toLocaleString('en-IN') %></span>
-    <span class="price-regular-strike">Rs. <%= regular.toLocaleString('en-IN') %></span>
-  </div>
-  <!-- ✅ Offer badge -->
-  <div style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
-    <span style="background:#e74c3c; color:white; font-size:12px;
-                 font-weight:700; padding:4px 10px; border-radius:4px;">
-      <%= discountPct %>% OFF
-    </span>
-    <% if (appliedOffer) { %>
-      <span style="background:#fff3cd; color:#856404; font-size:12px;
-                   font-weight:600; padding:4px 10px; border-radius:4px;
-                   border:1px solid #ffc107;">
-        <i class="fas fa-tag" style="margin-right:4px;"></i>
-        <%= appliedOffer.offerName %>
-      </span>
-    <% } %>
-  </div>
-<% } else { %>
-  <div class="price-display">Rs. <%= regular.toLocaleString('en-IN') %></div>
-<% } %>
+          <% if (isOnSale) { %>
+            <div class="price-display">
+              <span class="price-sale">Rs. <%= sale.toLocaleString('en-IN') %></span>
+              <span class="price-regular-strike">Rs. <%= regular.toLocaleString('en-IN') %></span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+              <span style="background:#e74c3c; color:white; font-size:12px;
+                           font-weight:700; padding:4px 10px; border-radius:4px;">
+                <%= discountPct %>% OFF
+              </span>
+              <% if (appliedOffer) { %>
+                <span style="background:#fff3cd; color:#856404; font-size:12px;
+                             font-weight:600; padding:4px 10px; border-radius:4px;
+                             border:1px solid #ffc107;">
+                  <i class="fas fa-tag" style="margin-right:4px;"></i>
+                  <%= appliedOffer.offerName %>
+                </span>
+              <% } %>
+            </div>
+          <% } else { %>
+            <div class="price-display">Rs. <%= regular.toLocaleString('en-IN') %></div>
+          <% } %>
 
           <div class="divider"></div>
 
@@ -154,13 +148,7 @@ var appliedOffer  = product.appliedOffer    || null;
         </div>
       <% } %>
 
-      <!-- Reviews -->
-      <!--
-        FIX: reviewCount, averageRating, reviews are passed from the controller.
-             We do NOT redeclare them with const/let here.
-             All EJS scriptlet variables use var to avoid TDZ issues.
-             Bar widths are set via data-width + JS — no % character in EJS output.
-      -->
+      <!-- ══ Reviews Section ══════════════════════════════════════════ -->
       <div class="reviews-section">
         <h2 class="section-heading">Customer Reviews (<%= reviewCount %>)</h2>
 
@@ -179,9 +167,7 @@ var appliedOffer  = product.appliedOffer    || null;
 
           <!-- Right: bars + write button -->
           <div class="rating-bars">
-
             <%
-              /* Build ratingCounts and fillWidths using var (no const/let in EJS) */
               var ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
               if (reviews && reviews.length > 0) {
                 reviews.forEach(function(review) {
@@ -204,7 +190,6 @@ var appliedOffer  = product.appliedOffer    || null;
                   <% for (var j = 0; j < 5; j++) { %><%= j < i ? '★' : '☆' %><% } %>
                 </span>
                 <div class="bar-track">
-                  <!-- width set by JS below — no % character needed in EJS -->
                   <div class="bar-fill" data-width="<%= fillWidths[i] %>"></div>
                 </div>
                 <span class="bar-count"><%= ratingCounts[i] %></span>
@@ -228,7 +213,7 @@ var appliedOffer  = product.appliedOffer    || null;
               <h4>Write Your Review</h4>
               <button type="button" class="close-review-btn" id="closeReviewBtn">&times;</button>
             </div>
-            <form method="POST" action="/product/<%= product._id %>/addReview" id="reviewForm">
+            <form id="reviewForm">
               <div class="form-field">
                 <label for="rating">Rating *</label>
                 <select name="rating" id="rating" required>
@@ -293,14 +278,15 @@ var appliedOffer  = product.appliedOffer    || null;
     <script>
       document.addEventListener('DOMContentLoaded', function () {
 
-     
+        // ── Rating bar widths ──────────────────────────────────────────
         document.querySelectorAll('.bar-fill').forEach(function (el) {
           el.style.width = el.getAttribute('data-width') + '%';
         });
 
-        const userDataEl   = document.getElementById('user-data');
-        const userId       = userDataEl.getAttribute('data-user');
-        const currentUser  = userId ? { _id: userId } : null;
+        // ── User / product data from hidden div ────────────────────────
+        const userDataEl  = document.getElementById('user-data');
+        const userId      = userDataEl.getAttribute('data-user');
+        const currentUser = userId ? { _id: userId } : null;
 
         let productImages = [];
         try { productImages = JSON.parse(userDataEl.getAttribute('data-images') || '[]'); } catch (e) {}
@@ -312,7 +298,7 @@ var appliedOffer  = product.appliedOffer    || null;
           return sum + (parseInt(v) || 0);
         }, 0);
 
-        /* ── Image navigation ── */
+        // ── Image navigation ───────────────────────────────────────────
         let currentImageIndex = 0;
         const mainImage = document.getElementById('mainImage');
         const prevBtn   = document.getElementById('prevImage');
@@ -348,7 +334,7 @@ var appliedOffer  = product.appliedOffer    || null;
           });
         });
 
-
+        // ── Image zoom on hover ────────────────────────────────────────
         const mainImageContainer = document.getElementById('mainImageContainer');
         mainImageContainer.addEventListener('mousemove', function (e) {
           const rect  = mainImageContainer.getBoundingClientRect();
@@ -364,55 +350,67 @@ var appliedOffer  = product.appliedOffer    || null;
           mainImage.style.transform = 'scale(1) translate(0,0)';
         });
 
-  
-        if (totalStock === 0) return;
-
+        // ── Size selector ──────────────────────────────────────────────
+        // FIX: removed early return so form submit listener always registers
         let selectedSize = null;
-        const availabilityText = document.getElementById('availabilityText');
-        const submitBtn        = document.querySelector('#addToCartForm button[type=submit]');
 
-        document.querySelectorAll('#sizeSelector a').forEach(function (link) {
-          link.addEventListener('click', function (e) {
-            e.preventDefault();
-            const stock = parseInt(this.getAttribute('data-stock')) || 0;
-            if (stock === 0) return;
+        if (totalStock > 0) {
+          const availabilityText = document.getElementById('availabilityText');
+          const cartSubmitBtn    = document.querySelector('#addToCartForm button[type=submit]');
 
-            selectedSize = this.getAttribute('data-size');
-            document.getElementById('selectedSize').value = selectedSize;
+          document.querySelectorAll('#sizeSelector a').forEach(function (link) {
+            link.addEventListener('click', function (e) {
+              e.preventDefault();
+              const stock = parseInt(this.getAttribute('data-stock')) || 0;
+              if (stock === 0) return;
 
-            document.querySelectorAll('#sizeSelector li').forEach(function (li) {
-              li.classList.remove('active');
+              selectedSize = this.getAttribute('data-size');
+              document.getElementById('selectedSize').value = selectedSize;
+
+              document.querySelectorAll('#sizeSelector li').forEach(function (li) {
+                li.classList.remove('active');
+              });
+              this.parentElement.classList.add('active');
+
+              availabilityText.innerHTML = stock < 5
+                ? '<span class="in">Only ' + stock + ' left in stock</span>'
+                : '<span class="in">In Stock (' + stock + ' available)</span>';
+
+              if (cartSubmitBtn) cartSubmitBtn.disabled = false;
             });
-            this.parentElement.classList.add('active');
-
-            availabilityText.innerHTML = stock < 5
-              ? '<span class="in">Only ' + stock + ' left in stock</span>'
-              : '<span class="in">In Stock (' + stock + ' available)</span>';
-
-            if (submitBtn) submitBtn.disabled = false;
           });
-        });
+        }
 
-    
+        // ── Add to cart form submit ────────────────────────────────────
+        // FIX: this listener is now outside the totalStock check so it always works
         const addToCartForm = document.getElementById('addToCartForm');
         if (addToCartForm) {
           addToCartForm.addEventListener('submit', async function (e) {
             e.preventDefault();
 
             if (!currentUser) {
-              Swal.fire({ icon: 'warning', title: 'Login Required', text: 'Please login to continue', confirmButtonText: 'Go to Login' })
-                .then(function (r) { if (r.isConfirmed) window.location.href = '/login'; });
+              Swal.fire({
+                icon: 'warning',
+                title: 'Login Required',
+                text: 'Please login to continue',
+                confirmButtonText: 'Go to Login'
+              }).then(function (r) {
+                if (r.isConfirmed) window.location.href = '/login';
+              });
               return;
             }
+
             if (!selectedSize) {
               Swal.fire({ icon: 'warning', title: 'Select Size', text: 'Please select a size before adding to cart' });
               return;
             }
+
             if ((productStock[selectedSize] || 0) < 1) {
               Swal.fire({ icon: 'error', title: 'Out of Stock!', text: 'This size is currently out of stock.' });
               return;
             }
 
+            const submitBtn = document.querySelector('#addToCartForm button[type=submit]');
             if (submitBtn) {
               submitBtn.disabled = true;
               submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Adding...';
@@ -424,12 +422,13 @@ var appliedOffer  = product.appliedOffer    || null;
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify({
-                  userId:    currentUser._id,
                   productId: userDataEl.getAttribute('data-product-id'),
                   size:      selectedSize,
                   quantity:  1
+                  // FIX: removed userId — controller reads it from session
                 })
               });
+
               const data = await response.json();
 
               if (data.redirect) {
@@ -437,25 +436,31 @@ var appliedOffer  = product.appliedOffer    || null;
                 window.location.href = data.redirect;
                 return;
               }
+
               if (data.success) {
                 const result = await Swal.fire({
-                  icon: 'success', title: 'Added to Cart!',
+                  icon: 'success',
+                  title: 'Added to Cart!',
                   text: 'Size ' + selectedSize + ' added to your cart',
-                  showConfirmButton: true, confirmButtonText: 'Go to Cart', timer: 2000
+                  showConfirmButton: true,
+                  confirmButtonText: 'Go to Cart',
+                  timer: 2000
                 });
                 if (result.isConfirmed) window.location.href = '/cart';
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Add to Cart'; }
               } else {
-                throw new Error(data.error || 'Failed to add to cart');
+                throw new Error(data.message || 'Failed to add to cart');
               }
+
             } catch (error) {
               await Swal.fire({ icon: 'error', title: 'Error!', text: error.message || 'Could not add to cart.' });
+              const submitBtn = document.querySelector('#addToCartForm button[type=submit]');
               if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Add to Cart'; }
             }
           });
         }
 
-        /* ── Related products ── */
+        // ── Related products ───────────────────────────────────────────
         async function loadRelatedProducts() {
           try {
             const categoryId       = userDataEl.getAttribute('data-category-id');
@@ -464,7 +469,9 @@ var appliedOffer  = product.appliedOffer    || null;
             const response = await fetch('/api/products?category=' + categoryId + '&limit=4&exclude=' + currentProductId);
             const data     = await response.json();
             if (data.products && data.products.length > 0) displayRelatedProducts(data.products);
-          } catch (err) { console.error('Related products error:', err); }
+          } catch (err) {
+            console.error('Related products error:', err);
+          }
         }
 
         function displayRelatedProducts(products) {
@@ -474,8 +481,9 @@ var appliedOffer  = product.appliedOffer    || null;
             const imageSrc   = (product.productImage && product.productImage[0]) || '/images/placeholder.png';
             const price      = Number(product.regularPrice || 0);
             const stockTotal = product.stock
-              ? Object.values(product.stock).reduce(function (sum, v) { return sum + (parseInt(v) || 0); }, 0) : 0;
-            const stockTag   = stockTotal === 0
+              ? Object.values(product.stock).reduce(function (sum, v) { return sum + (parseInt(v) || 0); }, 0)
+              : 0;
+            const stockTag = stockTotal === 0
               ? '<span class="stock-tag out">Out of Stock</span>'
               : stockTotal < 10
                 ? '<span class="stock-tag low">Only ' + stockTotal + ' left</span>'
@@ -491,10 +499,12 @@ var appliedOffer  = product.appliedOffer    || null;
 
         loadRelatedProducts();
 
-  
+        // ── Review form toggle ─────────────────────────────────────────
         const writeReviewBtn      = document.getElementById('writeReviewBtn');
         const reviewFormContainer = document.getElementById('reviewFormContainer');
         const closeReviewBtn      = document.getElementById('closeReviewBtn');
+        const reviewForm          = document.getElementById('reviewForm');
+
         if (writeReviewBtn && reviewFormContainer) {
           writeReviewBtn.addEventListener('click', function () {
             reviewFormContainer.style.display = 'block';
@@ -507,7 +517,65 @@ var appliedOffer  = product.appliedOffer    || null;
           }
         }
 
-        /* ── User dropdown ── */
+        // ── Review form submit via fetch ───────────────────────────────
+        if (reviewForm) {
+          reviewForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const rating  = document.getElementById('rating').value;
+            const comment = document.getElementById('comment').value.trim();
+
+            if (!rating) {
+              Swal.fire({ icon: 'warning', text: 'Please select a rating.', timer: 1800, showConfirmButton: false });
+              return;
+            }
+            if (comment.length < 5) {
+              Swal.fire({ icon: 'warning', text: 'Comment must be at least 5 characters.', timer: 1800, showConfirmButton: false });
+              return;
+            }
+
+            const submitReviewBtn = reviewForm.querySelector('.submit-review-btn');
+            if (submitReviewBtn) {
+              submitReviewBtn.disabled    = true;
+              submitReviewBtn.textContent = 'Submitting…';
+            }
+
+            try {
+              const productId = userDataEl.getAttribute('data-product-id');
+              const res = await fetch('/product/' + productId + '/addReview', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ rating: Number(rating), comment })
+              });
+              const data = await res.json();
+
+              if (data.success) {
+                await Swal.fire({
+                  icon:              'success',
+                  text:              data.message,
+                  timer:             1800,
+                  showConfirmButton: false
+                });
+                window.location.reload();
+              } else {
+                Swal.fire({ icon: 'error', text: data.message });
+                if (submitReviewBtn) {
+                  submitReviewBtn.disabled    = false;
+                  submitReviewBtn.textContent = 'Submit Review';
+                }
+              }
+
+            } catch (err) {
+              Swal.fire({ icon: 'error', text: 'Network error. Please try again.' });
+              if (submitReviewBtn) {
+                submitReviewBtn.disabled    = false;
+                submitReviewBtn.textContent = 'Submit Review';
+              }
+            }
+          });
+        }
+
+        // ── User dropdown ──────────────────────────────────────────────
         document.addEventListener('click', function (e) {
           const toggle   = document.getElementById('userMenuToggle');
           const dropdown = document.getElementById('userDropdown');
@@ -520,10 +588,14 @@ var appliedOffer  = product.appliedOffer    || null;
             dropdown.setAttribute('aria-hidden', 'true');
           }
         });
+
         document.addEventListener('keydown', function (e) {
           if (e.key === 'Escape') {
             const dropdown = document.getElementById('userDropdown');
-            if (dropdown) { dropdown.classList.remove('open'); dropdown.setAttribute('aria-hidden', 'true'); }
+            if (dropdown) {
+              dropdown.classList.remove('open');
+              dropdown.setAttribute('aria-hidden', 'true');
+            }
           }
         });
 

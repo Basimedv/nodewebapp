@@ -1,68 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
-        <%= typeof title !=='undefined' ? title : 'Admin' %> | COLINGUEST
+      <%= typeof title !== 'undefined' ? title : 'Admin' %> | COLINGUEST
     </title>
 
     <script>
-        if (localStorage.getItem('darkMode') === 'enabled') {
-            document.documentElement.classList.add('dark-mode-logic');
-        }
+      if (localStorage.getItem("darkMode") === "enabled") {
+        document.documentElement.classList.add("dark-mode-logic");
+      }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Bellefair&family=Outfit:wght@400;500;700&display=swap"
-        rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/admindashboard.css">
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bellefair&family=Outfit:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="/css/admindashboard.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+  </head>
 
-<body>
+  <body>
+    <!-- ── Top Navbar ── -->
     <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid">
-            <div class="d-flex align-items-center">
-                <button class="btn btn-link d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
-                    <i class="bi bi-list fs-3"></i>
-                </button>
-                <a href="/admin/dashboard" class="brand-name ms-2"
-                    style="text-decoration:none; color:inherit;">COLINGUEST</a>
-            </div>
-
-            <div class="nav-right d-flex align-items-center">
-                <button id="theme-toggle" class="btn btn-outline-secondary me-3 border-0">
-                    <i class="bi bi-moon-stars"></i>
-                </button>
-
-               
-                <a href="/admin/logout" class="btn btn-danger btn-sm">Logout</a>
-            </div>
+      <div class="container-fluid">
+        <div class="d-flex align-items-center">
+          <!-- Mobile hamburger — opens offcanvas sidebar -->
+          <button
+            class="btn btn-link d-lg-none p-0 me-2"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#sidebarOffcanvas"
+            aria-controls="sidebarOffcanvas"
+          >
+            <i class="bi bi-list fs-2"></i>
+          </button>
+          <a
+            href="/admin/dashboard"
+            class="brand-name"
+            style="
+              text-decoration: none;
+              color: inherit;
+              font-weight: 700;
+              font-size: 1.1rem;
+            "
+          >
+            COLINGUEST
+          </a>
         </div>
+
+        <!-- Right side buttons — always visible -->
+        <div class="nav-right d-flex align-items-center gap-2">
+          <button id="theme-toggle" class="btn btn-outline-secondary border-0">
+            <i class="bi bi-moon-stars"></i>
+          </button>
+          <a href="/admin/logout" class="btn btn-danger btn-sm">
+            <i class="bi bi-box-arrow-right me-1"></i> Logout
+          </a>
+        </div>
+      </div>
     </nav>
 
+    <!-- ── Mobile Offcanvas Sidebar ── -->
+    <div
+      class="offcanvas offcanvas-start d-lg-none"
+      tabindex="-1"
+      id="sidebarOffcanvas"
+      aria-labelledby="sidebarOffcanvasLabel"
+      style="width: 250px"
+    >
+      <div class="offcanvas-header border-bottom">
+        <h6 class="offcanvas-title fw-bold" id="sidebarOffcanvasLabel">
+          COLINGUEST Admin
+        </h6>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="offcanvas"
+        ></button>
+      </div>
+      <div class="offcanvas-body p-0"><%- include('./sidebar_links') %></div>
+    </div>
+
+    <!-- ── Bootstrap JS (required for offcanvas) ── -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const themeBtn = document.getElementById('theme-toggle');
-            const html = document.documentElement;
-            const icon = themeBtn.querySelector('i');
+      document.addEventListener("DOMContentLoaded", () => {
+        const themeBtn = document.getElementById("theme-toggle");
+        const html = document.documentElement;
+        const icon = themeBtn.querySelector("i");
 
-            // Sync icon with current state
-            const syncIcon = () => {
-                if (html.classList.contains('dark-mode-logic')) {
-                    icon.classList.replace('bi-moon-stars', 'bi-sun');
-                } else {
-                    icon.classList.replace('bi-sun', 'bi-moon-stars');
-                }
-            };
-            syncIcon();
+        const syncIcon = () => {
+          if (html.classList.contains("dark-mode-logic")) {
+            icon.className = "bi bi-sun";
+          } else {
+            icon.className = "bi bi-moon-stars";
+          }
+        };
+        syncIcon();
 
-            themeBtn.addEventListener('click', () => {
-                const isDark = html.classList.toggle('dark-mode-logic');
-                localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-                syncIcon();
-            });
+        themeBtn.addEventListener("click", () => {
+          const isDark = html.classList.toggle("dark-mode-logic");
+          localStorage.setItem("darkMode", isDark ? "enabled" : "disabled");
+          syncIcon();
         });
+      });
     </script>
+  </body>
+</html>

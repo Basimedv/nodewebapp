@@ -104,47 +104,61 @@ const getCheckout = async (req, res) => {
         res.redirect('/pageNotFound');
     }
 };
-// ── APPLY COUPON ─────────────────────────────────────────────────
 const applyCoupon = async (req, res) => {
     try {
         const userId             = req.session.user?._id;
         const { code, subtotal } = req.body;
 
         if (!code?.trim()) {
-            return res.status(400).json({
-                success: false, message: 'Please enter a coupon code'
-            });
+            return res.status(400).json({ success: false, message: 'Please enter a coupon code' });
         }
 
+        const now    = new Date();
         const coupon = await Coupon.findOne({
-            name:     code.trim().toUpperCase(),
-            isList:   true,
-            expireOn: { $gte: new Date() }
+            code:      code.trim().toUpperCase(),
+            isActive:  true,
+            startDate: { $lte: now },
+            endDate:   { $gte: now }
         });
 
         if (!coupon) {
-            return res.status(404).json({
-                success: false, message: 'Invalid or expired coupon'
-            });
+            return res.status(404).json({ success: false, message: 'Invalid or expired coupon' });
         }
 
-        const alreadyUsed = coupon.userId.some(
-            id => id.toString() === userId.toString()
-        );
-        if (alreadyUsed) {
-            return res.status(400).json({
-                success: false, message: 'You have already used this coupon'
-            });
+        // Usage limit
+        if (coupon.usageLimit > 0 && coupon.usedCount >= coupon.usageLimit) {
+            return res.status(400).json({ success: false, message: 'Coupon usage limit reached' });
         }
 
-        if (subtotal < coupon.minimumPrice) {
+        // Already used by this user
+        if (coupon.usedBy.some(id => id.toString() === userId.toString())) {
+            return res.status(400).json({ success: false, message: 'You have already used this coupon' });
+        }
+
+        // Allowed users check
+        if (coupon.allowedUsers.length > 0 &&
+            !coupon.allowedUsers.some(id => id.toString() === userId.toString())) {
+            return res.status(400).json({ success: false, message: 'This coupon is not available for your account' });
+        }
+
+        // First order only
+        if (coupon.firstOrderOnly) {
+            const pastOrder = await Order.findOne({ userId });
+            if (pastOrder) {
+                return res.status(400).json({ success: false, message: 'This coupon is for first-time orders only' });
+            }
+        }
+
+        // Minimum order
+        if (subtotal < coupon.minOrderAmount) {
             return res.status(400).json({
                 success: false,
-                message: `Minimum order amount is ₹${coupon.minimumPrice.toLocaleString('en-IN')}`
+                message: `Minimum order amount is ₹${coupon.minOrderAmount.toLocaleString('en-IN')}`
             });
         }
 
-        const discount   = coupon.offerPrice;
+        // Calculate discount
+        const discount   = coupon.calculateDiscount(subtotal);
         const finalTotal = Math.max(subtotal - discount, 0);
 
         return res.status(200).json({
@@ -152,7 +166,7 @@ const applyCoupon = async (req, res) => {
             message:    `Coupon applied! You saved ₹${discount.toLocaleString('en-IN')}`,
             discount,
             finalTotal,
-            couponCode: coupon.name
+            couponCode: coupon.code
         });
 
     } catch (error) {
@@ -160,7 +174,6 @@ const applyCoupon = async (req, res) => {
         res.status(500).json({ success: false, message: 'Something went wrong' });
     }
 };
-
 const placeOrder = async (req, res) => {
     let savedOrder = null;
 
@@ -237,21 +250,18 @@ const placeOrder = async (req, res) => {
 
         // ── 8. Validate coupon ───────────────────────────────────
         if (couponCode) {
-            const coupon = await Coupon.findOne({
-                name:     couponCode.toUpperCase(),
-                isList:   true,
-                expireOn: { $gte: new Date() }
-            });
-            if (!coupon) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Coupon is no longer valid'
-                });
-            }
-            if (!coupon.userId.includes(userId)) {
-                coupon.userId.push(userId);
-                await coupon.save();
-            }
+          
+// NEW — replace with this
+const coupon = await Coupon.findOne({
+    code:     couponCode.toUpperCase(),
+    isActive: true,
+    endDate:  { $gte: new Date() }
+});
+if (coupon && !coupon.usedBy.includes(userId)) {
+    coupon.usedBy.push(userId);
+    coupon.usedCount = (coupon.usedCount || 0) + 1;
+    await coupon.save();
+}
         }
 
         // ── 9. Save order FIRST ──────────────────────────────────
@@ -356,7 +366,6 @@ const getOrderSuccess = async (req, res) => {
     }
 };
 
-// ── CREATE RAZORPAY ORDER ────────────────────────────────────────
 const createRazorpayOrder = async (req, res) => {
     try {
         const userId = req.session.user?._id;
@@ -364,31 +373,22 @@ const createRazorpayOrder = async (req, res) => {
 
         const addressDoc = await Address.findOne({ userId });
         if (!addressDoc) {
-            return res.status(400).json({
-                success: false, message: 'No address found.'
-            });
+            return res.status(400).json({ success: false, message: 'No address found.' });
         }
 
         const selectedAddress = addressDoc.address.id(addressId);
         if (!selectedAddress) {
-            return res.status(400).json({
-                success: false, message: 'Selected address not found'
-            });
+            return res.status(400).json({ success: false, message: 'Selected address not found' });
         }
 
         const cart = await Cart.findOne({ userId }).populate('items.productId');
         if (!cart || cart.items.length === 0) {
-            return res.status(400).json({
-                success: false, message: 'Your cart is empty'
-            });
+            return res.status(400).json({ success: false, message: 'Your cart is empty' });
         }
 
-        // ✅ Validate stock before creating Razorpay order
         const stockCheck = await validateStock(cart.items);
         if (!stockCheck.valid) {
-            return res.status(400).json({
-                success: false, message: stockCheck.message
-            });
+            return res.status(400).json({ success: false, message: stockCheck.message });
         }
 
         const totalPrice  = cart.items.reduce((s, i) => s + i.price * i.quantity, 0);
@@ -401,91 +401,7 @@ const createRazorpayOrder = async (req, res) => {
             receipt:  `receipt_${Date.now()}`
         });
 
-        // ✅ Store everything needed for verify step
-        req.session.pendingOrder = {
-            addressId,
-            couponCode:      couponCode  || null,
-            couponDiscount:  discount,
-            totalPrice,
-            finalAmount,
-            razorpayOrderId: razorpayOrder.id
-        };
-
-        return res.status(200).json({
-            success:         true,
-            razorpayOrderId: razorpayOrder.id,
-            amount:          razorpayOrder.amount,
-            currency:        razorpayOrder.currency,
-            keyId:           process.env.RAZORPAY_KEY_ID
-        });
-
-    } catch (error) {
-        console.error('createRazorpayOrder error:', error);
-        res.status(500).json({
-            success: false, message: 'Failed to create payment order'
-        });
-    }
-};
-
-// ── VERIFY RAZORPAY PAYMENT ──────────────────────────────────────
-const verifyRazorpayPayment = async (req, res) => {
-    let savedOrder = null;  // track for rollback
-
-    try {
-        const userId = req.session.user?._id;
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-
-        // ── 1. Verify signature ──────────────────────────────────
-        const body     = razorpay_order_id + '|' + razorpay_payment_id;
-        const expected = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-            .update(body)
-            .digest('hex');
-
-        if (expected !== razorpay_signature) {
-            return res.status(400).json({
-                success: false, message: 'Payment verification failed. Invalid signature.'
-            });
-        }
-
-        // ── 2. Get pending order from session ────────────────────
-        const pending = req.session.pendingOrder;
-        if (!pending) {
-            return res.status(400).json({
-                success: false, message: 'No pending order found. Please try again.'
-            });
-        }
-
-        // ── 3. Get address ───────────────────────────────────────
-        const addressDoc = await Address.findOne({ userId });
-        const selectedAddress = addressDoc?.address.id(pending.addressId);
-        if (!selectedAddress) {
-            return res.status(400).json({
-                success: false, message: 'Address not found'
-            });
-        }
-
-        // ── 4. Get cart ──────────────────────────────────────────
-        const cart = await Cart.findOne({ userId }).populate('items.productId');
-        if (!cart || cart.items.length === 0) {
-            return res.status(400).json({
-                success: false, message: 'Cart is empty'
-            });
-        }
-
-        // ── 5. Validate stock AGAIN before saving ────────────────
-        // ✅ Stock could have changed between payment and verify
-        const stockCheck = await validateStock(cart.items);
-        if (!stockCheck.valid) {
-            // Payment was taken but stock unavailable — flag for refund
-            delete req.session.pendingOrder;
-            return res.status(400).json({
-                success: false,
-                message: `${stockCheck.message}. Your payment will be refunded within 5-7 business days.`
-            });
-        }
-
-        // ── 6. Build orderedItems ────────────────────────────────
+        // ── Snapshot cart items now, while we still have them ────
         const orderedItems = cart.items.map(item => ({
             product:      item.productId._id,
             productName:  item.productId.productName,
@@ -495,104 +411,194 @@ const verifyRazorpayPayment = async (req, res) => {
             price:        item.price
         }));
 
-        // ── 7. Mark coupon as used ───────────────────────────────
+        // ✅ NEW — save a draft order BEFORE payment.
+        // Guarantees order-success AND order-failure always have data.
+        const draftOrder = new Order({
+            userId,
+            orderedItems,
+            totalPrice,
+            dicount:         discount,
+            finalAmount,
+            paymentMethod:   'Online',
+            deliveryCharge:  0,
+            address:         buildAddressString(selectedAddress),
+            invoiceDate:     new Date(),
+            status:          'Payment Pending',
+            couponApplied:   !!couponCode,
+            razorpayOrderId: razorpayOrder.id
+        });
+
+        await draftOrder.save();
+
+        // ✅ Only store the lookup info needed by verify/failure handlers
+        req.session.pendingOrder = {
+            orderDocId:      draftOrder._id,
+            couponCode:      couponCode || null,
+            razorpayOrderId: razorpayOrder.id
+        };
+
+        return res.status(200).json({
+            success:         true,
+            razorpayOrderId: razorpayOrder.id,
+            amount:          razorpayOrder.amount,
+            currency:        razorpayOrder.currency,
+            keyId:           process.env.RAZORPAY_KEY_ID,
+            orderDocId:      draftOrder._id   // frontend keeps this for failure redirect
+        });
+
+    } catch (error) {
+        console.error('createRazorpayOrder error:', error);
+        res.status(500).json({ success: false, message: 'Failed to create payment order' });
+    }
+};
+
+const verifyRazorpayPayment = async (req, res) => {
+    try {
+        const userId = req.session.user?._id;
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+        const pending = req.session.pendingOrder;
+        if (!pending?.orderDocId) {
+            return res.status(400).json({
+                success: false, message: 'No pending order found. Please try again.'
+            });
+        }
+
+        const draftOrder = await Order.findById(pending.orderDocId);
+        if (!draftOrder) {
+            return res.status(400).json({
+                success: false, message: 'Order not found. Please try again.'
+            });
+        }
+
+        // ── 1. Verify signature ──────────────────────────────────
+        const body     = razorpay_order_id + '|' + razorpay_payment_id;
+        const expected = crypto
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+            .update(body)
+            .digest('hex');
+
+        if (expected !== razorpay_signature) {
+            draftOrder.status = 'Failed';
+            await draftOrder.save();
+            delete req.session.pendingOrder;
+            return res.status(400).json({
+                success:    false,
+                message:    'Payment verification failed. Invalid signature.',
+                orderDocId: draftOrder._id
+            });
+        }
+
+        // ── 2. Re-check stock right before committing ───────────
+        const cart = await Cart.findOne({ userId }).populate('items.productId');
+        const stockCheck = (cart && cart.items.length)
+            ? await validateStock(cart.items)
+            : { valid: false, message: 'Cart is empty' };
+
+        if (!stockCheck.valid) {
+            draftOrder.status            = 'Failed';
+            draftOrder.razorpayPaymentId = razorpay_payment_id;
+            await draftOrder.save();
+            delete req.session.pendingOrder;
+            return res.status(400).json({
+                success:    false,
+                message:    `${stockCheck.message}. Your payment will be refunded within 5-7 business days.`,
+                orderDocId: draftOrder._id
+            });
+        }
+
+        // ── 3. Reduce stock ───────────────────────────────────────
+        const stockResult = await reduceStock(cart.items);
+        if (!stockResult.success) {
+            draftOrder.status            = 'Failed';
+            draftOrder.razorpayPaymentId = razorpay_payment_id;
+            await draftOrder.save();
+            delete req.session.pendingOrder;
+            return res.status(500).json({
+                success:    false,
+                message:    'Stock update failed. Payment will be refunded.',
+                orderDocId: draftOrder._id
+            });
+        }
+
+        // ── 4. Mark coupon as used ────────────────────────────────
         if (pending.couponCode) {
             const coupon = await Coupon.findOne({
-                name:     pending.couponCode.toUpperCase(),
-                isList:   true,
-                expireOn: { $gte: new Date() }
+                code:     pending.couponCode.toUpperCase(),
+                isActive: true,
+                endDate:  { $gte: new Date() }
             });
-            if (coupon && !coupon.userId.includes(userId)) {
-                coupon.userId.push(userId);
+            if (coupon && !coupon.usedBy.some(id => id.toString() === userId.toString())) {
+                coupon.usedBy.push(userId);
+                coupon.usedCount = (coupon.usedCount || 0) + 1;
                 await coupon.save();
             }
         }
 
-        // ── 8. Save order FIRST ──────────────────────────────────
-        // ✅ Order saved before touching stock or cart
-        const order = new Order({
-            userId,
-            orderedItems,
-            totalPrice:     pending.totalPrice,
-            dicount:        pending.couponDiscount,
-            finalAmount:    pending.finalAmount,
-            paymentMethod:  'Online',
-            deliveryCharge: 0,
-            address:        buildAddressString(selectedAddress),
-            invoiceDate:    new Date(),
-            status:         'Pending',
-            couponApplied:  !!pending.couponCode
-        });
+        // ── 5. Promote draft → real order ──────────────────────────
+        draftOrder.status            = 'Pending';
+        draftOrder.razorpayPaymentId = razorpay_payment_id;
+        await draftOrder.save();
 
-        await order.save();
-        savedOrder = order;  // track for rollback
-
-        // ── 9. Reduce stock AFTER order saved ────────────────────
-        const stockResult = await reduceStock(cart.items);
-        if (!stockResult.success) {
-            // Rollback: delete the saved order
-            await Order.findByIdAndDelete(savedOrder._id).catch(() => {});
-            delete req.session.pendingOrder;
-            return res.status(500).json({
-                success: false,
-                message: 'Stock update failed. Order cancelled. Payment will be refunded.'
-            });
-        }
-
-        // ── 10. Clear cart AFTER stock reduced ───────────────────
+        // ── 6. Clear cart ───────────────────────────────────────────
         try {
-            await Cart.findOneAndUpdate(
-                { userId },
-                { $set: { items: [] } }
-            );
+            await Cart.findOneAndUpdate({ userId }, { $set: { items: [] } });
         } catch (cartErr) {
             console.error('Cart clear failed (non-critical):', cartErr);
         }
 
-        // ── 11. Clear pending session ────────────────────────────
         delete req.session.pendingOrder;
 
         return res.status(200).json({
             success: true,
             message: 'Payment verified and order placed',
-            orderId: order.orderId,
-            _id:     order._id
+            orderId: draftOrder.orderId,
+            _id:     draftOrder._id
         });
 
     } catch (error) {
-        // ✅ Rollback saved order if something failed after save
-        if (savedOrder) {
-            await Order.findByIdAndDelete(savedOrder._id).catch(() => {});
+        console.error('verifyRazorpayPayment error:', error);
+        const pending = req.session.pendingOrder;
+        if (pending?.orderDocId) {
+            await Order.findByIdAndUpdate(pending.orderDocId, { status: 'Failed' }).catch(() => {});
         }
         delete req.session.pendingOrder;
-        console.error('verifyRazorpayPayment error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Payment verification failed. Please contact support.'
+        return res.status(500).json({
+            success: false, message: 'Payment verification failed. Please contact support.'
         });
     }
 };
-
-// ── PAYMENT FAILED ───────────────────────────────────────────────
 const paymentFailed = async (req, res) => {
     try {
-        // ✅ Just clear session — stock and cart are untouched
-        // because stock is NEVER reduced until verifyRazorpayPayment succeeds
+        const pending = req.session.pendingOrder;
+
+        if (pending?.orderDocId) {
+            await Order.findByIdAndUpdate(pending.orderDocId, { status: 'Failed' });
+        }
+
         delete req.session.pendingOrder;
-        res.status(200).json({ success: true, message: 'Payment cancelled' });
+
+        return res.status(200).json({
+            success:    true,
+            message:    'Payment cancelled',
+            orderDocId: pending?.orderDocId || null
+        });
     } catch (error) {
+        console.error('paymentFailed error:', error);
         res.status(500).json({ success: false });
     }
 };
 
 
-// ── GET /user/coupons ─────────────────────────────────────────────
 const getUserCoupons = async (req, res) => {
     try {
         const userId = req.session.user?._id;
-
-        const coupons = await Coupon.find({}).sort({ expireOn: 1 }).lean();
-
+        const now    = new Date();
+ 
+        // Fetch all coupons (active + inactive + expired)
+        // so the user can see used/expired ones too
+        const coupons = await Coupon.find({}).lean();
+ 
         res.render('user/coupons', {
             user:    req.session.user,
             coupons,
@@ -603,14 +609,66 @@ const getUserCoupons = async (req, res) => {
         res.redirect('/pageNotFound');
     }
 };
+const getAvailableCoupons = async (req, res) => {
+    try {
+        const userId   = req.session.user?._id;
+        const subtotal = parseFloat(req.query.subtotal) || 0;
+        const now      = new Date();
 
+        const mongoose = require('mongoose');
+        const userObjId = new mongoose.Types.ObjectId(userId); // ✅ ensure ObjectId
+
+        const coupons = await Coupon.find({
+            isActive:  true,
+            startDate: { $lte: now },
+            endDate:   { $gte: now },
+            usedBy:    { $ne: userObjId },        // ✅ user hasn't used it
+            $or: [
+                { allowedUsers: { $exists: false } },
+                { allowedUsers: { $size: 0 } },
+                { allowedUsers: userObjId }        // ✅ user is allowed
+            ]
+        }).lean();
+
+        const eligible = coupons.filter(c =>
+            subtotal >= (c.minOrderAmount || 0) &&
+            (c.usageLimit === 0 || (c.usedCount || 0) < c.usageLimit)
+        );
+
+        const shaped = eligible.map(c => ({
+            code:           c.code,
+            type:           c.type,
+            value:          c.value,
+            minOrderAmount: c.minOrderAmount || 0,
+            maxDiscount:    c.maxDiscount    || 0,
+            endDate:        c.endDate,
+            description:    c.description   || ''
+        }));
+
+        res.json({ success: true, coupons: shaped });
+    } catch (err) {
+        console.error('getAvailableCoupons error:', err);
+        res.status(500).json({ success: false, coupons: [] });
+    }
+};
+const getOrderFailure = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id).lean();
+        if (!order) return res.redirect('/shop');
+        res.render('user/order-failure', { user: req.session.user, order });
+    } catch (error) {
+        res.redirect('/shop');
+    }
+};
 module.exports = {
     getCheckout,
     applyCoupon,
     placeOrder,
     getOrderSuccess,
+    getOrderFailure, 
     createRazorpayOrder,
     verifyRazorpayPayment,
     paymentFailed,
-     getUserCoupons 
+     getUserCoupons ,
+     getAvailableCoupons
 };
