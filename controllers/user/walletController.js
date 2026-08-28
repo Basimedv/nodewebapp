@@ -1,6 +1,6 @@
 const Wallet  = require('../../models/walletSchema');
 const Order   = require('../../models/orderSchema');
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID: uuidv4 } = require('crypto');
 const HTTP_STATUS_CODES = require('../../constants/status_codes');
 
 // ── GET WALLET PAGE ──────────────────────────────────────────────
